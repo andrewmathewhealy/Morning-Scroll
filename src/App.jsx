@@ -94,14 +94,24 @@ function useColorTemp() {
 
 // ── AMBIENT PARTICLES ─────────────────────────────────────
 function AmbientParticles() {
-  const particles = useMemo(() => Array.from({ length: 12 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    size: 2 + Math.random() * 3,
-    delay: Math.random() * 8,
-    duration: 6 + Math.random() * 8,
-    opacity: 0.12 + Math.random() * 0.18,
-  })), []);
+  const particles = useMemo(() => {
+    const warmColors = [
+      'rgba(240,184,138,0.85)',
+      'rgba(250,222,210,0.8)',
+      'rgba(224,139,106,0.75)',
+      'rgba(255,210,170,0.7)',
+      'rgba(184,92,92,0.6)',
+    ];
+    return Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      size: 2 + Math.random() * 3,
+      delay: Math.random() * 8,
+      duration: 6 + Math.random() * 8,
+      opacity: 0.12 + Math.random() * 0.18,
+      color: warmColors[i % warmColors.length],
+    }));
+  }, []);
 
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 1 }}>
@@ -121,12 +131,131 @@ function AmbientParticles() {
           width: p.size,
           height: p.size,
           borderRadius: '50%',
-          background: 'rgba(255,255,255,0.9)',
+          background: p.color,
           '--p-op': p.opacity,
           '--p-dx': `${(Math.random() - 0.5) * 40}px`,
           animation: `floatUp ${p.duration}s ${p.delay}s ease-in-out infinite`,
         }} />
       ))}
+    </div>
+  );
+}
+
+// ── HOME ATMOSPHERE (clouds, stars, vignette, shooting stars) ──
+function HomeAtmosphere() {
+  const [shootingStar, setShootingStar] = useState(null);
+
+  // Shooting star every 15-20 seconds
+  useEffect(() => {
+    let timeout;
+    function fire() {
+      const startX = 10 + Math.random() * 40;
+      const startY = 2 + Math.random() * 15;
+      const angle = 25 + Math.random() * 20;
+      const duration = 0.6 + Math.random() * 0.4;
+      setShootingStar({ startX, startY, angle, duration, key: Date.now() });
+      timeout = setTimeout(() => setShootingStar(null), duration * 1000 + 200);
+      timeout = setTimeout(fire, 15000 + Math.random() * 5000);
+    }
+    timeout = setTimeout(fire, 3000 + Math.random() * 5000);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  const stars = useMemo(() => Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    x: 5 + Math.random() * 90,
+    y: 2 + Math.random() * 28,
+    size: 1 + Math.random() * 1.5,
+    delay: Math.random() * 4,
+    duration: 2 + Math.random() * 3,
+  })), []);
+
+  const clouds = useMemo(() => [
+    { id: 0, side: 'left',  top: '8%',  width: 180, opacity: 0.08, delay: 0,   duration: 50 },
+    { id: 1, side: 'right', top: '14%', width: 220, opacity: 0.06, delay: 3,   duration: 60 },
+    { id: 2, side: 'left',  top: '22%', width: 150, opacity: 0.07, delay: 8,   duration: 45 },
+    { id: 3, side: 'right', top: '5%',  width: 200, opacity: 0.05, delay: 12,  duration: 55 },
+    { id: 4, side: 'left',  top: '30%', width: 160, opacity: 0.06, delay: 5,   duration: 48 },
+  ], []);
+
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
+      <style>{`
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.15; }
+          50% { opacity: 0.7; }
+        }
+        @keyframes cloudDriftLeft {
+          0%   { transform: translateX(-110%); opacity: 0; }
+          10%  { opacity: var(--c-op); }
+          90%  { opacity: var(--c-op); }
+          100% { transform: translateX(110vw); opacity: 0; }
+        }
+        @keyframes cloudDriftRight {
+          0%   { transform: translateX(110vw); opacity: 0; }
+          10%  { opacity: var(--c-op); }
+          90%  { opacity: var(--c-op); }
+          100% { transform: translateX(-110%); opacity: 0; }
+        }
+        @keyframes shootAcross {
+          0%   { transform: translate(0, 0) rotate(var(--ss-angle)); opacity: 0; }
+          5%   { opacity: 1; }
+          80%  { opacity: 0.8; }
+          100% { transform: translate(200px, 120px) rotate(var(--ss-angle)); opacity: 0; }
+        }
+      `}</style>
+
+      {/* Vignette */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: 'radial-gradient(ellipse at center, transparent 50%, rgba(10,10,20,0.35) 100%)',
+        zIndex: 2,
+      }} />
+
+      {/* Stars in dark top portion */}
+      {stars.map(s => (
+        <div key={s.id} style={{
+          position: 'absolute',
+          left: `${s.x}%`, top: `${s.y}%`,
+          width: s.size, height: s.size,
+          borderRadius: '50%',
+          background: 'rgba(250,230,210,0.85)',
+          boxShadow: '0 0 3px rgba(250,230,210,0.4)',
+          animation: `twinkle ${s.duration}s ${s.delay}s ease-in-out infinite`,
+        }} />
+      ))}
+
+      {/* Drifting clouds */}
+      {clouds.map(c => (
+        <div key={c.id} style={{
+          position: 'absolute',
+          top: c.top,
+          [c.side]: 0,
+          width: c.width,
+          height: c.width * 0.35,
+          borderRadius: '50%',
+          background: 'radial-gradient(ellipse, rgba(250,222,210,0.5) 0%, rgba(224,139,106,0.2) 40%, transparent 70%)',
+          filter: 'blur(12px)',
+          '--c-op': c.opacity,
+          animation: `cloudDrift${c.side === 'left' ? 'Left' : 'Right'} ${c.duration}s ${c.delay}s linear infinite`,
+        }} />
+      ))}
+
+      {/* Shooting star */}
+      {shootingStar && (
+        <div key={shootingStar.key} style={{
+          position: 'absolute',
+          left: `${shootingStar.startX}%`,
+          top: `${shootingStar.startY}%`,
+          width: 40, height: 1.5,
+          borderRadius: 1,
+          background: 'linear-gradient(to right, transparent, rgba(250,222,210,0.9), rgba(255,255,255,0.95))',
+          boxShadow: '0 0 6px 1px rgba(240,184,138,0.5)',
+          '--ss-angle': `${shootingStar.angle}deg`,
+          animation: `shootAcross ${shootingStar.duration}s ease-out forwards`,
+          zIndex: 3,
+        }} />
+      )}
     </div>
   );
 }
@@ -171,7 +300,7 @@ const styles = `
     height: 50px; display: flex; align-items: flex-end; justify-content: space-between;
     padding: 0 28px 8px; flex-shrink: 0; position: relative; z-index: 10; background: transparent;
   }
-  .status-time { font-family: 'Satoshi', sans-serif; font-weight: 500; font-size: 15px; color: #023047; }
+  .status-time { font-family: 'Satoshi', sans-serif; font-weight: 500; font-size: 15px; color: #FDF2E8; }
   .status-icons span { font-size: 10px; color: #2a5f7a; margin-left: 5px; }
 
   .screen { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; background: transparent; }
@@ -203,14 +332,15 @@ const styles = `
   /* ── WIDGET BREATHING / SHIMMER ── */
   @keyframes breathe { 0%,100% { opacity: 1; } 50% { opacity: 0.82; } }
   @keyframes widgetShimmer {
-    0% { background-position: -300% 0; }
+    0%  { background-position: -300% 0; }
+    15% { background-position: 300% 0; }
     100% { background-position: 300% 0; }
   }
   .widget-shimmer::after {
     content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
     background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.07) 50%, transparent 65%);
     background-size: 300% 100%;
-    animation: widgetShimmer 4s ease-in-out infinite;
+    animation: widgetShimmer 25s ease-in-out infinite;
   }
   .widget-pulse { animation: breathe 4s ease-in-out infinite; }
 
@@ -261,80 +391,80 @@ const styles = `
 
   /* ── NAV ── */
   .nav {
-    height: 82px; background: rgba(255,255,255,0.72); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid rgba(2,48,71,0.1);
+    height: 82px; background: #0C1A35; border-top: 1px solid rgba(253,242,232,0.12);
     display: flex; align-items: center; justify-content: space-around;
     padding: 0 8px 16px; flex-shrink: 0; z-index: 20;
   }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 16px; border-radius: 16px; cursor: pointer; transition: all 0.2s; position: relative; }
-  .nav-item.active { background: rgba(2,48,71,0.07); }
+  .nav-item.active { background: rgba(253,242,232,0.1); }
   .nav-icon { width: 24px; height: 24px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; }
   .nav-item.active .nav-icon { transform: scale(1.1); }
-  .nav-label { font-size: 10px; font-weight: 500; color: #8ec5d9; letter-spacing: 0.3px; transition: color 0.2s; }
-  .nav-item.active .nav-label { color: #023047; }
+  .nav-label { font-size: 10px; font-weight: 500; color: rgba(253,242,232,0.45); letter-spacing: 0.3px; transition: color 0.2s; }
+  .nav-item.active .nav-label { color: #FDF2E8; }
   .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: linear-gradient(135deg, #fffbe6 0%, #FFD166 100%); position: absolute; bottom: 0; opacity: 0; transition: opacity 0.2s; }
   .nav-item.active .nav-dot { opacity: 1; }
 
   /* ── HOME ── */
   .home-bg { min-height: 100%; background: transparent; padding: 0 0 32px; }
   .home-header { padding: 16px 24px 0; display: flex; justify-content: space-between; align-items: flex-start; }
-  .home-greeting { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; color: #023047; line-height: 1.2; }
-  .home-greeting span { color: #023047; -webkit-text-fill-color: #023047; }
-  .home-date { font-size: 11px; color: #2a5f7a; margin-top: 4px; letter-spacing: 1px; font-weight: 500; text-transform: uppercase; }
+  .home-greeting { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; color: #FDF2E8; line-height: 1.2; }
+  .home-greeting span { color: #FDF2E8; -webkit-text-fill-color: #FDF2E8; }
+  .home-date { font-size: 11px; color: #FDF2E8; margin-top: 4px; letter-spacing: 1px; font-weight: 500; text-transform: uppercase; opacity: 0.7; }
   .home-avatar { width: 40px; height: 40px; border-radius: 50%; background: #023047; display: flex; align-items: center; justify-content: center; }
 
   .widget-row { display: flex; gap: 12px; }
   .section-pad { padding: 14px 20px 0; }
 
   .weather-widget {
-    background: #023047; border-radius: 24px; padding: 20px; flex: 1; position: relative; overflow: hidden; cursor: pointer;
+    background: #023047; border-radius: 24px; padding: 20px; flex: 1; position: relative; overflow: hidden; cursor: pointer; border: 1.5px solid #FDF2E8;
   }
   .weather-widget::before {
     content: ''; position: absolute; top: -30px; right: -30px; width: 130px; height: 130px;
     background: radial-gradient(circle, rgba(255,183,3,0.12) 0%, transparent 70%);
   }
-  .weather-temp { font-family: 'Satoshi', sans-serif; font-size: 48px; color: #EAF4FB; line-height: 1; }
-  .weather-label { font-size: 11px; color: rgba(142,202,230,0.5); margin-top: 4px; letter-spacing: 0.5px; }
-  .weather-condition { font-size: 13px; color: rgba(142,202,230,0.8); margin-top: 8px; }
+  .weather-temp { font-family: 'Satoshi', sans-serif; font-size: 48px; color: #FDF2E8; line-height: 1; }
+  .weather-label { font-size: 11px; color: rgba(253,242,232,0.5); margin-top: 4px; letter-spacing: 0.5px; }
+  .weather-condition { font-size: 13px; color: rgba(253,242,232,0.7); margin-top: 8px; }
   .weather-icon-wrap { margin-bottom: 6px; }
-  .weather-forecast { display: flex; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.12); }
+  .weather-forecast { display: flex; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(253,242,232,0.15); }
   .weather-hour { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
-  .weather-hour-time { font-size: 9px; color: rgba(255,255,255,0.5); letter-spacing: 0.3px; }
-  .weather-hour-temp { font-size: 11px; color: rgba(255,255,255,0.9); font-weight: 600; }
+  .weather-hour-time { font-size: 9px; color: rgba(253,242,232,0.5); letter-spacing: 0.3px; }
+  .weather-hour-temp { font-size: 11px; color: rgba(253,242,232,0.9); font-weight: 600; }
 
   .moon-widget {
     background: #000; border-radius: 24px; width: 130px; overflow: hidden;
     display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-    position: relative; box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
+    position: relative; border: 1.5px solid #FDF2E8;
   }
   .moon-img-wrap { width: 100%; aspect-ratio: 1; overflow: hidden; }
   .moon-img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .moon-info { padding: 10px 8px 14px; text-align: center; width: 100%; }
-  .moon-phase { font-size: 10px; color: rgba(142,202,230,0.7); line-height: 1.3; font-weight: 500; letter-spacing: 0.3px; }
-  .moon-pct { font-family: 'Satoshi', sans-serif; font-size: 18px; color: #EAF4FB; margin-bottom: 2px; font-weight: 600; }
+  .moon-phase { font-size: 10px; color: rgba(253,242,232,0.6); line-height: 1.3; font-weight: 500; letter-spacing: 0.3px; }
+  .moon-pct { font-family: 'Satoshi', sans-serif; font-size: 18px; color: #FDF2E8; margin-bottom: 2px; font-weight: 600; }
 
-  .calendar-widget { background: rgba(255,255,255,0.6); backdrop-filter: blur(8px); border-radius: 24px; padding: 18px 20px; box-shadow: 0 0 0 1px rgba(255,209,102,0.3), 0 2px 10px rgba(2,48,71,0.05); }
-  .cal-header { font-size: 10px; color: #2a5f7a; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
-  .cal-event { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(2,48,71,0.06); }
+  .calendar-widget { background: rgba(8,16,32,0.55); backdrop-filter: blur(8px); border-radius: 24px; padding: 18px 20px; border: 1.5px solid #FDF2E8; }
+  .cal-header { font-size: 10px; color: rgba(253,242,232,0.55); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+  .cal-event { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(253,242,232,0.1); }
   .cal-event:last-child { border-bottom: none; }
   .cal-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .cal-time { font-size: 11px; color: #5a9ab5; width: 40px; flex-shrink: 0; font-weight: 500; }
-  .cal-title { font-size: 13px; color: #023047; }
+  .cal-time { font-size: 11px; color: rgba(253,242,232,0.55); width: 40px; flex-shrink: 0; font-weight: 500; }
+  .cal-title { font-size: 13px; color: #FDF2E8; }
 
-  .photo-widget { background: #023047; border-radius: 24px; overflow: hidden; position: relative; height: 160px; display: flex; align-items: flex-end; }
+  .photo-widget { background: #023047; border-radius: 24px; overflow: hidden; position: relative; height: 160px; display: flex; align-items: flex-end; border: 1.5px solid #FDF2E8; }
   .photo-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
   .photo-gradient { position: absolute; inset: 0; background: linear-gradient(to top, rgba(2,48,71,0.8) 0%, transparent 55%); }
   .photo-label { position: relative; z-index: 1; padding: 16px; }
   .photo-tag { font-size: 10px; color: #FFD166; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; }
-  .photo-caption { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #EAF4FB; margin-top: 2px; }
+  .photo-caption { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #FDF2E8; margin-top: 2px; }
 
-  .otd-widget { background: rgba(255,255,255,0.6); backdrop-filter: blur(8px); border-radius: 24px; padding: 20px; box-shadow: 0 0 0 1px rgba(142,202,230,0.3), 0 2px 10px rgba(2,48,71,0.05); min-height: 110px; }
-  .otd-label { font-size: 10px; color: #2a5f7a; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-  .otd-year { font-size: 22px; font-weight: 700; color: #8ECAE6; font-family: 'Space Mono', monospace; margin-bottom: 2px; }
-  .otd-meta { font-size: 11px; color: #2a5f7a; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-  .otd-text { font-family: 'Satoshi', sans-serif; font-size: 14px; color: #023047; line-height: 1.6; }
-  .otd-link { font-size: 11px; color: #219EBC; margin-top: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
-  .otd-loading { display: flex; align-items: center; gap: 8px; color: #8ec5d9; font-size: 13px; }
-  .otd-dot { width: 6px; height: 6px; border-radius: 50%; background: #8ECAE6; animation: otd-pulse 1.4s ease-in-out infinite; }
+  .otd-widget { background: rgba(8,16,32,0.55); backdrop-filter: blur(8px); border-radius: 24px; padding: 20px; min-height: 110px; border: 1.5px solid #FDF2E8; }
+  .otd-label { font-size: 10px; color: rgba(253,242,232,0.55); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .otd-year { font-size: 22px; font-weight: 700; color: #F0D080; font-family: 'Space Mono', monospace; margin-bottom: 2px; }
+  .otd-meta { font-size: 11px; color: rgba(253,242,232,0.5); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .otd-text { font-family: 'Satoshi', sans-serif; font-size: 14px; color: #FDF2E8; line-height: 1.6; }
+  .otd-link { font-size: 11px; color: #F0D080; margin-top: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .otd-loading { display: flex; align-items: center; gap: 8px; color: rgba(253,242,232,0.5); font-size: 13px; }
+  .otd-dot { width: 6px; height: 6px; border-radius: 50%; background: #F0D080; animation: otd-pulse 1.4s ease-in-out infinite; }
   .otd-dot:nth-child(2) { animation-delay: 0.2s; }
   .otd-dot:nth-child(3) { animation-delay: 0.4s; }
   @keyframes otd-pulse { 0%,80%,100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
@@ -342,8 +472,8 @@ const styles = `
   /* ── FEED ── */
   .feed-bg { height: 100%; display: flex; flex-direction: column; background: transparent; overflow: hidden; }
   .feed-header { padding: 16px 24px 0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-  .feed-title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 600; color: #023047; }
-  .feed-subtitle { font-size: 12px; color: #2a5f7a; margin-top: 2px; }
+  .feed-title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 600; color: #FDF2E8; }
+  .feed-subtitle { font-size: 12px; color: rgba(253,242,232,0.6); margin-top: 2px; }
 
   .filter-scroll { display: flex; gap: 8px; padding: 14px 20px 10px; overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
   .filter-scroll::-webkit-scrollbar { display: none; }
@@ -408,12 +538,12 @@ const styles = `
   /* ── COMMUNITY / WORLD ── */
   .community-bg { min-height: 100%; background: transparent; padding-bottom: 32px; }
   .community-header { padding: 16px 24px 12px; }
-  .community-title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 600; color: #023047; }
-  .community-subtitle { font-size: 12px; color: #2a5f7a; margin-top: 2px; }
+  .community-title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 600; color: #FDF2E8; }
+  .community-subtitle { font-size: 12px; color: rgba(253,242,232,0.6); margin-top: 2px; }
 
   .globe-hero {
     margin: 0 20px; height: 380px; border-radius: 28px;
-    background: #010f18; border: 1px solid rgba(142,202,230,0.1);
+    background: #010f18; border: 1.5px solid #FDF2E8;
     position: relative; overflow: hidden; cursor: pointer;
   }
   .globe-sphere {
@@ -441,55 +571,55 @@ const styles = `
   .pulse-text { font-size: 13px; color: #2a5f7a; }
   .pulse-text strong { color: #023047; }
 
-  .comm-card { margin: 12px 20px 0; background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); border-radius: 24px; padding: 20px; box-shadow: 0 0 0 1px rgba(255,209,102,0.3), 0 2px 10px rgba(2,48,71,0.05); }
+  .comm-card { margin: 12px 20px 0; background: rgba(8,16,32,0.55); backdrop-filter: blur(8px); border-radius: 24px; padding: 20px; border: 1.5px solid #FDF2E8; }
   .comm-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-  .comm-card-title { font-family: 'Satoshi', sans-serif; font-size: 17px; color: #023047; }
-  .comm-card-sub { font-size: 11px; color: #5a9ab5; margin-top: 2px; }
-  .comm-card-tag { font-size: 10px; color: #5a9ab5; background: rgba(2,48,71,0.06); padding: 4px 8px; border-radius: 8px; font-weight: 500; white-space: nowrap; margin-left: 8px; }
+  .comm-card-title { font-family: 'Satoshi', sans-serif; font-size: 17px; color: #FDF2E8; }
+  .comm-card-sub { font-size: 11px; color: rgba(253,242,232,0.5); margin-top: 2px; }
+  .comm-card-tag { font-size: 10px; color: rgba(253,242,232,0.5); background: rgba(253,242,232,0.08); padding: 4px 8px; border-radius: 8px; font-weight: 500; white-space: nowrap; margin-left: 8px; }
 
   .poll-option {
     padding: 11px 16px; border-radius: 14px; font-size: 13px; font-weight: 500;
-    background: rgba(255,255,255,0.55); border: 1.5px solid rgba(2,48,71,0.12); cursor: pointer;
-    transition: all 0.18s; color: #023047; margin-bottom: 8px; display: block; width: 100%;
+    background: rgba(253,242,232,0.08); border: 1.5px solid rgba(253,242,232,0.25); cursor: pointer;
+    transition: all 0.18s; color: #FDF2E8; margin-bottom: 8px; display: block; width: 100%;
     text-align: left;
   }
   .poll-option:last-child { margin-bottom: 0; }
-  .poll-option:hover { border-color: #FFD166; background: rgba(255,183,3,0.08); }
+  .poll-option:hover { border-color: #FFD166; background: rgba(255,183,3,0.12); }
   .poll-option.chosen { background: #FFD166; border-color: #FFD166; color: #023047; font-weight: 600; }
 
   .poll-result { margin-bottom: 10px; }
   .poll-result:last-child { margin-bottom: 0; }
   .poll-result-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-  .poll-result-label { font-size: 13px; color: #023047; font-weight: 500; display: flex; align-items: center; gap: 6px; }
-  .poll-result-pct { font-size: 12px; color: #2a5f7a; font-weight: 600; }
-  .poll-result-track { height: 8px; background: rgba(2,48,71,0.08); border-radius: 4px; overflow: hidden; }
+  .poll-result-label { font-size: 13px; color: #FDF2E8; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .poll-result-pct { font-size: 12px; color: rgba(253,242,232,0.7); font-weight: 600; }
+  .poll-result-track { height: 8px; background: rgba(253,242,232,0.1); border-radius: 4px; overflow: hidden; }
   .poll-result-fill { height: 100%; border-radius: 4px; background: #219EBC; transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
   .poll-result-fill.winner { background: #FFD166; }
   .poll-result-fill.chosen { background: linear-gradient(90deg, #fff8e7 0%, #FFD166 100%); }
-  .poll-total { font-size: 11px; color: #8ec5d9; margin-top: 12px; text-align: center; }
+  .poll-total { font-size: 11px; color: rgba(253,242,232,0.5); margin-top: 12px; text-align: center; }
 
-  .word-card { margin: 12px 20px 0; background: #023047; border-radius: 24px; padding: 24px 20px; }
-  .word-tag { font-size: 10px; color: #FFD166; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
-  .word-main { font-family: 'Satoshi', sans-serif; font-size: 34px; color: #EAF4FB; }
-  .word-type { font-size: 11px; color: rgba(142,202,230,0.45); font-style: italic; margin-top: 4px; }
-  .word-def { font-size: 13px; color: rgba(142,202,230,0.7); line-height: 1.65; margin-top: 12px; }
+  .word-card { margin: 12px 20px 0; background: #023047; border-radius: 24px; padding: 24px 20px; border: 1.5px solid #FDF2E8; }
+  .word-tag { font-size: 10px; color: #F0D080; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .word-main { font-family: 'Satoshi', sans-serif; font-size: 34px; color: #FDF2E8; }
+  .word-type { font-size: 11px; color: rgba(253,242,232,0.45); font-style: italic; margin-top: 4px; }
+  .word-def { font-size: 13px; color: rgba(253,242,232,0.65); line-height: 1.65; margin-top: 12px; }
 
-  .art-card { margin: 12px 20px 0; border-radius: 24px; overflow: hidden; border: 1px solid rgba(2,48,71,0.1); }
+  .art-card { margin: 12px 20px 0; border-radius: 24px; overflow: hidden; border: 1.5px solid #FDF2E8; }
   .art-image { height: 200px; background: #023047; display: flex; align-items: center; justify-content: center; position: relative; }
-  .art-info { background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); padding: 16px 20px; }
-  .art-title { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #023047; }
-  .art-meta { font-size: 11px; color: #5a9ab5; margin-top: 3px; }
+  .art-info { background: rgba(8,16,32,0.55); backdrop-filter: blur(8px); padding: 16px 20px; }
+  .art-title { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #FDF2E8; }
+  .art-meta { font-size: 11px; color: rgba(253,242,232,0.5); margin-top: 3px; }
 
   /* ── SETTINGS ── */
   .profile-bg { min-height: 100%; background: transparent; padding-bottom: 32px; }
   .profile-header { padding: 16px 24px 20px; }
   .profile-top { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
   .profile-avatar-large { width: 64px; height: 64px; border-radius: 50%; background: #023047; display: flex; align-items: center; justify-content: center; }
-  .profile-name { font-family: 'Satoshi', sans-serif; font-size: 22px; color: #023047; -webkit-text-fill-color: #023047; }
-  .profile-streak { font-size: 12px; color: #2a5f7a; margin-top: 3px; }
+  .profile-name { font-family: 'Satoshi', sans-serif; font-size: 22px; color: #FDF2E8; -webkit-text-fill-color: #FDF2E8; }
+  .profile-streak { font-size: 12px; color: rgba(253,242,232,0.6); margin-top: 3px; }
   .profile-streak span { color: #FFBC42; font-weight: 600; }
 
-  .section-label { font-size: 10px; color: #2a5f7a; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 0 24px; margin-bottom: 10px; margin-top: 20px; display: block; }
+  .section-label { font-size: 10px; color: #FDF2E8; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 0 24px; margin-bottom: 10px; margin-top: 20px; display: block; }
 
   .setting-row { margin: 0 20px 8px; background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); border-radius: 16px; padding: 14px 16px; box-shadow: 0 0 0 1px rgba(255,209,102,0.3), 0 2px 10px rgba(2,48,71,0.05); display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
   .setting-left { display: flex; align-items: center; gap: 12px; }
@@ -846,14 +976,14 @@ const wordleCss = `
   .w-swatch-absent { background: linear-gradient(135deg, #3A2E24, #4A3C30); }
 
   /* Home Wordle Card */
-  .wordle-card { background: #023047; border-radius: 24px; padding: 18px 20px; cursor: pointer; transition: transform 0.15s ease; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(2,48,71,0.15); }
+  .wordle-card { background: #023047; border-radius: 24px; padding: 18px 20px; cursor: pointer; transition: transform 0.15s ease; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(2,48,71,0.15); border: 1.5px solid #FDF2E8; }
   .wordle-card:active { transform: scale(0.98); }
   .wc-left { display: flex; flex-direction: column; gap: 3px; }
   .wc-label { font-size: 10px; color: #FFD166; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
-  .wc-title { font-family: 'Playfair Display', serif; font-size: 22px; color: #EAF4FB; font-weight: 900; letter-spacing: 3px; }
-  .wc-date { font-size: 11px; color: rgba(142,202,230,0.55); margin-top: 2px; letter-spacing: 0.5px; }
+  .wc-title { font-family: 'Playfair Display', serif; font-size: 22px; color: #FDF2E8; font-weight: 900; letter-spacing: 3px; }
+  .wc-date { font-size: 11px; color: rgba(253,242,232,0.5); margin-top: 2px; letter-spacing: 0.5px; }
   .wc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-  .wc-play { font-size: 12px; color: rgba(142,202,230,0.7); font-weight: 600; letter-spacing: 0.5px; }
+  .wc-play { font-size: 12px; color: rgba(253,242,232,0.6); font-weight: 600; letter-spacing: 0.5px; }
   .wc-tiles { display: flex; gap: 4px; }
   .wc-tile { width: 18px; height: 18px; border-radius: 4px; background: rgba(255,255,255,0.15); }
   .wc-tile-amber { background: #FFD166; }
@@ -1564,6 +1694,7 @@ function HomeScreen({ onOpenWordle }) {
 
   return (
     <div className="home-bg">
+      <HomeAtmosphere />
       <AmbientParticles />
       <div className="home-header spring-in spring-in-1 depth-top">
         <div>
@@ -3065,7 +3196,7 @@ function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggle
 
       {/* ── SECTION 1: MY MORNING ── */}
       <span className="section-label fade-up fade-up-2">
-        My Morning <span style={{ color: "#8ec5d9", fontWeight: 400, letterSpacing: 0 }}>· your custom feed</span>
+        My Morning <span style={{ color: "rgba(253,242,232,0.5)", fontWeight: 400, letterSpacing: 0 }}>· your custom feed</span>
       </span>
 
       {/* News sources for My Morning */}
@@ -3105,7 +3236,7 @@ function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggle
 
       {/* ── SECTION 2: FEED MODES ── */}
       <span className="section-label fade-up fade-up-2" style={{ marginTop: 8 }}>
-        Feed Modes <span style={{ color: "#8ec5d9", fontWeight: 400, letterSpacing: 0 }}>· mute from presets</span>
+        Feed Modes <span style={{ color: "rgba(253,242,232,0.5)", fontWeight: 400, letterSpacing: 0 }}>· mute from presets</span>
       </span>
       <div style={{ padding: "0 20px 4px", fontSize: 11, color: "#8a9ab5", lineHeight: 1.5 }}>
         Tap any source to mute it from that mode. Muted sources move to the bottom.
@@ -3142,7 +3273,7 @@ function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggle
 
       {/* ── SECTION 3: ALWAYS BLOCK ── */}
       <span className="section-label fade-up fade-up-3" style={{ marginTop: 8 }}>
-        Always Block <span style={{ color: "#8ec5d9", fontWeight: 400, letterSpacing: 0 }}>· excluded everywhere</span>
+        Always Block <span style={{ color: "rgba(253,242,232,0.5)", fontWeight: 400, letterSpacing: 0 }}>· excluded everywhere</span>
       </span>
       <div style={{ padding: "0 20px 4px", fontSize: 11, color: "#8a9ab5", lineHeight: 1.5 }}>
         Toggle off any source to block it from every feed mode.
@@ -3236,25 +3367,19 @@ function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggle
   );
 }
 
-// ── BACKGROUND IMAGE (per-tab) ───────────────────────────
-// Home tab uses the sky/clouds image; all other tabs use the wave image.
-// backgroundPosition: "top center" ensures the top design detail is always visible.
-const getBgStyle = (tab) => {
-  const isHome = tab === "home";
-  return {
-    backgroundImage: isHome ? "url('/bg-home.webp')" : "url('/bg-other.webp')",
-    backgroundSize: "cover",
-    backgroundPosition: isHome ? "top center" : "center 40%",
-    backgroundRepeat: "no-repeat",
-  };
-};
+// ── BACKGROUND GRADIENT (per-tab) ────────────────────────
+const HOME_GRADIENT = "linear-gradient(175deg, #081020 0%, #0C1A35 12%, #142848 26%, #1E3D62 38%, #3B6080 48%, #7A8A72 55%, #C4A24E 64%, #E4BD58 72%, #F0D080 82%, #F8E2AA 90%, #FFF4E0 100%)";
+const OTHER_GRADIENT = "linear-gradient(175deg, #081020 0%, #0E1A30 12%, #162840 26%, #1E3555 38%, #3A5570 48%, #6A7A6A 55%, #A08E4A 64%, #BCA050 72%, #D0B870 82%, #DEC890 90%, #E8D8C0 100%)";
+const getBgStyle = (tab) => ({
+  background: tab === "home" ? HOME_GRADIENT : OTHER_GRADIENT,
+});
 
 // ── NAV TABS ──────────────────────────────────────────────
 const TABS = [
-  { id: "home",     label: "Home",     ActiveIcon: p => <Icon.Home     {...p} color="#023047" />, InactiveIcon: p => <Icon.Home     {...p} color="#8ec5d9" /> },
-  { id: "feed",     label: "Feed",     ActiveIcon: p => <Icon.Feed     {...p} color="#023047" />, InactiveIcon: p => <Icon.Feed     {...p} color="#8ec5d9" /> },
-  { id: "world",    label: "World",    ActiveIcon: p => <Icon.Globe    {...p} color="#023047" />, InactiveIcon: p => <Icon.Globe    {...p} color="#8ec5d9" /> },
-  { id: "settings", label: "Settings", ActiveIcon: p => <Icon.Settings {...p} color="#023047" />, InactiveIcon: p => <Icon.Settings {...p} color="#8ec5d9" /> },
+  { id: "home",     label: "Home",     ActiveIcon: p => <Icon.Home     {...p} color="#FDF2E8" />, InactiveIcon: p => <Icon.Home     {...p} color="rgba(253,242,232,0.4)" /> },
+  { id: "feed",     label: "Feed",     ActiveIcon: p => <Icon.Feed     {...p} color="#FDF2E8" />, InactiveIcon: p => <Icon.Feed     {...p} color="rgba(253,242,232,0.4)" /> },
+  { id: "world",    label: "World",    ActiveIcon: p => <Icon.Globe    {...p} color="#FDF2E8" />, InactiveIcon: p => <Icon.Globe    {...p} color="rgba(253,242,232,0.4)" /> },
+  { id: "settings", label: "Settings", ActiveIcon: p => <Icon.Settings {...p} color="#FDF2E8" />, InactiveIcon: p => <Icon.Settings {...p} color="rgba(253,242,232,0.4)" /> },
 ];
 
 // ── APP SHELL ─────────────────────────────────────────────
@@ -3344,9 +3469,9 @@ export default function MorningScrollApp() {
           {/* Status Bar */}
           <div className="status-bar">
             <div className="status-time">{clockTime}</div>
-            <div style={{ width: 120, height: 30, background: "#8ECAE6", borderRadius: 15, position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)" }} />
+            <div style={{ width: 120, height: 30, background: "#0a1628", borderRadius: 15, position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)" }} />
             <div style={{ display: "flex", gap: 2 }}>
-              <span style={{ fontSize: 10, color: "#2a5f7a" }}>●●● WiFi ▮▮▮</span>
+              <span style={{ fontSize: 10, color: "rgba(253,242,232,0.6)" }}>●●● WiFi ▮▮▮</span>
             </div>
           </div>
 
