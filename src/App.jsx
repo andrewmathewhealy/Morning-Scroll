@@ -4,6 +4,7 @@ import { NEWS_SOURCES, NEWS_SOURCE_CATEGORIES, ALL_NEWS_SOURCE_NAMES } from "./n
 import { useRedditFeed } from "./useRedditFeed.js";
 import { useNewsFeed } from "./useNewsFeed.js";
 import { cleanRedditText } from "./redditApi.js";
+import GlobeCanvas from "./Globe.jsx";
 
 // ── GYROSCOPE PARALLAX HOOK ───────────────────────────────
 function useGyroscope() {
@@ -411,7 +412,7 @@ const styles = `
   .community-subtitle { font-size: 12px; color: #2a5f7a; margin-top: 2px; }
 
   .globe-hero {
-    margin: 0 20px; height: 280px; border-radius: 28px;
+    margin: 0 20px; height: 380px; border-radius: 28px;
     background: #010f18; border: 1px solid rgba(142,202,230,0.1);
     position: relative; overflow: hidden; cursor: pointer;
   }
@@ -2568,6 +2569,10 @@ function FeedScreen({ enabledSubs, enabledNewsSources, mutedInMode = {}, alwaysB
     catch { return new Set(); }
   });
 
+  // Snapshot of seen IDs at mount time — used to push previously-seen posts
+  // to the bottom of the feed without causing items to jump mid-session.
+  const previouslySeenIds = useRef(seenIds);
+
   const markSeen = (id) => {
     setSeenIds(prev => {
       const next = new Set(prev);
@@ -2697,6 +2702,15 @@ function FeedScreen({ enabledSubs, enabledNewsSources, mutedInMode = {}, alwaysB
       }
     });
     while (ni < dedupedArticles.length) merged.push(dedupedArticles[ni++]);
+
+    // Push posts that were already seen (from a previous session) to the bottom,
+    // preserving relative order within each group (unseen first, then seen).
+    const prevSeen = previouslySeenIds.current;
+    if (prevSeen.size > 0) {
+      const unseen = merged.filter(item => !prevSeen.has(item.id));
+      const seen = merged.filter(item => prevSeen.has(item.id));
+      return [...unseen, ...seen];
+    }
     return merged;
   }, [rawPosts, rawArticles, enabledSubSet, mode]);
 
@@ -2825,6 +2839,7 @@ function FeedScreen({ enabledSubs, enabledNewsSources, mutedInMode = {}, alwaysB
                 onClick={() => {
                   try { localStorage.removeItem("ms_seen_posts"); } catch {}
                   setSeenIds(new Set());
+                  previouslySeenIds.current = new Set();
                 }}
                 style={{ marginTop: 4, fontSize: 11, color: "rgba(142,202,230,0.8)", cursor: "pointer", textDecoration: "underline" }}
               >
@@ -2856,6 +2871,7 @@ function FeedScreen({ enabledSubs, enabledNewsSources, mutedInMode = {}, alwaysB
 function WorldScreen() {
   const [vote, setVote] = useState(null);
   const [animating, setAnimating] = useState(false);
+  const [globeExpanded, setGlobeExpanded] = useState(false);
   const winnerVotes = Math.max(...POLL_OPTIONS.map(o => o.votes));
 
   const handleVote = (label) => {
@@ -2871,33 +2887,73 @@ function WorldScreen() {
         <div className="community-subtitle">What we all share right now</div>
       </div>
 
-      <div className="globe-hero fade-up fade-up-2">
-        <Stars />
-        <div className="globe-sphere">
-          <div className="globe-terminator" />
-          <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.18 }} viewBox="0 0 200 200">
-            <ellipse cx="60" cy="70" rx="28" ry="22" fill="#8ECAE6" />
-            <ellipse cx="110" cy="65" rx="35" ry="25" fill="#8ECAE6" />
-            <ellipse cx="140" cy="100" rx="20" ry="30" fill="#8ECAE6" />
-            <ellipse cx="80" cy="120" rx="15" ry="20" fill="#8ECAE6" />
-            <ellipse cx="50" cy="130" rx="22" ry="15" fill="#8ECAE6" />
+      <div
+        className="globe-hero fade-up fade-up-2"
+        style={{ overflow: "hidden", padding: 0, cursor: "pointer" }}
+        onClick={() => setGlobeExpanded(true)}
+      >
+        <GlobeCanvas style={{ width: "100%", height: "100%", minHeight: 320, borderRadius: "inherit" }} />
+        <div
+          style={{
+            position: "absolute", top: 12, right: 12, zIndex: 10,
+            width: 32, height: 32, borderRadius: 10,
+            background: "rgba(0,0,0,0.45)", backdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", border: "1px solid rgba(140,180,255,0.15)",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="rgba(160,200,255,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="10,1 15,1 15,6" />
+            <polyline points="6,15 1,15 1,10" />
+            <line x1="15" y1="1" x2="10" y2="6" />
+            <line x1="1" y1="15" x2="6" y2="10" />
           </svg>
-          {GDOTS.map((d, i) => <div key={i} className="globe-dot" style={{ top: d.top, left: d.left, animationDelay: `${i * 0.2}s` }} />)}
-        </div>
-        <div className="globe-overlay" />
-        <div className="globe-expand">Explore ⤢</div>
-        <div className="globe-label">
-          <div className="globe-count"><span><CountUp value="4281" duration={1200} /></span> scrolling now</div>
-          <div className="globe-sub">Morning wave over East Asia & Australia</div>
         </div>
       </div>
 
-      <div className="pulse-banner fade-up fade-up-3">
-        <div className="pulse-live" />
-        <div className="pulse-text"><strong>47 people</strong> in your timezone started their scroll in the last 10 minutes</div>
-      </div>
+      {globeExpanded && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          zIndex: 9999, background: "#020308",
+          animation: "globeOverlayIn 0.35s ease-out both",
+          display: "flex", flexDirection: "column",
+        }}>
+          {/* Top gradient buffer */}
+          <div style={{
+            height: 60, flexShrink: 0,
+            background: "linear-gradient(to bottom, #06091a 0%, #030510 60%, #020308 100%)",
+          }} />
+          {/* Globe canvas — fills the middle */}
+          <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+            <GlobeCanvas style={{ width: "100%", height: "100%" }} fullscreen />
+          </div>
+          {/* Bottom gradient buffer */}
+          <div style={{
+            height: 60, flexShrink: 0,
+            background: "linear-gradient(to top, #06091a 0%, #030510 60%, #020308 100%)",
+          }} />
+          {/* Close button */}
+          <div
+            onClick={() => setGlobeExpanded(false)}
+            style={{
+              position: "absolute", top: 16, right: 16, zIndex: 10,
+              width: 36, height: 36, borderRadius: 12,
+              background: "rgba(6,9,26,0.65)", backdropFilter: "blur(10px)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", border: "1px solid rgba(140,180,255,0.12)",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="rgba(160,200,255,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="4,1 1,1 1,4" />
+              <polyline points="12,15 15,15 15,12" />
+              <line x1="1" y1="1" x2="6" y2="6" />
+              <line x1="15" y1="15" x2="10" y2="10" />
+            </svg>
+          </div>
+        </div>
+      )}
 
-      <div className="comm-card fade-up fade-up-4">
+      <div className="comm-card fade-up fade-up-3">
         <div className="comm-card-header">
           <div>
             <div className="comm-card-title">How are you waking up?</div>
