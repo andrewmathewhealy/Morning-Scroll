@@ -391,7 +391,7 @@ const styles = `
 
   /* ── NAV ── */
   .nav {
-    height: 82px; background: #0C1A35; border-top: 1px solid rgba(253,242,232,0.12);
+    height: 82px; background: rgba(0,0,0,0.15); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid rgba(255,255,255,0.08);
     display: flex; align-items: center; justify-content: space-around;
     padding: 0 8px 16px; flex-shrink: 0; z-index: 20;
   }
@@ -436,8 +436,32 @@ const styles = `
     display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
     position: relative; border: 1.5px solid #FDF2E8;
   }
-  .moon-img-wrap { width: 100%; aspect-ratio: 1; overflow: hidden; }
-  .moon-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .moon-widget::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      radial-gradient(1px 1px at 12% 8%, rgba(253,242,232,0.7) 50%, transparent 50%),
+      radial-gradient(1px 1px at 28% 18%, rgba(253,242,232,0.5) 50%, transparent 50%),
+      radial-gradient(1px 1px at 75% 6%, rgba(253,242,232,0.6) 50%, transparent 50%),
+      radial-gradient(1px 1px at 88% 22%, rgba(253,242,232,0.4) 50%, transparent 50%),
+      radial-gradient(1px 1px at 45% 12%, rgba(253,242,232,0.55) 50%, transparent 50%),
+      radial-gradient(1px 1px at 62% 25%, rgba(253,242,232,0.45) 50%, transparent 50%),
+      radial-gradient(1px 1px at 8% 28%, rgba(253,242,232,0.35) 50%, transparent 50%),
+      radial-gradient(1.5px 1.5px at 92% 10%, rgba(253,242,232,0.65) 50%, transparent 50%),
+      radial-gradient(1px 1px at 35% 4%, rgba(253,242,232,0.5) 50%, transparent 50%),
+      radial-gradient(1px 1px at 55% 20%, rgba(253,242,232,0.4) 50%, transparent 50%),
+      radial-gradient(1px 1px at 18% 30%, rgba(253,242,232,0.3) 50%, transparent 50%),
+      radial-gradient(1.5px 1.5px at 70% 15%, rgba(253,242,232,0.55) 50%, transparent 50%);
+  }
+  .moon-img-wrap {
+    width: 100%; aspect-ratio: 1; overflow: hidden; position: relative; z-index: 1;
+    background: radial-gradient(circle at center, rgba(253,242,232,0.45) 0%, rgba(253,242,232,0.2) 35%, rgba(253,242,232,0.06) 55%, transparent 70%);
+  }
+  .moon-img-wrap::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(circle at center, rgba(253,242,232,0.3) 0%, rgba(253,242,232,0.12) 35%, transparent 60%);
+    mix-blend-mode: screen;
+  }
+  .moon-img { width: 100%; height: 100%; object-fit: cover; display: block; mix-blend-mode: lighten; }
   .moon-info { padding: 10px 8px 14px; text-align: center; width: 100%; }
   .moon-phase { font-size: 10px; color: rgba(253,242,232,0.6); line-height: 1.3; font-weight: 500; letter-spacing: 0.3px; }
   .moon-pct { font-family: 'Satoshi', sans-serif; font-size: 18px; color: #FDF2E8; margin-bottom: 2px; font-weight: 600; }
