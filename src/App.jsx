@@ -96,45 +96,61 @@ function useColorTemp() {
 function AmbientParticles() {
   const particles = useMemo(() => {
     const warmColors = [
-      'rgba(240,184,138,0.85)',
-      'rgba(250,222,210,0.8)',
-      'rgba(224,139,106,0.75)',
-      'rgba(255,210,170,0.7)',
-      'rgba(184,92,92,0.6)',
+      { bg: 'rgba(251,232,211,0.35)', glow: 'rgba(251,232,211,0.2)' },
+      { bg: 'rgba(228,189,88,0.25)',  glow: 'rgba(228,189,88,0.15)' },
+      { bg: 'rgba(251,232,211,0.3)',  glow: 'rgba(251,232,211,0.18)' },
+      { bg: 'rgba(240,208,128,0.28)', glow: 'rgba(240,208,128,0.15)' },
+      { bg: 'rgba(228,189,88,0.22)',  glow: 'rgba(228,189,88,0.12)' },
     ];
-    return Array.from({ length: 12 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      size: 2 + Math.random() * 3,
-      delay: Math.random() * 8,
-      duration: 6 + Math.random() * 8,
-      opacity: 0.12 + Math.random() * 0.18,
-      color: warmColors[i % warmColors.length],
-    }));
+    return Array.from({ length: 18 }, (_, i) => {
+      const c = warmColors[i % warmColors.length];
+      return {
+        id: i,
+        x: Math.random() * 100,
+        size: 3 + Math.random() * 2,
+        delay: Math.random() * 10,
+        duration: 14 + Math.random() * 10,
+        opacity: 0.2 + Math.random() * 0.25,
+        bg: c.bg,
+        glow: c.glow,
+        drift: (Math.random() - 0.5) * 50,
+      };
+    });
   }, []);
 
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 1 }}>
       <style>{`
-        @keyframes floatUp {
-          0%   { transform: translateY(110%) translateX(0px); opacity: 0; }
-          10%  { opacity: var(--p-op); }
-          85%  { opacity: var(--p-op); }
-          100% { transform: translateY(-10%) translateX(var(--p-dx)); opacity: 0; }
+        @keyframes floatUpZigzag {
+          0%   { transform: translateY(0px) translateX(0px); opacity: 0; }
+          5%   { opacity: var(--p-op); }
+          15%  { transform: translateY(-120px) translateX(var(--p-z1)); }
+          30%  { transform: translateY(-240px) translateX(var(--p-z2)); }
+          45%  { transform: translateY(-360px) translateX(var(--p-z3)); }
+          60%  { transform: translateY(-480px) translateX(var(--p-z4)); }
+          75%  { transform: translateY(-600px) translateX(var(--p-z5)); }
+          88%  { opacity: var(--p-op); }
+          100% { transform: translateY(-780px) translateX(var(--p-z6)); opacity: 0; }
         }
       `}</style>
       {particles.map(p => (
         <div key={p.id} style={{
           position: 'absolute',
           left: `${p.x}%`,
-          bottom: 0,
+          bottom: -10,
           width: p.size,
           height: p.size,
           borderRadius: '50%',
-          background: p.color,
+          background: p.bg,
+          boxShadow: `0 0 ${p.size + 2}px ${p.size}px ${p.glow}`,
           '--p-op': p.opacity,
-          '--p-dx': `${(Math.random() - 0.5) * 40}px`,
-          animation: `floatUp ${p.duration}s ${p.delay}s ease-in-out infinite`,
+          '--p-z1': `${p.drift * 0.3}px`,
+          '--p-z2': `${p.drift * -0.5}px`,
+          '--p-z3': `${p.drift * 0.7}px`,
+          '--p-z4': `${p.drift * -0.4}px`,
+          '--p-z5': `${p.drift * 0.6}px`,
+          '--p-z6': `${p.drift * -0.2}px`,
+          animation: `floatUpZigzag ${p.duration}s ${p.delay}s linear infinite`,
         }} />
       ))}
     </div>
@@ -413,7 +429,7 @@ const styles = `
   .nav-item.active .nav-dot { opacity: 1; }
 
   /* ── HOME ── */
-  .home-bg { min-height: 100%; background: transparent; padding: 0 0 32px; }
+  .home-bg { min-height: 100%; background: transparent; padding: 0 0 32px; position: relative; }
   .home-header { padding: 16px 24px 0; display: flex; justify-content: space-between; align-items: flex-start; }
   .home-greeting { font-family: 'Fraunces', serif; font-size: 23.5px; font-weight: 600; color: #FDF2E8; line-height: 1.2; }
   .home-greeting span { color: #FDF2E8; -webkit-text-fill-color: #FDF2E8; }

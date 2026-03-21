@@ -47,7 +47,7 @@ const GLOBE_FRAG = `
     float dayMix = smoothstep(-0.08, 0.08, sunDot);
     float twi = clamp(1.0 - abs(sunDot / 0.10), 0.0, 1.0);
     twi = pow(twi, 1.8);
-    vec3 twilightCol = vec3(1.0, 0.52, 0.12) * twi * 0.6;
+    vec3 twilightCol = vec3(0.98, 0.91, 0.83) * twi * 0.7;
     float polarBlend = smoothstep(0.62, 0.80, abs(lat) / 1.5708);
     float nightDark = smoothstep(-0.5, 0.1, sunDot) * 0.92 + 0.08;
     vec3 polarNightRgb = dayRgb * nightDark;
@@ -123,7 +123,7 @@ export default function GlobeCanvas({ style, fullscreen = false }) {
         vec3 mwAxis=normalize(vec3(0.4,0.8,0.4));
         float mwDot=abs(dot(d,mwAxis));
         float mwBand=exp(-mwDot*mwDot*18.0);
-        vec3 mwCol=vec3(0.22,0.18,0.35)*mwBand*1.2;
+        vec3 mwCol=vec3(0.10,0.18,0.32)*mwBand*1.2;
         gl_FragColor=vec4((c*1.6+mwCol)*uBr,1.);
       }`
     });
@@ -131,9 +131,9 @@ export default function GlobeCanvas({ style, fullscreen = false }) {
 
     // Nebula shells
     [
-      { r: 6, o: .11, s: 10, sp: .013, c1: [.18, .12, .42], c2: [.45, .28, .72], thresh: 0.38 },
-      { r: 18, o: .065, s: 3.5, sp: .006, c1: [.08, .08, .32], c2: [.28, .18, .52], thresh: 0.38 },
-      { r: 50, o: .038, s: 1.2, sp: .003, c1: [.04, .04, .22], c2: [.18, .09, .38], thresh: 0.38 }
+      { r: 6, o: .11, s: 10, sp: .013, c1: [.06, .13, .24], c2: [.12, .24, .42], thresh: 0.38 },
+      { r: 18, o: .065, s: 3.5, sp: .006, c1: [.04, .08, .20], c2: [.09, .18, .32], thresh: 0.38 },
+      { r: 50, o: .038, s: 1.2, sp: .003, c1: [.03, .05, .14], c2: [.06, .12, .25], thresh: 0.38 }
     ].forEach(L => {
       const m = new THREE.ShaderMaterial({
         uniforms: {
@@ -259,7 +259,7 @@ export default function GlobeCanvas({ style, fullscreen = false }) {
             vec3 np=vec3(uvc*2.5,0.0)+uOffset+vec3(uTime*0.012,uTime*0.008,0.0);
             float n=snoise(np)*0.5+0.5;
             n=smoothstep(0.38,0.62,n);
-            vec3 col=mix(vec3(0.08,0.06,0.18),vec3(0.15,0.12,0.28),n);
+            vec3 col=mix(vec3(0.04,0.08,0.20),vec3(0.09,0.18,0.32),n);
             gl_FragColor=vec4(col,n*vign*uAlpha);
           }`,
         transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide
