@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Art of the Day — public read, admin write
+    match /artOfTheDay/{date} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Polls — public read, admin write
+    match /polls/{date} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Journal prompts — public read/write (app stores daily prompt for dedup)
+    match /journalPrompts/{date} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if request.auth != null;
+    }
+
+    // User journal entries — users can only read/write their own
+    match /users/{userId}/journalEntries/{date} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

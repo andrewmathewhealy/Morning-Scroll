@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { SUBREDDIT_CATEGORIES, ALL_SUBREDDITS, FEED_MODES } from "./subreddits.js";
 import { NEWS_SOURCES, NEWS_SOURCE_CATEGORIES, ALL_NEWS_SOURCE_NAMES } from "./newsApi.js";
 import { useRedditFeed } from "./useRedditFeed.js";
 import { useNewsFeed } from "./useNewsFeed.js";
 import { cleanRedditText } from "./redditApi.js";
 import GlobeCanvas from "./Globe.jsx";
-import { db } from "./firebase.js";
-import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "./firebase.js";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { doc, getDoc, setDoc, collection, getDocs, query, orderBy, limit as fbLimit } from "firebase/firestore";
 
 // ── GYROSCOPE PARALLAX HOOK ───────────────────────────────
 function useGyroscope() {
@@ -722,6 +724,86 @@ const styles = `
   .sports-error { margin: 20px; text-align: center; padding: 40px 20px; }
   .sports-error-msg { font-size: 13px; color: rgba(253,242,232,0.5); margin-top: 8px; }
 
+  /* ── JOURNAL ── */
+  .journal-card { background: rgba(253,242,232,0.55); backdrop-filter: blur(8px); border-radius: 24px; padding: 20px; border: 1.5px solid #FDF2E8; transition: all 0.3s ease; }
+
+  .journal-expanded-overlay { position: absolute; inset: 0; z-index: 9998; background: rgba(8,16,32,0.5); backdrop-filter: blur(6px); animation: journalFadeIn 0.35s ease; touch-action: none; transition: opacity 0.45s ease; }
+  .journal-expanded-overlay.closing { opacity: 0; }
+  @keyframes journalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .journal-expanded { position: absolute; bottom: 0; left: 0; right: 0; z-index: 9999; background: #FDF2E8; border-radius: 24px 24px 0 0; padding: 0 20px 32px; top: 15%; display: flex; flex-direction: column; animation: journalSlideUp 0.35s cubic-bezier(0.36, 1.3, 0.64, 1); box-shadow: 0 -4px 40px rgba(8,16,32,0.2); transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease; }
+  .journal-expanded.closing { transform: translateY(110%); opacity: 0; transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.74, 0.05), opacity 0.4s ease; }
+  @keyframes journalSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes journalSlideUpBounce { 0% { transform: translateY(100%); } 70% { transform: translateY(-2%); } 100% { transform: translateY(0); } }
+  .journal-expanded .journal-header { padding-top: 16px; }
+  .journal-expanded .journal-prompt { font-size: 16px; }
+  .journal-expanded .journal-textarea { flex: 1; min-height: 0; resize: none; background: rgba(8,16,32,0.03); border-color: rgba(8,16,32,0.08); font-size: 16px; }
+  .journal-drag-handle { width: 36px; height: 4px; border-radius: 2px; background: rgba(8,16,32,0.15); margin: 10px auto 6px; flex-shrink: 0; cursor: grab; }
+  body.journal-open { overflow: hidden; touch-action: none; }
+  body.journal-open .screen { overflow: hidden !important; touch-action: none; }
+  body.journal-open .rubber-scroll { overflow: hidden !important; touch-action: none; }
+  .journal-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .journal-label { font-size: 10px; color: rgba(8,16,32,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .journal-prompt { font-family: 'Satoshi', sans-serif; font-size: 15px; color: #0C1A35; line-height: 1.6; margin-bottom: 14px; font-style: italic; }
+  .journal-textarea { width: 100%; min-height: 100px; padding: 14px; border-radius: 14px; border: 1.5px solid rgba(8,16,32,0.12); background: rgba(255,255,255,0.5); color: #0C1A35; font-size: 14px; font-family: 'Satoshi', sans-serif; line-height: 1.6; resize: vertical; outline: none; }
+  .journal-textarea:focus { border-color: rgba(8,16,32,0.3); }
+  .journal-textarea::placeholder { color: rgba(8,16,32,0.25); }
+  .journal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+  .journal-save { padding: 10px 24px; border-radius: 12px; border: none; background: #FFD166; color: #023047; font-size: 13px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
+  .journal-save:hover { background: #FFBC42; }
+  .journal-save:disabled { opacity: 0.5; cursor: not-allowed; }
+  .journal-saved { font-size: 12px; color: rgba(8,16,32,0.4); }
+  .journal-login-prompt { font-size: 12px; color: rgba(8,16,32,0.4); text-align: center; padding: 8px 0; }
+  .journal-login-btn { background: none; border: none; color: #8B5CF6; font-weight: 600; cursor: pointer; font-size: 12px; font-family: 'Satoshi', sans-serif; }
+  .journal-shimmer { min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+
+  .journal-history-btn { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(8,16,32,0.45); cursor: pointer; background: none; border: none; font-family: 'Satoshi', sans-serif; padding: 0; }
+  .journal-history-btn:hover { color: rgba(8,16,32,0.7); }
+
+  .diary-overlay { position: absolute; inset: 0; z-index: 9998; background: rgba(8,16,32,0.5); backdrop-filter: blur(6px); animation: journalFadeIn 0.35s ease; touch-action: none; transition: opacity 0.45s ease; }
+  .diary-overlay.closing { opacity: 0; }
+  .diary-sheet { position: absolute; bottom: 0; left: 0; right: 0; top: 8%; z-index: 9999; background: #F5EDE4; border-radius: 24px 24px 0 0; display: flex; flex-direction: column; animation: journalSlideUp 0.35s cubic-bezier(0.36, 1.3, 0.64, 1); box-shadow: 0 -4px 40px rgba(8,16,32,0.2); overflow: hidden; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease; }
+  .diary-sheet.closing { transform: translateY(110%); opacity: 0; transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.74, 0.05), opacity 0.4s ease; }
+  .diary-drag-handle { width: 36px; height: 4px; border-radius: 2px; background: rgba(8,16,32,0.15); margin: 10px auto 6px; flex-shrink: 0; cursor: grab; }
+  .diary-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 20px 14px; flex-shrink: 0; }
+  .diary-title { font-family: 'Fraunces', serif; font-size: 22px; color: #0C1A35; font-weight: 600; }
+  .diary-close { background: none; border: none; cursor: pointer; padding: 4px; font-size: 13px; color: rgba(8,16,32,0.4); font-family: 'Satoshi', sans-serif; font-weight: 500; }
+  .diary-counter { font-size: 11px; color: rgba(8,16,32,0.3); text-align: center; flex-shrink: 0; padding-bottom: 10px; }
+
+  .diary-page-area { flex: 1; position: relative; overflow: hidden; touch-action: none; }
+  .diary-page {
+    position: absolute; inset: 12px 16px 16px; display: flex; flex-direction: column;
+    background: #FDF8F2; border-radius: 18px; padding: 28px 24px 24px;
+    border: 1px solid rgba(8,16,32,0.06);
+    box-shadow: 0 2px 8px rgba(8,16,32,0.05), 0 8px 30px rgba(8,16,32,0.03);
+    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1), opacity 0.3s ease;
+  }
+  .diary-page::before {
+    content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+    background: linear-gradient(to bottom, #8B5CF6, #C4A7E7);
+    border-radius: 3px 0 0 3px; opacity: 0.5;
+  }
+  .diary-page-date { font-size: 13px; color: #8B5CF6; font-weight: 600; font-family: 'Space Mono', monospace; margin-bottom: 4px; }
+  .diary-page-weekday { font-family: 'Fraunces', serif; font-size: 20px; color: #0C1A35; font-weight: 600; margin-bottom: 16px; }
+  .diary-page-prompt { font-size: 14px; color: rgba(8,16,32,0.45); font-style: italic; line-height: 1.6; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid rgba(8,16,32,0.06); }
+  .diary-page-text { font-size: 15px; color: #0C1A35; line-height: 1.7; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .diary-page-text::-webkit-scrollbar { display: none; }
+  .diary-empty { text-align: center; padding: 60px 20px; color: rgba(8,16,32,0.3); font-size: 14px; font-style: italic; }
+
+  .diary-scrub-hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 10px; color: rgba(8,16,32,0.2); pointer-events: none; letter-spacing: 0.5px; transition: opacity 0.3s; }
+
+  .diary-date-toast { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(8,16,32,0.85); color: #FDF2E8; font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 600; padding: 10px 20px; border-radius: 12px; pointer-events: none; z-index: 10; animation: diaryToastIn 0.15s ease; }
+  @keyframes diaryToastIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+
+  .journal-auth-card { background: rgba(253,242,232,0.55); backdrop-filter: blur(8px); border-radius: 24px; padding: 24px 20px; border: 1.5px solid #FDF2E8; text-align: center; }
+  .journal-auth-title { font-family: 'Satoshi', sans-serif; font-size: 15px; color: #0C1A35; margin-bottom: 4px; font-weight: 600; }
+  .journal-auth-sub { font-size: 12px; color: rgba(8,16,32,0.4); margin-bottom: 16px; }
+  .journal-auth-input { width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px solid rgba(8,16,32,0.12); background: rgba(255,255,255,0.5); color: #0C1A35; font-size: 13px; font-family: 'Satoshi', sans-serif; outline: none; margin-bottom: 8px; }
+  .journal-auth-input:focus { border-color: rgba(8,16,32,0.3); }
+  .journal-auth-input::placeholder { color: rgba(8,16,32,0.25); }
+  .journal-auth-btn { width: 100%; padding: 10px; border-radius: 12px; border: none; background: #FFD166; color: #023047; font-size: 13px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
+  .journal-auth-btn:hover { background: #FFBC42; }
+  .journal-auth-err { font-size: 11px; color: #FF6B6B; margin-top: 8px; }
+
   /* ── SETTINGS ── */
   .profile-bg { min-height: 100%; background: transparent; padding-bottom: 32px; }
   .profile-header { padding: 16px 24px 20px; }
@@ -1135,6 +1217,16 @@ const Icon = {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17 8C8 10 5.9 16.17 3.82 19.34L4.5 20l.68-.68C6.5 18 9.27 16.2 12 15c3-1.36 6-3 8-7-1 0-2.07.1-3 0z"/>
       <path d="M3.82 19.36C2.68 21.06 2 22 2 22"/>
+    </svg>
+  ),
+  Feather: ({ size = 22, color = "#8ec5d9" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/>
+    </svg>
+  ),
+  ChevronLeft: ({ size = 22, color = "#0C1A35" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
     </svg>
   ),
   Basketball: ({ size = 22, color = "rgba(234,244,251,0.7)" }) => (
@@ -2009,6 +2101,410 @@ function OnThisDayWidget() {
   );
 }
 
+// ── JOURNAL / GRATITUDE PROMPT ────────────────────────────
+function useAuth() {
+  const [user, setUser] = useState(undefined);
+  useEffect(() => onAuthStateChanged(auth, (u) => setUser(u ?? null)), []);
+  return user;
+}
+
+function useJournalPrompt() {
+  const [state, setState] = useState({ loading: true, prompt: null });
+
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const cacheKey = `journal-prompt-v1-${today}`;
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey));
+      if (cached?.prompt) { setState({ loading: false, prompt: cached.prompt }); return; }
+    } catch {}
+
+    (async () => {
+      try {
+        // Fetch recent prompts from Firestore to avoid repetition
+        let recentParam = "";
+        try {
+          const q = query(collection(db, "journalPrompts"), orderBy("date", "desc"), fbLimit(10));
+          const snap = await getDocs(q);
+          const recent = snap.docs.map(d => d.data().prompt).filter(Boolean);
+          if (recent.length) recentParam = `?recent=${encodeURIComponent(recent.join("|||"))}`;
+        } catch {}
+
+        const res = await fetch(`${WORKER_URL}/journal-prompt${recentParam}`);
+        const data = await res.json();
+        if (!data.prompt) throw new Error("No prompt");
+
+        // Store prompt in Firestore for future dedup
+        try { await setDoc(doc(db, "journalPrompts", today), { date: today, prompt: data.prompt }); } catch {}
+
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+        setState({ loading: false, prompt: data.prompt });
+      } catch {
+        setState({ loading: false, prompt: "What's one small thing you're looking forward to today?" });
+      }
+    })();
+  }, []);
+
+  return state;
+}
+
+function JournalWidget() {
+  const user = useAuth();
+  const { loading: promptLoading, prompt } = useJournalPrompt();
+  const [text, setText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [diaryOpen, setDiaryOpen] = useState(false);
+  const [diaryClosing, setDiaryClosing] = useState(false);
+  const [loginMode, setLoginMode] = useState(false);
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [authErr, setAuthErr] = useState(null);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [expandedClosing, setExpandedClosing] = useState(false);
+  const dragRef = useRef({ startY: 0, dragging: false });
+  const sheetRef = useRef(null);
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const dismissExpanded = useCallback(() => {
+    setExpandedClosing(true);
+    setTimeout(() => { setExpanded(false); setExpandedClosing(false); }, 500);
+  }, []);
+
+  const dismissDiary = useCallback(() => {
+    setDiaryClosing(true);
+    setTimeout(() => { setDiaryOpen(false); setDiaryClosing(false); }, 500);
+  }, []);
+
+  // Lock body scroll when expanded or diary open
+  useEffect(() => {
+    if (expanded || diaryOpen) {
+      document.body.classList.add("journal-open");
+    } else {
+      document.body.classList.remove("journal-open");
+    }
+    return () => document.body.classList.remove("journal-open");
+  }, [expanded]);
+
+  // Load today's entry if user is logged in
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, `users/${user.uid}/journalEntries`, today));
+        if (snap.exists()) {
+          setText(snap.data().text || "");
+          setSaved(true);
+        }
+      } catch {}
+    })();
+  }, [user, today]);
+
+  const handleSave = async () => {
+    if (!user || !text.trim()) return;
+    setSaving(true);
+    try {
+      await setDoc(doc(db, `users/${user.uid}/journalEntries`, today), {
+        date: today,
+        prompt: prompt || "",
+        text: text.trim(),
+        updatedAt: new Date().toISOString(),
+      });
+      setSaved(true);
+    } catch {}
+    setSaving(false);
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setAuthErr(null);
+    setAuthLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      setLoginMode(false);
+    } catch (ex) {
+      setAuthErr(ex.message.replace("Firebase: ", ""));
+    }
+    setAuthLoading(false);
+  };
+
+  const handleTouchStart = (e) => {
+    dragRef.current = { startY: e.touches[0].clientY, dragging: true };
+  };
+  const handleTouchMove = (e) => {
+    if (!dragRef.current.dragging || !sheetRef.current) return;
+    const dy = e.touches[0].clientY - dragRef.current.startY;
+    if (dy > 0) sheetRef.current.style.transform = `translateY(${dy}px)`;
+  };
+  const handleTouchEnd = (e) => {
+    if (!dragRef.current.dragging || !sheetRef.current) return;
+    const dy = e.changedTouches[0].clientY - dragRef.current.startY;
+    dragRef.current.dragging = false;
+    sheetRef.current.style.transform = "";
+    if (dy > 80) dismissExpanded();
+  };
+
+  if (promptLoading) return (
+    <div className="journal-card journal-shimmer widget-shimmer">
+      <Icon.Feather size={24} color="rgba(8,16,32,0.12)" />
+      <div className="journal-label">Journal</div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Inline card — collapsed view */}
+      <div className="journal-card" onClick={() => { if (user) setExpanded(true); }}>
+        <div className="journal-header">
+          <Icon.Feather size={14} color="rgba(8,16,32,0.4)" />
+          <div className="journal-label">Morning Journal</div>
+        </div>
+        <div className="journal-prompt">{prompt}</div>
+        {user === undefined ? null : user ? (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ color: 'rgba(8,16,32,0.35)', fontStyle: 'italic', fontSize: 12 }}>Tap to write...</div>
+            <button className="journal-history-btn" onClick={(e) => { e.stopPropagation(); setDiaryOpen(true); }}>
+              <Icon.BookOpen size={13} color="rgba(8,16,32,0.4)" /> Past entries
+            </button>
+          </div>
+        ) : loginMode ? (
+          <form onSubmit={handleLogin}>
+            <input className="journal-auth-input" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input className="journal-auth-input" type="password" placeholder="Password" value={pass} onChange={(e) => setPass(e.target.value)} />
+            <button className="journal-auth-btn" type="submit" disabled={authLoading}>{authLoading ? "Signing in..." : "Sign In"}</button>
+            {authErr && <div className="journal-auth-err">{authErr}</div>}
+          </form>
+        ) : (
+          <div className="journal-login-prompt">
+            <button className="journal-login-btn" onClick={() => setLoginMode(true)}>Sign in</button> to save your journal entries
+          </div>
+        )}
+      </div>
+
+      {/* Expanded fullscreen sheet — portaled to .phone so it covers nav */}
+      {expanded && document.getElementById("phone-shell") && createPortal(
+        <>
+          <div className={`journal-expanded-overlay ${expandedClosing ? "closing" : ""}`} onClick={dismissExpanded} />
+          <div className={`journal-expanded ${expandedClosing ? "closing" : ""}`} ref={sheetRef}>
+            <div className="journal-drag-handle"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            />
+            <div className="journal-header">
+              <Icon.Feather size={14} color="rgba(8,16,32,0.4)" />
+              <div className="journal-label">Morning Journal</div>
+            </div>
+            <div className="journal-prompt">{prompt}</div>
+            <textarea
+              className="journal-textarea"
+              placeholder="Write your thoughts..."
+              value={text}
+              onChange={(e) => { setText(e.target.value); setSaved(false); }}
+              autoFocus
+            />
+            <div className="journal-actions">
+              <button className="journal-history-btn" onClick={() => setDiaryOpen(true)}>
+                <Icon.BookOpen size={13} color="rgba(8,16,32,0.4)" /> Past entries
+              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {saved && <span className="journal-saved">Saved</span>}
+                <button className="journal-save" onClick={handleSave} disabled={saving || !text.trim()}>
+                  {saving ? "Saving..." : "Save"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>,
+        document.getElementById("phone-shell")
+      )}
+
+      {diaryOpen && <DiarySheet user={user} onClose={dismissDiary} closing={diaryClosing} />}
+    </>
+  );
+}
+
+function DiarySheet({ user, onClose, closing = false }) {
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [idx, setIdx] = useState(0);
+  const [scrubbing, setScrubbing] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const scrubRef = useRef({ startY: 0, startIdx: 0, active: false, lastTs: 0 });
+  const closeRef = useRef({ startY: 0, dragging: false });
+  const sheetRef = useRef(null);
+  const swipeRef = useRef({ startX: 0, startY: 0, swiping: false });
+  const toastTimer = useRef(null);
+
+  useEffect(() => {
+    document.body.classList.add("journal-open");
+    return () => document.body.classList.remove("journal-open");
+  }, []);
+
+  useEffect(() => {
+    if (!user) { setLoading(false); return; }
+    (async () => {
+      try {
+        const q = query(
+          collection(db, `users/${user.uid}/journalEntries`),
+          orderBy("date", "desc"),
+          fbLimit(50)
+        );
+        const snap = await getDocs(q);
+        let results = snap.docs.map(d => d.data());
+
+        if (results.length === 0) {
+          const seeds = [
+            { date: "2026-03-20", prompt: "What made you smile before 9am today?", text: "My dog stretched out in a sunbeam on the kitchen floor and sighed so contentedly. I stood there with my coffee just watching her for a minute. Sometimes the smallest moments are the most grounding." },
+            { date: "2026-03-18", prompt: "Describe a sound you heard this morning that you usually ignore.", text: "Birds outside my window — I think they're house finches. I never really stopped to listen before, but this morning the house was quiet and their song filled the whole room. It felt like a little gift." },
+            { date: "2026-03-15", prompt: "What's one thing you're learning about yourself lately?", text: "I'm learning that I don't need to have everything figured out to feel okay. There's a kind of peace in just showing up each day and doing my best. Progress doesn't always look dramatic." },
+            { date: "2026-03-12", prompt: "If today were a color, what would it be and why?", text: "A soft golden yellow — like late afternoon light. I woke up feeling warm and unhurried. No rush, no anxiety. Just a gentle kind of optimism that I want to hold onto." },
+            { date: "2026-03-09", prompt: "Write about someone who made your week better, even in a small way.", text: "The barista at my usual coffee shop remembered my name and my order. She said 'the usual?' with this big smile. It's such a tiny thing but it made me feel seen. Connection doesn't have to be deep to be meaningful." },
+          ];
+          for (const seed of seeds) {
+            await setDoc(doc(db, `users/${user.uid}/journalEntries`, seed.date), { ...seed, updatedAt: new Date().toISOString() });
+          }
+          results = seeds;
+        }
+
+        setEntries(results);
+      } catch {}
+      setLoading(false);
+    })();
+  }, [user]);
+
+  // Close handle drag
+  const handleCloseTouchStart = (e) => { closeRef.current = { startY: e.touches[0].clientY, dragging: true }; };
+  const handleCloseTouchMove = (e) => {
+    if (!closeRef.current.dragging || !sheetRef.current) return;
+    const dy = e.touches[0].clientY - closeRef.current.startY;
+    if (dy > 0) sheetRef.current.style.transform = `translateY(${dy}px)`;
+  };
+  const handleCloseTouchEnd = (e) => {
+    if (!closeRef.current.dragging || !sheetRef.current) return;
+    const dy = e.changedTouches[0].clientY - closeRef.current.startY;
+    closeRef.current.dragging = false;
+    sheetRef.current.style.transform = "";
+    if (dy > 80) onClose();
+  };
+
+  // Page area: horizontal swipe = prev/next, vertical swipe = scrub
+  const handlePageTouchStart = (e) => {
+    const t = e.touches[0];
+    swipeRef.current = { startX: t.clientX, startY: t.clientY, swiping: true, direction: null };
+    scrubRef.current = { startY: t.clientY, startIdx: idx, active: false, lastTs: Date.now() };
+  };
+
+  const handlePageTouchMove = (e) => {
+    if (!swipeRef.current.swiping) return;
+    const t = e.touches[0];
+    const dx = t.clientX - swipeRef.current.startX;
+    const dy = t.clientY - swipeRef.current.startY;
+
+    // Determine direction on first significant move
+    if (!swipeRef.current.direction) {
+      if (Math.abs(dx) > 12 || Math.abs(dy) > 12) {
+        swipeRef.current.direction = Math.abs(dx) > Math.abs(dy) ? "h" : "v";
+        if (swipeRef.current.direction === "v") {
+          scrubRef.current.active = true;
+          setScrubbing(true);
+        }
+      } else return;
+    }
+
+    if (swipeRef.current.direction === "v" && scrubRef.current.active && entries.length > 1) {
+      // Vertical scrub: each 30px of movement = 1 entry, accelerates with speed
+      const rawDy = t.clientY - scrubRef.current.startY;
+      const now = Date.now();
+      const velocity = Math.abs(rawDy) / Math.max(now - scrubRef.current.lastTs, 16);
+      const accel = Math.max(1, Math.floor(velocity * 3));
+      const steps = Math.round(rawDy / 30) * accel;
+      const newIdx = Math.max(0, Math.min(entries.length - 1, scrubRef.current.startIdx - steps));
+      if (newIdx !== idx) {
+        setIdx(newIdx);
+        setShowToast(true);
+        clearTimeout(toastTimer.current);
+        toastTimer.current = setTimeout(() => setShowToast(false), 800);
+      }
+    }
+  };
+
+  const handlePageTouchEnd = (e) => {
+    if (!swipeRef.current.swiping) return;
+    const dx = e.changedTouches[0].clientX - swipeRef.current.startX;
+    const dy = e.changedTouches[0].clientY - swipeRef.current.startY;
+
+    if (swipeRef.current.direction === "h") {
+      // Horizontal swipe: left = next, right = prev
+      if (dx < -40 && idx < entries.length - 1) setIdx(i => i + 1);
+      else if (dx > 40 && idx > 0) setIdx(i => i - 1);
+    }
+
+    swipeRef.current.swiping = false;
+    swipeRef.current.direction = null;
+    scrubRef.current.active = false;
+    setScrubbing(false);
+  };
+
+  const phoneEl = document.getElementById("phone-shell");
+  if (!phoneEl) return null;
+
+  const entry = entries[idx];
+
+  return createPortal(
+    <>
+      <div className={`diary-overlay ${closing ? "closing" : ""}`} onClick={onClose} />
+      <div className={`diary-sheet ${closing ? "closing" : ""}`} ref={sheetRef}>
+        <div className="diary-drag-handle"
+          onTouchStart={handleCloseTouchStart}
+          onTouchMove={handleCloseTouchMove}
+          onTouchEnd={handleCloseTouchEnd}
+        />
+        <div className="diary-header">
+          <div className="diary-title">My Journal</div>
+          <button className="diary-close" onClick={onClose}>Done</button>
+        </div>
+        {entries.length > 0 && (
+          <div className="diary-counter">{idx + 1} of {entries.length}</div>
+        )}
+        <div className="diary-page-area"
+          onTouchStart={handlePageTouchStart}
+          onTouchMove={handlePageTouchMove}
+          onTouchEnd={handlePageTouchEnd}
+        >
+          {loading ? (
+            <div className="diary-empty">Loading...</div>
+          ) : entries.length === 0 ? (
+            <div className="diary-empty">No entries yet. Start writing today!</div>
+          ) : entry ? (
+            <div className="diary-page" key={entry.date}>
+              <div className="diary-page-date">
+                {new Date(entry.date + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+              </div>
+              <div className="diary-page-weekday">
+                {new Date(entry.date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long" })}
+              </div>
+              {entry.prompt && <div className="diary-page-prompt">"{entry.prompt}"</div>}
+              <div className="diary-page-text">{entry.text}</div>
+            </div>
+          ) : null}
+          {showToast && entry && (
+            <div className="diary-date-toast">
+              {new Date(entry.date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            </div>
+          )}
+          {!scrubbing && entries.length > 1 && (
+            <div className="diary-scrub-hint">swipe left/right or drag up to scrub</div>
+          )}
+        </div>
+      </div>
+    </>,
+    phoneEl
+  );
+}
+
 function HomeScreen({ onOpenWordle }) {
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
@@ -2067,6 +2563,10 @@ function HomeScreen({ onOpenWordle }) {
       </div>
 
       <div className="section-pad spring-in spring-in-6 depth-mid">
+        <JournalWidget />
+      </div>
+
+      <div className="section-pad spring-in spring-in-7 depth-mid">
         <div className="wordle-card" onClick={onOpenWordle}>
           <div className="wc-left">
             <div className="wc-label">Daily · Word Game</div>
@@ -4110,7 +4610,7 @@ export default function MorningScrollApp() {
         </defs>
       </svg>
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", background: "#0a1628", padding: "20px" }}>
-        <div className="phone" style={{ ...getBgStyle(), '--gyro-x': gyro.x, '--gyro-y': gyro.y, filter: colorTemp }}>
+        <div className="phone" id="phone-shell" style={{ ...getBgStyle(), '--gyro-x': gyro.x, '--gyro-y': gyro.y, filter: colorTemp }}>
           {/* Status Bar */}
           <div className="status-bar">
             <div className="status-time">{clockTime}</div>

@@ -18,6 +18,7 @@ export default {
     if (path === "/word-of-the-day") return handleWordOfTheDay(request, env);
     if (path === "/sports") return handleSports(request, env, url);
     if (path === "/wikipedia") return handleWikipedia(request, env);
+    if (path === "/journal-prompt") return handleJournalPrompt(request, env);
 
     return json({ error: "Not found" }, 404);
   },
@@ -347,6 +348,82 @@ async function handleWikipedia(request, env) {
     } catch {
       return json({ error: "Worker exception", detail: err.message }, 500);
     }
+  }
+}
+
+// --- Journal Prompt (Anthropic) ---
+let journalCache = { date: null, data: null };
+
+async function handleJournalPrompt(request, env) {
+  try {
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const dateLabel = now.toLocaleDateString("en-US", {
+      weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+    });
+
+    // Return cached if already generated today
+    if (journalCache.date === today && journalCache.data) {
+      return json(journalCache.data);
+    }
+
+    const anthropicKey = env.Claude;
+
+    // Collect recent prompts passed as query param to avoid repetition
+    const url = new URL(request.url);
+    const recentPromptsParam = url.searchParams.get("recent") || "";
+    const recentPrompts = recentPromptsParam
+      ? decodeURIComponent(recentPromptsParam).split("|||").filter(Boolean)
+      : [];
+
+    const recentSection = recentPrompts.length
+      ? `\n\nHere are the last ${recentPrompts.length} prompts — do NOT repeat or closely resemble any of them:\n${recentPrompts.map((p, i) => `${i + 1}. "${p}"`).join("\n")}`
+      : "";
+
+    if (!anthropicKey) {
+      // Fallback without AI
+      const fallback = {
+        date: today,
+        prompt: "What's one small thing you're looking forward to today?",
+      };
+      journalCache = { date: today, data: fallback };
+      return json(fallback);
+    }
+
+    const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": anthropicKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 150,
+        system: `You generate warm, thoughtful morning journal prompts for a feel-good daily digest app. Each prompt should be introspective but uplifting — inviting the user to reflect on gratitude, growth, small joys, or meaningful connections. Keep it to 1-2 sentences. Be seasonally aware based on the date. Vary the style: sometimes a question, sometimes a gentle invitation, sometimes a "what if" scenario. Respond with ONLY the prompt text, nothing else.${recentSection}`,
+        messages: [
+          { role: "user", content: `Generate a morning journal prompt for ${dateLabel}.` },
+        ],
+      }),
+    });
+
+    const aiData = await aiRes.json();
+    const prompt = (aiData.content?.[0]?.text || "").trim();
+
+    if (!prompt) {
+      const fallback = { date: today, prompt: "What's one small thing you're looking forward to today?" };
+      journalCache = { date: today, data: fallback };
+      return json(fallback);
+    }
+
+    const result = { date: today, prompt };
+    journalCache = { date: today, data: result };
+    return json(result);
+  } catch (err) {
+    return json({
+      date: new Date().toISOString().slice(0, 10),
+      prompt: "What's one small thing you're looking forward to today?",
+    });
   }
 }
 
