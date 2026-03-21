@@ -501,7 +501,7 @@ const styles = `
 
   .filter-scroll { display: flex; gap: 8px; padding: 14px 20px 10px; overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
   .filter-scroll::-webkit-scrollbar { display: none; }
-  .feed-scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding-top: 12px; padding-bottom: 32px; }
+  .feed-scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; padding-top: 12px; padding-bottom: 32px; background: #FDF2E8; border-radius: 24px 24px 0 0; }
   .feed-scroll-area::-webkit-scrollbar { display: none; }
   .mode-pill {
     padding: 7px 16px; border-radius: 10px; cursor: pointer;
@@ -2145,7 +2145,7 @@ function RedditHeroCard({ post, onOpen, readerOpen = false }) {
   };
 
   return (
-    <div className="feed-card" style={{ cursor: "pointer" }} onClick={handleOpen}>
+    <div className="feed-card" style={{ cursor: "pointer", border: `1.5px solid ${color}` }} onClick={handleOpen}>
       {/* Video posts: inline autoplay preview */}
       {hasVideo ? (
         <div onClick={e => e.stopPropagation()}>
@@ -2199,7 +2199,7 @@ function RedditHeroCard({ post, onOpen, readerOpen = false }) {
         </div>
       )}
       {/* Card body — always shown below video/image */}
-      <div className="feed-card-body">
+      <div className="feed-card-body" style={{ background: `${color}1A` }}>
         <div className="feed-card-source" style={{ justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <div className="feed-source-dot" style={{ background: color }} />
@@ -2224,8 +2224,8 @@ function RedditSmallCard({ post, onOpen }) {
   return (
     <div className="feed-card-small" style={{
       cursor: "pointer",
-      background: "white",
-      boxShadow: `0 0 0 2px ${color}, 0 2px 10px rgba(2,48,71,0.05)`,
+      background: `${color}1A`,
+      border: `1.5px solid ${color}`,
     }} onClick={() => onOpen(post)}>
       <div style={{ position: "relative", flexShrink: 0 }}>
         {post.image
@@ -2746,7 +2746,7 @@ function FeedScreen({ enabledSubs, enabledNewsSources, mutedInMode = {}, alwaysB
   const [activeMode, setActiveMode] = useState("my-morning");
   const [retryKey, setRetryKey] = useState(0);
   const mode = FEED_MODES.find(m => m.id === activeMode) ?? FEED_MODES[0];
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   // Pull-to-refresh
   const pullStartY = useRef(0);
@@ -2932,12 +2932,28 @@ function FeedScreen({ enabledSubs, enabledNewsSources, mutedInMode = {}, alwaysB
                 letterSpacing: m.letterSpacing,
                 fontStyle: m.fontStyle,
                 textTransform: m.textTransform ?? "none",
-                background: isActive ? m.bgActive : "rgba(255,255,255,0.5)",
-                color: isActive ? m.colorActive : m.colorInactive,
-                borderColor: isActive ? m.bgActive : m.borderInactive,
+                background: m.bgActive,
+                color: m.colorActive,
+                borderColor: m.bgActive,
+                position: "relative",
               }}
             >
               {m.label}
+              {isActive && (
+                <div style={{
+                  position: "absolute", bottom: -6, left: "50%", transform: "translateX(-50%)",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
+                }}>
+                  <div style={{
+                    width: 16, height: 2, borderRadius: 1,
+                    background: m.colorActive, opacity: 0.7,
+                  }} />
+                  <div style={{
+                    width: 4, height: 4, borderRadius: "50%",
+                    background: "#FDF2E8",
+                  }} />
+                </div>
+              )}
             </div>
           );
         })}
