@@ -19,6 +19,8 @@ export default {
     if (path === "/sports") return handleSports(request, env, url);
     if (path === "/wikipedia") return handleWikipedia(request, env);
     if (path === "/journal-prompt") return handleJournalPrompt(request, env);
+    if (path === "/youtube") return handleYouTube(request, env, url);
+    if (path === "/youtube/channel") return handleYouTubeChannel(request, env, url);
 
     return json({ error: "Not found" }, 404);
   },
@@ -424,6 +426,130 @@ async function handleJournalPrompt(request, env) {
       date: new Date().toISOString().slice(0, 10),
       prompt: "What's one small thing you're looking forward to today?",
     });
+  }
+}
+
+// --- YouTube RSS + Channel Lookup ---
+const ytRssCache = {}; // { channelId: { ts, videos } }
+const YT_RSS_TTL = 3 * 60 * 60 * 1000; // 3 hours
+
+async function handleYouTube(request, env, url) {
+  try {
+    const channelIds = url.searchParams.get("channels");
+    if (!channelIds) return json({ error: "channels param required" }, 400);
+
+    const ids = channelIds.split(",").filter(Boolean);
+    const now = Date.now();
+    const results = {};
+
+    await Promise.all(ids.map(async (id) => {
+      // Check cache
+      const cached = ytRssCache[id];
+      if (cached && (now - cached.ts) < YT_RSS_TTL) {
+        results[id] = cached.videos;
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `https://www.youtube.com/feeds/videos.xml?channel_id=${id}`,
+          { headers: { "User-Agent": "MorningScroll/1.0" } }
+        );
+        const xml = await res.text();
+
+        // Parse XML entries — extract title, videoId, published
+        const videos = [];
+        const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
+        let match;
+        while ((match = entryRegex.exec(xml)) !== null && videos.length < 10) {
+          const entry = match[1];
+          const videoId = entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/)?.[1];
+          const title = entry.match(/<title>(.*?)<\/title>/)?.[1];
+          const published = entry.match(/<published>(.*?)<\/published>/)?.[1];
+          if (videoId && title) {
+            videos.push({
+              videoId,
+              title: title.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#39;/g, "'").replace(/&quot;/g, '"'),
+              published,
+              thumbnail: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+            });
+          }
+        }
+
+        ytRssCache[id] = { ts: now, videos };
+        results[id] = videos;
+      } catch {
+        results[id] = [];
+      }
+    }));
+
+    return json({ channels: results });
+  } catch (err) {
+    return json({ error: "Worker exception", detail: err.message }, 500);
+  }
+}
+
+async function handleYouTubeChannel(request, env, url) {
+  try {
+    const apiKey = env.YOUTUBE_API_KEY;
+    if (!apiKey) return json({ error: "YOUTUBE_API_KEY not configured" }, 500);
+
+    const input = url.searchParams.get("q");
+    if (!input) return json({ error: "q param required" }, 400);
+
+    // Determine if input is a channel ID, handle/username, or URL
+    let channelId = null;
+    let searchQuery = input.trim();
+
+    // Direct channel ID
+    if (/^UC[\w-]{22}$/.test(searchQuery)) {
+      channelId = searchQuery;
+    }
+
+    // URL parsing
+    const urlMatch = searchQuery.match(/youtube\.com\/(channel\/(UC[\w-]{22})|(@[\w.-]+)|c\/([\w.-]+)|user\/([\w.-]+))/);
+    if (urlMatch) {
+      if (urlMatch[2]) channelId = urlMatch[2];
+      else searchQuery = urlMatch[3] || urlMatch[4] || urlMatch[5] || searchQuery;
+    }
+
+    // Handle format @name
+    if (searchQuery.startsWith("@")) {
+      searchQuery = searchQuery;
+    }
+
+    // If we have a channel ID, fetch directly
+    if (channelId) {
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${apiKey}`,
+        { headers: { "User-Agent": "MorningScroll/1.0" } }
+      );
+      const data = await res.json();
+      const ch = data.items?.[0];
+      if (!ch) return json({ error: "Channel not found" }, 404);
+      return json({
+        channelId: ch.id,
+        name: ch.snippet.title,
+        avatar: ch.snippet.thumbnails?.medium?.url || ch.snippet.thumbnails?.default?.url,
+      });
+    }
+
+    // Search by name/handle
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(searchQuery)}&maxResults=1&key=${apiKey}`,
+      { headers: { "User-Agent": "MorningScroll/1.0" } }
+    );
+    const data = await res.json();
+    const ch = data.items?.[0];
+    if (!ch) return json({ error: "Channel not found" }, 404);
+
+    return json({
+      channelId: ch.snippet.channelId,
+      name: ch.snippet.channelTitle,
+      avatar: ch.snippet.thumbnails?.medium?.url || ch.snippet.thumbnails?.default?.url,
+    });
+  } catch (err) {
+    return json({ error: "Worker exception", detail: err.message }, 500);
   }
 }
 

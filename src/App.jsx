@@ -804,6 +804,52 @@ const styles = `
   .journal-auth-btn:hover { background: #FFBC42; }
   .journal-auth-err { font-size: 11px; color: #FF6B6B; margin-top: 8px; }
 
+  /* ── YOUTUBE ── */
+  .yt-card { background: rgba(253,242,232,0.55); backdrop-filter: blur(8px); border-radius: 20px; overflow: hidden; border: 1.5px solid #FDF2E8; margin: 0 20px 10px; cursor: pointer; }
+  .yt-card-inner { display: flex; gap: 12px; padding: 12px; }
+  .yt-thumb-wrap { position: relative; width: 140px; height: 79px; border-radius: 12px; overflow: hidden; flex-shrink: 0; background: #0C1A35; }
+  .yt-thumb { width: 100%; height: 100%; object-fit: cover; }
+  .yt-play-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.25); opacity: 0; transition: opacity 0.2s; }
+  .yt-card:hover .yt-play-icon { opacity: 1; }
+  .yt-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+  .yt-channel-row { display: flex; align-items: center; gap: 6px; }
+  .yt-avatar { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .yt-channel-name { font-size: 11px; color: rgba(8,16,32,0.45); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .yt-video-title { font-size: 13px; color: #0C1A35; font-weight: 500; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .yt-new-badge { display: inline-block; font-size: 9px; font-weight: 700; color: #FF0000; background: rgba(255,0,0,0.08); padding: 1px 6px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase; margin-left: 6px; vertical-align: middle; }
+  .yt-time { font-size: 10px; color: rgba(8,16,32,0.3); }
+  .yt-section-header { display: flex; align-items: center; gap: 8px; padding: 12px 20px 6px; }
+  .yt-section-label { font-size: 10px; color: rgba(8,16,32,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+
+  .yt-add-wrap { padding: 0 20px; margin-bottom: 8px; }
+  .yt-add-row { display: flex; gap: 8px; }
+  .yt-add-input { flex: 1; padding: 10px 14px; border-radius: 12px; border: 1.5px solid rgba(8,16,32,0.12); background: rgba(255,255,255,0.5); color: #0C1A35; font-size: 13px; font-family: 'Satoshi', sans-serif; outline: none; }
+  .yt-add-input:focus { border-color: rgba(8,16,32,0.3); }
+  .yt-add-input::placeholder { color: rgba(8,16,32,0.25); }
+  .yt-add-btn { padding: 10px 16px; border-radius: 12px; border: none; background: #FF0000; color: #fff; font-size: 12px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; white-space: nowrap; }
+  .yt-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .yt-add-err { font-size: 11px; color: #FF6B6B; margin-top: 4px; padding: 0 20px; }
+  .yt-channel-list { padding: 0 20px; }
+  .yt-channel-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(8,16,32,0.06); }
+  .yt-channel-item:last-child { border-bottom: none; }
+  .yt-channel-item-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .yt-channel-item-name { font-size: 13px; color: #0C1A35; font-weight: 500; flex: 1; }
+  .yt-channel-remove { background: none; border: none; cursor: pointer; padding: 4px; }
+
+  .yt-player-overlay { position: absolute; inset: 0; z-index: 9998; background: rgba(8,16,32,0.7); backdrop-filter: blur(6px); animation: journalFadeIn 0.35s ease; touch-action: none; transition: opacity 0.45s ease; }
+  .yt-player-overlay.closing { opacity: 0; }
+  .yt-player-sheet { position: absolute; bottom: 0; left: 0; right: 0; z-index: 9999; background: #0C1A35; border-radius: 24px 24px 0 0; display: flex; flex-direction: column; animation: journalSlideUp 0.35s cubic-bezier(0.36, 1.3, 0.64, 1); transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.74, 0.05), opacity 0.4s ease; }
+  .yt-player-sheet.closing { transform: translateY(110%); opacity: 0; }
+  .yt-player-handle { width: 36px; height: 4px; border-radius: 2px; background: rgba(253,242,232,0.2); margin: 10px auto 8px; flex-shrink: 0; cursor: grab; }
+  .yt-player-video { width: 100%; aspect-ratio: 16/9; border-radius: 0; border: none; background: #000; }
+  .yt-player-info { padding: 16px 20px 32px; }
+  .yt-player-title { font-family: 'Satoshi', sans-serif; font-size: 15px; color: #FDF2E8; font-weight: 500; line-height: 1.4; margin-bottom: 8px; }
+  .yt-player-channel { display: flex; align-items: center; gap: 8px; }
+  .yt-player-channel img { width: 24px; height: 24px; border-radius: 50%; }
+  .yt-player-channel-name { font-size: 13px; color: rgba(253,242,232,0.5); }
+  .yt-player-open-yt { font-size: 11px; color: rgba(253,242,232,0.35); margin-top: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .yt-player-open-yt:hover { color: rgba(253,242,232,0.6); }
+
   /* ── SETTINGS ── */
   .profile-bg { min-height: 100%; background: transparent; padding-bottom: 32px; }
   .profile-header { padding: 16px 24px 20px; }
@@ -1222,6 +1268,26 @@ const Icon = {
   Feather: ({ size = 22, color = "#8ec5d9" }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/>
+    </svg>
+  ),
+  Play: ({ size = 22, color = "#FDF2E8" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke="none">
+      <polygon points="5 3 19 12 5 21 5 3"/>
+    </svg>
+  ),
+  YouTube: ({ size = 22, color = "#FF0000" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.8zM9.5 15.6V8.4l6.3 3.6-6.3 3.6z"/>
+    </svg>
+  ),
+  X: ({ size = 22, color = "#0C1A35" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  ),
+  Plus: ({ size = 22, color = "#0C1A35" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
     </svg>
   ),
   ChevronLeft: ({ size = 22, color = "#0C1A35" }) => (
@@ -3504,6 +3570,7 @@ function ReaderSheet({ item, onClose, allItems = [], onNavigate, videoStartTime 
 
 // ── FEED SCREEN ───────────────────────────────────────────
 function FeedScreen({ enabledSubs, enabledNewsSources, mutedInMode = {}, alwaysBlock = [] }) {
+  const feedUser = useAuth();
   const [readerItem, setReaderItem] = useState(null);
   const [readerClosing, setReaderClosing] = useState(false);
 
@@ -3774,6 +3841,8 @@ function FeedScreen({ enabledSubs, enabledNewsSources, mutedInMode = {}, alwaysB
         )}
 
       {loading && <FeedSkeleton />}
+
+      {!loading && feedUser && <YouTubeFeedSection user={feedUser} />}
 
       {!loading && feedItems.length === 0 && (
         <div className="feed-empty" style={{ whiteSpace: "pre-line" }}>{emptyMessage}</div>
@@ -4248,6 +4317,373 @@ function WorldScreen() {
   );
 }
 
+// ── YOUTUBE HOOKS & COMPONENTS ────────────────────────────
+function useYouTubeChannels(user) {
+  const [channels, setChannels] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadChannels = useCallback(async () => {
+    if (!user) { setChannels([]); setLoading(false); return; }
+    try {
+      // Get user's followed channel IDs
+      const userSnap = await getDocs(collection(db, `users/${user.uid}/youtubeChannels`));
+      const followedIds = userSnap.docs.map(d => d.id);
+
+      if (!followedIds.length) { setChannels([]); setLoading(false); return; }
+
+      // Fetch shared channel metadata
+      const channelData = await Promise.all(
+        followedIds.map(async (id) => {
+          try {
+            const snap = await getDoc(doc(db, "channels", id));
+            return snap.exists() ? { id, ...snap.data() } : null;
+          } catch { return null; }
+        })
+      );
+      setChannels(channelData.filter(Boolean));
+    } catch {}
+    setLoading(false);
+  }, [user]);
+
+  useEffect(() => { loadChannels(); }, [loadChannels]);
+
+  const addChannel = useCallback(async (searchQuery) => {
+    if (!user) throw new Error("Not signed in");
+
+    // Step 1: Try to find in shared collection first (search by name for URL/handle inputs)
+    // For direct channel IDs, check shared collection directly
+    let channelId = null;
+    let channelData = null;
+
+    // Check if input looks like a channel ID
+    const idMatch = searchQuery.match(/UC[\w-]{22}/);
+    if (idMatch) {
+      const existing = await getDoc(doc(db, "channels", idMatch[0]));
+      if (existing.exists()) {
+        channelData = existing.data();
+        channelId = idMatch[0];
+      }
+    }
+
+    // Step 2: If not found in shared collection, call YouTube API
+    if (!channelData) {
+      const res = await fetch(`${WORKER_URL}/youtube/channel?q=${encodeURIComponent(searchQuery)}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      channelId = data.channelId;
+
+      // Check if another user already added this channel
+      const existing = await getDoc(doc(db, "channels", channelId));
+      if (existing.exists()) {
+        channelData = existing.data();
+      } else {
+        // Brand new channel — store in shared collection
+        channelData = {
+          channelId,
+          name: data.name,
+          avatar: data.avatar,
+          addedAt: new Date().toISOString(),
+        };
+        await setDoc(doc(db, "channels", channelId), channelData);
+      }
+    }
+
+    // Step 3: Link user to this channel (lightweight doc, just the ID)
+    await setDoc(doc(db, `users/${user.uid}/youtubeChannels`, channelId), {
+      channelId,
+      addedAt: new Date().toISOString(),
+    });
+
+    await loadChannels();
+    return channelData;
+  }, [user, loadChannels]);
+
+  const removeChannel = useCallback(async (channelId) => {
+    if (!user) return;
+    const { deleteDoc: delDoc } = await import("firebase/firestore");
+    await delDoc(doc(db, `users/${user.uid}/youtubeChannels`, channelId));
+    await loadChannels();
+  }, [user, loadChannels]);
+
+  return { channels, loading, addChannel, removeChannel, reload: loadChannels };
+}
+
+function useYouTubeVideos(channels) {
+  const [videos, setVideos] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!channels.length) { setVideos({}); setLoading(false); return; }
+    const ids = channels.map(c => c.channelId).join(",");
+    const cacheKey = `yt-rss-v1-${ids}`;
+    const now = Date.now();
+
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey));
+      if (cached && (now - cached.ts) < 30 * 60 * 1000) {
+        setVideos(cached.data);
+        setLoading(false);
+        return;
+      }
+    } catch {}
+
+    (async () => {
+      try {
+        const res = await fetch(`${WORKER_URL}/youtube?channels=${ids}`);
+        const data = await res.json();
+        if (data.channels) {
+          localStorage.setItem(cacheKey, JSON.stringify({ ts: now, data: data.channels }));
+          setVideos(data.channels);
+        }
+      } catch {}
+      setLoading(false);
+    })();
+  }, [channels]);
+
+  return { videos, loading };
+}
+
+function useYouTubeReadState(user) {
+  const [readIds, setReadIds] = useState(new Set());
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, `users/${user.uid}/settings`, "youtubeRead"));
+        if (snap.exists()) setReadIds(new Set(snap.data().videoIds || []));
+      } catch {}
+    })();
+  }, [user]);
+
+  const markRead = useCallback(async (videoId) => {
+    setReadIds(prev => {
+      const next = new Set(prev);
+      next.add(videoId);
+      return next;
+    });
+    if (!user) return;
+    try {
+      const existing = readIds;
+      const updated = [...existing, videoId];
+      await setDoc(doc(db, `users/${user.uid}/settings`, "youtubeRead"), { videoIds: updated.slice(-200) });
+    } catch {}
+  }, [user, readIds]);
+
+  return { readIds, markRead };
+}
+
+function YouTubeCard({ channel, video, isNew, onTap }) {
+  const ago = video.published ? (() => {
+    const diff = Math.floor((Date.now() - new Date(video.published).getTime()) / 1000);
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  })() : "";
+
+  return (
+    <div className="yt-card" onClick={onTap}>
+      <div className="yt-card-inner">
+        <div className="yt-thumb-wrap">
+          <img src={video.thumbnail} alt="" className="yt-thumb" loading="lazy" />
+          <div className="yt-play-icon"><Icon.Play size={28} /></div>
+        </div>
+        <div className="yt-card-info">
+          <div className="yt-channel-row">
+            {channel.avatar && <img src={channel.avatar} alt="" className="yt-avatar" />}
+            <span className="yt-channel-name">{channel.name}</span>
+            {isNew && <span className="yt-new-badge">New</span>}
+          </div>
+          <div className="yt-video-title">{video.title}</div>
+          {ago && <div className="yt-time">{ago}</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function YouTubePlayer({ video, channel, onClose }) {
+  const [closing, setClosing] = useState(false);
+  const dragRef = useRef({ startY: 0, dragging: false });
+  const sheetRef = useRef(null);
+
+  useEffect(() => {
+    document.body.classList.add("journal-open");
+    return () => document.body.classList.remove("journal-open");
+  }, []);
+
+  const dismiss = () => {
+    setClosing(true);
+    setTimeout(onClose, 500);
+  };
+
+  const handleTouchStart = (e) => { dragRef.current = { startY: e.touches[0].clientY, dragging: true }; };
+  const handleTouchMove = (e) => {
+    if (!dragRef.current.dragging || !sheetRef.current) return;
+    const dy = e.touches[0].clientY - dragRef.current.startY;
+    if (dy > 0) sheetRef.current.style.transform = `translateY(${dy}px)`;
+  };
+  const handleTouchEnd = (e) => {
+    if (!dragRef.current.dragging || !sheetRef.current) return;
+    const dy = e.changedTouches[0].clientY - dragRef.current.startY;
+    dragRef.current.dragging = false;
+    sheetRef.current.style.transform = "";
+    if (dy > 80) dismiss();
+  };
+
+  const phoneEl = document.getElementById("phone-shell");
+  if (!phoneEl) return null;
+
+  return createPortal(
+    <>
+      <div className={`yt-player-overlay ${closing ? "closing" : ""}`} onClick={dismiss} />
+      <div className={`yt-player-sheet ${closing ? "closing" : ""}`} ref={sheetRef}>
+        <div className="yt-player-handle"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        />
+        <iframe
+          className="yt-player-video"
+          src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0&modestbranding=1`}
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
+          title={video.title}
+        />
+        <div className="yt-player-info">
+          <div className="yt-player-title">{video.title}</div>
+          <div className="yt-player-channel">
+            {channel.avatar && <img src={channel.avatar} alt="" />}
+            <span className="yt-player-channel-name">{channel.name}</span>
+          </div>
+          <div className="yt-player-open-yt" onClick={() => window.open(`https://www.youtube.com/watch?v=${video.videoId}`, "_blank")}>
+            <Icon.YouTube size={12} /> Open in YouTube
+          </div>
+        </div>
+      </div>
+    </>,
+    phoneEl
+  );
+}
+
+function YouTubeFeedSection({ user }) {
+  const { channels } = useYouTubeChannels(user);
+  const { videos, loading } = useYouTubeVideos(channels);
+  const { readIds, markRead } = useYouTubeReadState(user);
+  const [playing, setPlaying] = useState(null); // { channel, video }
+
+  if (!user || !channels.length) return null;
+
+  // Build list: one card per channel (latest video), split into new vs seen
+  const items = channels
+    .map(ch => {
+      const vids = videos[ch.channelId] || [];
+      const latest = vids[0];
+      if (!latest) return null;
+      return { channel: ch, video: latest, isNew: !readIds.has(latest.videoId) };
+    })
+    .filter(Boolean)
+    .sort((a, b) => {
+      if (a.isNew && !b.isNew) return -1;
+      if (!a.isNew && b.isNew) return 1;
+      return new Date(b.video.published) - new Date(a.video.published);
+    });
+
+  if (loading && !items.length) return (
+    <div style={{ padding: "0 20px" }}>
+      <div className="yt-section-header">
+        <Icon.YouTube size={14} />
+        <div className="yt-section-label">YouTube</div>
+      </div>
+      <div className="skeleton-card widget-shimmer" style={{ height: 80, margin: "0 0 10px", borderRadius: 20 }} />
+    </div>
+  );
+
+  if (!items.length) return null;
+
+  return (
+    <div>
+      <div className="yt-section-header">
+        <Icon.YouTube size={14} />
+        <div className="yt-section-label">YouTube</div>
+      </div>
+      {items.map(({ channel, video, isNew }) => (
+        <YouTubeCard
+          key={video.videoId}
+          channel={channel}
+          video={video}
+          isNew={isNew}
+          onTap={() => {
+            markRead(video.videoId);
+            setPlaying({ channel, video });
+          }}
+        />
+      ))}
+      {playing && (
+        <YouTubePlayer
+          video={playing.video}
+          channel={playing.channel}
+          onClose={() => setPlaying(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function YouTubeSettingsSection({ user }) {
+  const { channels, addChannel, removeChannel } = useYouTubeChannels(user);
+  const [input, setInput] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [err, setErr] = useState(null);
+
+  const handleAdd = async () => {
+    if (!input.trim()) return;
+    setAdding(true);
+    setErr(null);
+    try {
+      await addChannel(input.trim());
+      setInput("");
+    } catch (e) {
+      setErr(e.message);
+    }
+    setAdding(false);
+  };
+
+  return (
+    <>
+      <span className="section-label fade-up fade-up-5">YouTube Channels</span>
+      <div className="yt-add-wrap fade-up fade-up-5">
+        <div className="yt-add-row">
+          <input
+            className="yt-add-input"
+            placeholder="Channel name, URL, or @handle"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleAdd()}
+          />
+          <button className="yt-add-btn" onClick={handleAdd} disabled={adding || !input.trim()}>
+            {adding ? "..." : "Add"}
+          </button>
+        </div>
+        {err && <div className="yt-add-err">{err}</div>}
+      </div>
+      {channels.length > 0 && (
+        <div className="yt-channel-list fade-up fade-up-5">
+          {channels.map(ch => (
+            <div className="yt-channel-item" key={ch.channelId}>
+              {ch.avatar && <img src={ch.avatar} alt="" className="yt-channel-item-avatar" />}
+              <div className="yt-channel-item-name">{ch.name}</div>
+              <button className="yt-channel-remove" onClick={() => removeChannel(ch.channelId)}>
+                <Icon.X size={16} color="rgba(8,16,32,0.3)" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
 // ── SETTINGS SCREEN ───────────────────────────────────────
 // ── ACCORDION COMPONENT ──────────────────────────────────
 function Accordion({ title, count, total, accentColor, children, defaultOpen = false }) {
@@ -4276,6 +4712,7 @@ function Accordion({ title, count, total, accentColor, children, defaultOpen = f
 function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggleNewsSource, mutedInMode, onToggleMutedInMode, alwaysBlock, onToggleAlwaysBlock }) {
   const [toggles, setToggles] = useState({ noNews: true, slowScroll: false, notification: true, sleepData: false });
   const toggle = k => setToggles(t => ({ ...t, [k]: !t[k] }));
+  const ytUser = useAuth();
 
   const CAT_ACCENT = {
     Animals: "#FF9F43", Nature: "#26de81", Sports: "#FF6B6B",
@@ -4454,6 +4891,8 @@ function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggle
           <div className="setting-arrow">›</div>
         </div>
       ))}
+
+      <YouTubeSettingsSection user={ytUser} />
 
       <span className="section-label fade-up fade-up-5">Sports Scores</span>
       {[
