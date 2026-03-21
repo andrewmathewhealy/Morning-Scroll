@@ -415,9 +415,9 @@ const styles = `
   /* ── HOME ── */
   .home-bg { min-height: 100%; background: transparent; padding: 0 0 32px; }
   .home-header { padding: 16px 24px 0; display: flex; justify-content: space-between; align-items: flex-start; }
-  .home-greeting { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; color: #FDF2E8; line-height: 1.2; }
+  .home-greeting { font-family: 'Fraunces', serif; font-size: 23.5px; font-weight: 600; color: #FDF2E8; line-height: 1.2; }
   .home-greeting span { color: #FDF2E8; -webkit-text-fill-color: #FDF2E8; }
-  .home-date { font-size: 11px; color: #FDF2E8; margin-top: 4px; letter-spacing: 1px; font-weight: 500; text-transform: uppercase; opacity: 0.7; }
+  .home-date { font-size: 12.5px; color: #FDF2E8; margin-top: 4px; letter-spacing: 1px; font-weight: 500; text-transform: uppercase; opacity: 0.7; }
   .home-avatar { width: 40px; height: 40px; border-radius: 50%; background: #023047; display: flex; align-items: center; justify-content: center; }
 
   .widget-row { display: flex; gap: 12px; }
@@ -504,8 +504,8 @@ const styles = `
   /* ── FEED ── */
   .feed-bg { height: 100%; display: flex; flex-direction: column; background: linear-gradient(to bottom, transparent 0%, transparent 180px, #FDF2E8 180px); overflow: hidden; }
   .feed-header { padding: 16px 24px 0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-  .feed-title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 600; color: #FDF2E8; }
-  .feed-subtitle { font-size: 12px; color: rgba(253,242,232,0.6); margin-top: 2px; }
+  .feed-title { font-family: 'Fraunces', serif; font-size: 27.5px; font-weight: 600; color: #FDF2E8; }
+  .feed-subtitle { font-size: 13.5px; color: rgba(253,242,232,0.6); margin-top: 2px; }
 
   .filter-scroll { display: flex; gap: 8px; padding: 14px 20px 10px; overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
   .filter-scroll::-webkit-scrollbar { display: none; }
@@ -570,8 +570,8 @@ const styles = `
   /* ── COMMUNITY / WORLD ── */
   .community-bg { min-height: 100%; background: transparent; padding-bottom: 32px; }
   .community-header { padding: 16px 24px 12px; }
-  .community-title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 600; color: #FDF2E8; }
-  .community-subtitle { font-size: 12px; color: rgba(253,242,232,0.6); margin-top: 2px; }
+  .community-title { font-family: 'Fraunces', serif; font-size: 27.5px; font-weight: 600; color: #FDF2E8; }
+  .community-subtitle { font-size: 13.5px; color: rgba(253,242,232,0.6); margin-top: 2px; }
 
   .globe-hero {
     margin: 0 20px; height: 380px; border-radius: 28px;
@@ -647,8 +647,8 @@ const styles = `
   .profile-header { padding: 16px 24px 20px; }
   .profile-top { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
   .profile-avatar-large { width: 64px; height: 64px; border-radius: 50%; background: #023047; display: flex; align-items: center; justify-content: center; }
-  .profile-name { font-family: 'Satoshi', sans-serif; font-size: 22px; color: #FDF2E8; -webkit-text-fill-color: #FDF2E8; }
-  .profile-streak { font-size: 12px; color: rgba(253,242,232,0.6); margin-top: 3px; }
+  .profile-name { font-family: 'Satoshi', sans-serif; font-size: 23.5px; color: #FDF2E8; -webkit-text-fill-color: #FDF2E8; }
+  .profile-streak { font-size: 13.5px; color: rgba(253,242,232,0.6); margin-top: 3px; }
   .profile-streak span { color: #FFBC42; font-weight: 600; }
 
   .section-label { font-size: 10px; color: #FDF2E8; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 0 24px; margin-bottom: 10px; margin-top: 20px; display: block; }
@@ -3515,8 +3515,8 @@ function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggle
 }
 
 // ── BACKGROUND GRADIENT (per-tab) ────────────────────────
-const HOME_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0C1A35 12%, #142848 26%, #1E3D62 38%, #3B6080 48%, #7A8A72 55%, #C4A24E 64%, #E4BD58 72%, #F0D080 82%, #F8E2AA 90%, #FFF4E0 100%)";
-const OTHER_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0E1A30 12%, #162840 26%, #1E3555 38%, #3A5570 48%, #6A7A6A 55%, #A08E4A 64%, #BCA050 72%, #D0B870 82%, #DEC890 90%, #E8D8C0 100%)";
+const HOME_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0B1528 8%, #10203E 18%, #162D52 28%, #1E3D62 38%, #2E5575 48%, #4E7E94 56%, #80A8B5 64%, #AAC8C8 72%, #CCDCCE 78%, #E0E8D6 84%, #EEEEDE 90%, #FFF4E0 100%)";
+const OTHER_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0B1528 8%, #10203E 18%, #162D52 28%, #1E3555 38%, #2E4E68 48%, #4A7080 56%, #6E9098 64%, #90AAA8 72%, #AAB8AC 78%, #C0C8B8 84%, #D0D0C4 90%, #DCD8CC 100%)";
 const FEED_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0E1A30 12%, #162840 26%, #1E3555 38%, #3A5570 48%, #FDF2E8 56%, #FDF2E8 100%)";
 const getBgStyle = (tab) => ({
   background: tab === "home" ? HOME_GRADIENT : tab === "feed" ? FEED_GRADIENT : OTHER_GRADIENT,
