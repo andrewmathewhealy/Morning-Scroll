@@ -295,6 +295,14 @@ const styles = `
     backface-visibility: hidden;
     transform: translateZ(0);
   }
+  .phone::after {
+    content: ''; position: absolute; inset: 0; z-index: 15; pointer-events: none;
+    border-radius: inherit;
+    filter: url(#grain);
+    opacity: 0.04;
+    background: rgba(128,128,128,0.5);
+    mix-blend-mode: overlay;
+  }
 
   .status-bar {
     height: 50px; display: flex; align-items: flex-end; justify-content: space-between;
@@ -422,11 +430,11 @@ const styles = `
     content: ''; position: absolute; top: -30px; right: -30px; width: 130px; height: 130px;
     background: radial-gradient(circle, rgba(255,183,3,0.12) 0%, transparent 70%);
   }
-  .weather-temp { font-family: 'Satoshi', sans-serif; font-size: 48px; color: #FDF2E8; line-height: 1; }
-  .weather-label { font-size: 11px; color: rgba(253,242,232,0.5); margin-top: 4px; letter-spacing: 0.5px; }
-  .weather-condition { font-size: 13px; color: rgba(253,242,232,0.7); margin-top: 8px; }
+  .weather-temp { font-family: 'Satoshi', sans-serif; font-size: 48px; color: #FDF2E8; line-height: 1; position: relative; z-index: 1; }
+  .weather-label { font-size: 11px; color: rgba(253,242,232,0.5); margin-top: 4px; letter-spacing: 0.5px; position: relative; z-index: 1; }
+  .weather-condition { font-size: 13px; color: rgba(253,242,232,0.7); margin-top: 8px; position: relative; z-index: 1; }
   .weather-icon-wrap { margin-bottom: 6px; }
-  .weather-forecast { display: flex; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(253,242,232,0.15); }
+  .weather-forecast { display: flex; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(253,242,232,0.15); position: relative; z-index: 1; }
   .weather-hour { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
   .weather-hour-time { font-size: 9px; color: rgba(253,242,232,0.5); letter-spacing: 0.3px; }
   .weather-hour-temp { font-size: 11px; color: rgba(253,242,232,0.9); font-weight: 600; }
@@ -1422,31 +1430,129 @@ const WORKER_URL = import.meta.env.VITE_WORKER_URL ?? 'http://localhost:8787';
 //   icon      → Lucide icon component
 //   bg        → CSS gradient for the widget background
 const WEATHER_MAP = {
-  'clear-day':             { label: 'Clear Skies',         icon: () => Icon.Sun,           bg: 'linear-gradient(135deg, #1a6b9e 0%, #2196c4 60%, #f5a623 100%)' },
-  'clear-night':           { label: 'Clear Night',         icon: () => Icon.Moon,          bg: 'linear-gradient(135deg, #0a1628 0%, #0d2444 60%, #1a3a6e 100%)' },
-  'partly-cloudy-day':     { label: 'Partly Cloudy',       icon: () => Icon.Cloud,         bg: 'linear-gradient(135deg, #1a5f8a 0%, #4a90b8 60%, #c4a35a 100%)' },
-  'partly-cloudy-night':   { label: 'Partly Cloudy Night', icon: () => Icon.Cloud,         bg: 'linear-gradient(135deg, #0d1f3c 0%, #1a3255 60%, #2a4a7a 100%)' },
-  'cloudy':                { label: 'Overcast',            icon: () => Icon.Cloud,         bg: 'linear-gradient(135deg, #3a4f6a 0%, #5a7080 60%, #7a8a95 100%)' },
-  'fog':                   { label: 'Foggy',               icon: () => Icon.Wind,          bg: 'linear-gradient(135deg, #4a5568 0%, #718096 60%, #a0aec0 100%)' },
-  'wind':                  { label: 'Windy',               icon: () => Icon.Wind,          bg: 'linear-gradient(135deg, #2d4a6e 0%, #4a7a9b 60%, #7fb3cc 100%)' },
-  'rain':                  { label: 'Rainy',               icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1a2f4a 0%, #2d4f6e 60%, #3d6b8a 100%)' },
-  'showers-day':           { label: 'Rain Showers',        icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a7a 60%, #5a8fa8 100%)' },
-  'showers-night':         { label: 'Overnight Showers',   icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #0d1f35 0%, #1a3050 60%, #2d4f6e 100%)' },
-  'thunder-rain':          { label: 'Thunderstorms',       icon: () => Icon.CloudLightning, bg: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)' },
-  'thunder-showers-day':   { label: 'Stormy',              icon: () => Icon.CloudLightning, bg: 'linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 60%, #4a3a6e 100%)' },
-  'thunder-showers-night': { label: 'Stormy Night',        icon: () => Icon.CloudLightning, bg: 'linear-gradient(135deg, #0d0d1f 0%, #1a1a35 60%, #2d2040 100%)' },
-  'snow':                  { label: 'Snowing',             icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #2d4a6e 0%, #5a7fa0 60%, #c8dce8 100%)' },
-  'snow-showers-day':      { label: 'Snow Showers',        icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #2a4060 0%, #4a6a85 60%, #b0c8d8 100%)' },
-  'snow-showers-night':    { label: 'Overnight Snow',      icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #0d1a2e 0%, #1a2e45 60%, #3a5570 100%)' },
-  'sleet':                 { label: 'Sleet',               icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #2a3d55 0%, #455e75 60%, #7a9ab0 100%)' },
-  'hail':                  { label: 'Hail',                icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #1f3040 0%, #354f65 60%, #6a8fa8 100%)' },
-  'tornado':               { label: 'Tornado Warning',     icon: () => Icon.Wind,          bg: 'linear-gradient(135deg, #1a0a0a 0%, #3d1515 60%, #6e2020 100%)' },
-  'drizzle':               { label: 'Light Drizzle',       icon: () => Icon.CloudDrizzle,  bg: 'linear-gradient(135deg, #243b55 0%, #3d5c78 60%, #6a8fa8 100%)' },
-  'freezing-drizzle':      { label: 'Freezing Drizzle',    icon: () => Icon.CloudDrizzle,  bg: 'linear-gradient(135deg, #1e3040 0%, #304f65 60%, #6080a0 100%)' },
-  'freezing-rain':         { label: 'Freezing Rain',       icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1a2535 0%, #2d4055 60%, #4a6a85 100%)' },
+  'clear-day':             { label: 'Clear Skies',         icon: () => Icon.Sun,           bg: 'linear-gradient(135deg, #c47a20 0%, #e8a840 40%, #f5c862 100%)', effect: 'sunny' },
+  'clear-night':           { label: 'Clear Night',         icon: () => Icon.Moon,          bg: 'linear-gradient(135deg, #081020 0%, #0C1A35 50%, #142848 100%)', effect: 'stars' },
+  'partly-cloudy-day':     { label: 'Partly Cloudy',       icon: () => Icon.Cloud,         bg: 'linear-gradient(135deg, #4a7a9a 0%, #7a9ab0 50%, #c4a35a 100%)', effect: 'sunny' },
+  'partly-cloudy-night':   { label: 'Partly Cloudy Night', icon: () => Icon.Cloud,         bg: 'linear-gradient(135deg, #0C1A35 0%, #1a3255 50%, #2a4a7a 100%)', effect: 'stars' },
+  'cloudy':                { label: 'Overcast',            icon: () => Icon.Cloud,         bg: 'linear-gradient(135deg, #3a4a5a 0%, #5a6a78 50%, #7a8890 100%)', effect: null },
+  'fog':                   { label: 'Foggy',               icon: () => Icon.Wind,          bg: 'linear-gradient(135deg, #4a5568 0%, #718096 50%, #a0aec0 100%)', effect: null },
+  'wind':                  { label: 'Windy',               icon: () => Icon.Wind,          bg: 'linear-gradient(135deg, #2d4a6e 0%, #4a7a9b 50%, #7fb3cc 100%)', effect: null },
+  'rain':                  { label: 'Rainy',               icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1a2535 0%, #2a3d55 50%, #3a5570 100%)', effect: 'rain' },
+  'showers-day':           { label: 'Rain Showers',        icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a7a 50%, #5a8fa8 100%)', effect: 'rain' },
+  'showers-night':         { label: 'Overnight Showers',   icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #0d1f35 0%, #1a3050 50%, #2d4f6e 100%)', effect: 'rain' },
+  'thunder-rain':          { label: 'Thunderstorms',       icon: () => Icon.CloudLightning, bg: 'linear-gradient(135deg, #0d0d1f 0%, #16213e 50%, #0f3460 100%)', effect: 'rain' },
+  'thunder-showers-day':   { label: 'Stormy',              icon: () => Icon.CloudLightning, bg: 'linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 50%, #4a3a6e 100%)', effect: 'rain' },
+  'thunder-showers-night': { label: 'Stormy Night',        icon: () => Icon.CloudLightning, bg: 'linear-gradient(135deg, #0d0d1f 0%, #1a1a35 50%, #2d2040 100%)', effect: 'rain' },
+  'snow':                  { label: 'Snowing',             icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #c8dce8 0%, #a0b8cc 50%, #7a98b0 100%)', effect: 'snow' },
+  'snow-showers-day':      { label: 'Snow Showers',        icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #b0c8d8 0%, #8aa8c0 50%, #6a8aa5 100%)', effect: 'snow' },
+  'snow-showers-night':    { label: 'Overnight Snow',      icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #0d1a2e 0%, #1a2e45 50%, #3a5570 100%)', effect: 'snow' },
+  'sleet':                 { label: 'Sleet',               icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #2a3d55 0%, #455e75 50%, #7a9ab0 100%)', effect: 'snow' },
+  'hail':                  { label: 'Hail',                icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #1f3040 0%, #354f65 50%, #6a8fa8 100%)', effect: 'snow' },
+  'tornado':               { label: 'Tornado Warning',     icon: () => Icon.Wind,          bg: 'linear-gradient(135deg, #1a0a0a 0%, #3d1515 50%, #6e2020 100%)', effect: null },
+  'drizzle':               { label: 'Light Drizzle',       icon: () => Icon.CloudDrizzle,  bg: 'linear-gradient(135deg, #243b55 0%, #3d5c78 50%, #6a8fa8 100%)', effect: 'drizzle' },
+  'freezing-drizzle':      { label: 'Freezing Drizzle',    icon: () => Icon.CloudDrizzle,  bg: 'linear-gradient(135deg, #1e3040 0%, #304f65 50%, #6080a0 100%)', effect: 'drizzle' },
+  'freezing-rain':         { label: 'Freezing Rain',       icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1a2535 0%, #2d4055 50%, #4a6a85 100%)', effect: 'rain' },
 };
 
-const DEFAULT_WEATHER = { label: 'Loading…', icon: () => Icon.Sun, bg: 'linear-gradient(135deg, #023047 0%, #219EBC 100%)' };
+const DEFAULT_WEATHER = { label: 'Loading…', icon: () => Icon.Sun, bg: 'linear-gradient(135deg, #023047 0%, #219EBC 100%)', effect: null };
+
+// ── WEATHER ATMOSPHERIC EFFECTS ──────────────────────────
+function WeatherEffect({ effect }) {
+  if (!effect) return null;
+
+  const rainDrops = useMemo(() => effect === 'rain' ? Array.from({ length: 20 }, (_, i) => ({
+    id: i, left: Math.random() * 100, delay: Math.random() * 1.5, duration: 0.4 + Math.random() * 0.3, opacity: 0.3 + Math.random() * 0.4,
+  })) : [], [effect]);
+
+  const drizzleDrops = useMemo(() => effect === 'drizzle' ? Array.from({ length: 10 }, (_, i) => ({
+    id: i, left: Math.random() * 100, delay: Math.random() * 2.5, duration: 0.8 + Math.random() * 0.5, opacity: 0.2 + Math.random() * 0.25,
+  })) : [], [effect]);
+
+  const snowflakes = useMemo(() => (effect === 'snow') ? Array.from({ length: 15 }, (_, i) => ({
+    id: i, left: Math.random() * 100, delay: Math.random() * 4, duration: 3 + Math.random() * 3,
+    size: 2 + Math.random() * 3, drift: (Math.random() - 0.5) * 30, opacity: 0.3 + Math.random() * 0.5,
+  })) : [], [effect]);
+
+  const stars = useMemo(() => effect === 'stars' ? Array.from({ length: 12 }, (_, i) => ({
+    id: i, left: Math.random() * 90 + 5, top: Math.random() * 70 + 5,
+    size: 1 + Math.random() * 1.5, delay: Math.random() * 3, duration: 2 + Math.random() * 2,
+  })) : [], [effect]);
+
+  return (
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 'inherit', pointerEvents: 'none', zIndex: 0 }}>
+      <style>{`
+        @keyframes weatherRain {
+          0% { transform: translateY(-10px); opacity: 0; }
+          10% { opacity: var(--wr-op); }
+          100% { transform: translateY(220px); opacity: 0; }
+        }
+        @keyframes weatherSnow {
+          0% { transform: translateY(-10px) translateX(0px); opacity: 0; }
+          10% { opacity: var(--ws-op); }
+          90% { opacity: var(--ws-op); }
+          100% { transform: translateY(220px) translateX(var(--ws-drift)); opacity: 0; }
+        }
+        @keyframes weatherTwinkle {
+          0%, 100% { opacity: 0.2; }
+          50% { opacity: 0.8; }
+        }
+        @keyframes weatherGlow {
+          0%, 100% { opacity: 0.15; transform: scale(1); }
+          50% { opacity: 0.3; transform: scale(1.1); }
+        }
+      `}</style>
+
+      {effect === 'rain' && rainDrops.map(d => (
+        <div key={d.id} style={{
+          position: 'absolute', left: `${d.left}%`, top: -10,
+          width: 1, height: 12, borderRadius: 1,
+          background: 'rgba(180,210,240,0.6)',
+          '--wr-op': d.opacity,
+          animation: `weatherRain ${d.duration}s ${d.delay}s linear infinite`,
+        }} />
+      ))}
+
+      {effect === 'drizzle' && drizzleDrops.map(d => (
+        <div key={d.id} style={{
+          position: 'absolute', left: `${d.left}%`, top: -10,
+          width: 1, height: 6, borderRadius: 1,
+          background: 'rgba(180,210,240,0.4)',
+          '--wr-op': d.opacity,
+          animation: `weatherRain ${d.duration}s ${d.delay}s linear infinite`,
+        }} />
+      ))}
+
+      {effect === 'snow' && snowflakes.map(s => (
+        <div key={s.id} style={{
+          position: 'absolute', left: `${s.left}%`, top: -10,
+          width: s.size, height: s.size, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.8)',
+          '--ws-op': s.opacity,
+          '--ws-drift': `${s.drift}px`,
+          animation: `weatherSnow ${s.duration}s ${s.delay}s linear infinite`,
+        }} />
+      ))}
+
+      {effect === 'stars' && stars.map(s => (
+        <div key={s.id} style={{
+          position: 'absolute', left: `${s.left}%`, top: `${s.top}%`,
+          width: s.size, height: s.size, borderRadius: '50%',
+          background: 'rgba(253,242,232,0.8)',
+          animation: `weatherTwinkle ${s.duration}s ${s.delay}s ease-in-out infinite`,
+        }} />
+      ))}
+
+      {effect === 'sunny' && (
+        <div style={{
+          position: 'absolute', top: -15, right: -15,
+          width: 70, height: 70, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(255,220,120,0.3) 0%, rgba(255,200,80,0.1) 40%, transparent 70%)',
+          animation: 'weatherGlow 4s ease-in-out infinite',
+        }} />
+      )}
+    </div>
+  );
+}
 
 function getWeatherConfig(vcIcon) {
   if (!vcIcon) return DEFAULT_WEATHER;
@@ -1592,7 +1698,8 @@ function WeatherWidget() {
 
   return (
     <div className="weather-widget" style={{ background: cfg.bg }}>
-      <div className="weather-icon-wrap"><WeatherIcon size={28} /></div>
+      <WeatherEffect effect={cfg.effect} />
+      <div className="weather-icon-wrap" style={{ position: 'relative', zIndex: 1 }}><WeatherIcon size={28} /></div>
       <div className="weather-temp">{data.temp}°F</div>
       <div className="weather-condition">{cfg.label}</div>
       {data.hours?.length > 0 && (
@@ -3408,9 +3515,9 @@ function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggle
 }
 
 // ── BACKGROUND GRADIENT (per-tab) ────────────────────────
-const HOME_GRADIENT = "linear-gradient(175deg, #081020 0%, #0C1A35 12%, #142848 26%, #1E3D62 38%, #3B6080 48%, #7A8A72 55%, #C4A24E 64%, #E4BD58 72%, #F0D080 82%, #F8E2AA 90%, #FFF4E0 100%)";
-const OTHER_GRADIENT = "linear-gradient(175deg, #081020 0%, #0E1A30 12%, #162840 26%, #1E3555 38%, #3A5570 48%, #6A7A6A 55%, #A08E4A 64%, #BCA050 72%, #D0B870 82%, #DEC890 90%, #E8D8C0 100%)";
-const FEED_GRADIENT = "linear-gradient(175deg, #081020 0%, #0E1A30 12%, #162840 26%, #1E3555 38%, #3A5570 48%, #FDF2E8 56%, #FDF2E8 100%)";
+const HOME_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0C1A35 12%, #142848 26%, #1E3D62 38%, #3B6080 48%, #7A8A72 55%, #C4A24E 64%, #E4BD58 72%, #F0D080 82%, #F8E2AA 90%, #FFF4E0 100%)";
+const OTHER_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0E1A30 12%, #162840 26%, #1E3555 38%, #3A5570 48%, #6A7A6A 55%, #A08E4A 64%, #BCA050 72%, #D0B870 82%, #DEC890 90%, #E8D8C0 100%)";
+const FEED_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0E1A30 12%, #162840 26%, #1E3555 38%, #3A5570 48%, #FDF2E8 56%, #FDF2E8 100%)";
 const getBgStyle = (tab) => ({
   background: tab === "home" ? HOME_GRADIENT : tab === "feed" ? FEED_GRADIENT : OTHER_GRADIENT,
 });
@@ -3505,6 +3612,14 @@ export default function MorningScrollApp() {
   return (
     <>
       <style>{styles + wordleCss}</style>
+      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+        <defs>
+          <filter id="grain">
+            <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+        </defs>
+      </svg>
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", background: "#0a1628", padding: "20px" }}>
         <div className="phone" style={{ ...getBgStyle(tab), '--gyro-x': gyro.x, '--gyro-y': gyro.y, filter: colorTemp }}>
           {/* Status Bar */}
