@@ -221,13 +221,6 @@ function HomeAtmosphere() {
         }
       `}</style>
 
-      {/* Vignette */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: 'radial-gradient(ellipse at center, transparent 50%, rgba(10,10,20,0.35) 100%)',
-        zIndex: 2,
-      }} />
-
       {/* Stars in dark top portion */}
       {stars.map(s => (
         <div key={s.id} style={{
@@ -250,7 +243,7 @@ function HomeAtmosphere() {
           width: c.width,
           height: c.width * 0.35,
           borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(250,222,210,0.5) 0%, rgba(224,139,106,0.2) 40%, transparent 70%)',
+          background: 'radial-gradient(ellipse, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 40%, transparent 70%)',
           filter: 'blur(12px)',
           '--c-op': c.opacity,
           animation: `cloudDrift${c.side === 'left' ? 'Left' : 'Right'} ${c.duration}s ${c.delay}s linear infinite`,
@@ -325,6 +318,7 @@ const styles = `
     padding: 0 28px 8px; flex-shrink: 0; position: relative; z-index: 10; background: transparent;
   }
   .status-time { font-family: 'Satoshi', sans-serif; font-weight: 500; font-size: 15px; color: #FDF2E8; }
+  .status-wifi { color: rgba(253,242,232,0.6); }
   .status-icons span { font-size: 10px; color: #2a5f7a; margin-left: 5px; }
 
   .screen { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; background: transparent; }
@@ -384,6 +378,14 @@ const styles = `
   /* ── COLOR TEMPERATURE ── */
   .phone { transition: filter 2s ease; }
 
+  /* ── LIVING SUNRISE ── */
+  @keyframes sunriseScroll {
+    0%   { background-position: 0% 0%; }
+    10%  { background-position: 0% 0%; }
+    100% { background-position: 0% 100%; }
+  }
+  .phone { animation: sunriseScroll 300s linear 1 forwards; }
+
   /* ── NUMBER COUNT-UP ── */
   .count-up { display: inline-block; transition: opacity 0.3s; }
 
@@ -433,7 +435,7 @@ const styles = `
   .home-header { padding: 16px 24px 0; display: flex; justify-content: space-between; align-items: flex-start; }
   .home-greeting { font-family: 'Fraunces', serif; font-size: 23.5px; font-weight: 600; color: #FDF2E8; line-height: 1.2; }
   .home-greeting span { color: #FDF2E8; -webkit-text-fill-color: #FDF2E8; }
-  .home-date { font-size: 12.5px; color: #FDF2E8; margin-top: 4px; letter-spacing: 1px; font-weight: 500; text-transform: uppercase; opacity: 0.7; }
+  .home-date { font-size: 12.5px; color: rgba(253,242,232,0.7); margin-top: 4px; letter-spacing: 1px; font-weight: 500; text-transform: uppercase; }
   .home-avatar { width: 40px; height: 40px; border-radius: 50%; background: #023047; display: flex; align-items: center; justify-content: center; }
 
   .widget-row { display: flex; gap: 12px; }
@@ -3533,9 +3535,20 @@ function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggle
 // ── BACKGROUND GRADIENT (per-tab) ────────────────────────
 const HOME_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0B1528 8%, #10203E 18%, #162D52 28%, #1E3D62 38%, #2E5575 48%, #4E7E94 56%, #80A8B5 64%, #AAC8C8 72%, #CCDCCE 78%, #E0E8D6 84%, #EEEEDE 90%, #FFF4E0 100%)";
 const OTHER_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0B1528 8%, #10203E 18%, #162D52 28%, #1E3555 38%, #2E4E68 48%, #4A7080 56%, #6E9098 64%, #90AAA8 72%, #AAB8AC 78%, #C0C8B8 84%, #D0D0C4 90%, #DCD8CC 100%)";
-const FEED_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0E1A30 12%, #162840 26%, #1E3555 38%, #3A5570 48%, #FDF2E8 56%, #FDF2E8 100%)";
-const getBgStyle = (tab) => ({
-  background: tab === "home" ? HOME_GRADIENT : tab === "feed" ? FEED_GRADIENT : OTHER_GRADIENT,
+
+// ── Living sunrise: tall gradient strip, visible window slides up over 270s ──
+// 19 stops spanning dark blue → light blue → gold. The gradient is 180% tall.
+// Start: window shows top (dark blue to light blue). End: window shows bottom (mid-blue to gold).
+const SUNRISE_GRADIENT = `linear-gradient(in oklch 175deg,
+  #081020 0%, #0B1528 5.5%, #10203E 11%, #162D52 16.5%, #1E3D62 22%,
+  #2B5278 27.5%, #3A6A8E 33%, #4E82A0 38.5%, #6498B0 44%, #7EAEBB 49.5%,
+  #98C2C6 55%, #B0D0CC 60.5%, #CCDCCC 66%, #E8EACC 71.5%, #F0EABC 77%,
+  #F5E8A8 82.5%, #F8E698 88%, #FAE48E 94%, #FCE488 100%
+)`;
+
+const getBgStyle = () => ({
+  background: SUNRISE_GRADIENT,
+  backgroundSize: '100% 180%',
 });
 
 // ── NAV TABS ──────────────────────────────────────────────
@@ -3554,6 +3567,8 @@ export default function MorningScrollApp() {
   const screenRef = useRef(null);
   const gyro = useGyroscope();
   const colorTemp = useColorTemp();
+
+  // Living sunrise is pure CSS — no JS state needed (see .phone animation)
 
   // All subs + all news sources enabled by default
   const [enabledSubs, setEnabledSubs] = useState(ALL_SUBREDDITS);
@@ -3637,13 +3652,13 @@ export default function MorningScrollApp() {
         </defs>
       </svg>
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", background: "#0a1628", padding: "20px" }}>
-        <div className="phone" style={{ ...getBgStyle(tab), '--gyro-x': gyro.x, '--gyro-y': gyro.y, filter: colorTemp }}>
+        <div className="phone" style={{ ...getBgStyle(), '--gyro-x': gyro.x, '--gyro-y': gyro.y, filter: colorTemp }}>
           {/* Status Bar */}
           <div className="status-bar">
             <div className="status-time">{clockTime}</div>
             <div style={{ width: 120, height: 30, background: "#0a1628", borderRadius: 15, position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)" }} />
             <div style={{ display: "flex", gap: 2 }}>
-              <span style={{ fontSize: 10, color: "rgba(253,242,232,0.6)" }}>●●● WiFi ▮▮▮</span>
+              <span className="status-wifi" style={{ fontSize: 10 }}>●●● WiFi ▮▮▮</span>
             </div>
           </div>
 
