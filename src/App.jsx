@@ -5,6 +5,8 @@ import { useRedditFeed } from "./useRedditFeed.js";
 import { useNewsFeed } from "./useNewsFeed.js";
 import { cleanRedditText } from "./redditApi.js";
 import GlobeCanvas from "./Globe.jsx";
+import { db } from "./firebase.js";
+import { doc, getDoc } from "firebase/firestore";
 
 // ── GYROSCOPE PARALLAX HOOK ───────────────────────────────
 function useGyroscope() {
@@ -480,17 +482,37 @@ const styles = `
   }
   .moon-img-wrap {
     width: 100%; aspect-ratio: 1; overflow: hidden; position: relative; z-index: 1;
-    background: radial-gradient(circle at center, rgba(253,242,232,0.45) 0%, rgba(253,242,232,0.2) 35%, rgba(253,242,232,0.06) 55%, transparent 70%);
+    background: radial-gradient(circle at var(--glow-x, 50%) 50%,
+      rgba(253,242,232,calc(0.45 * var(--glow-opacity, 1))) 0%,
+      rgba(253,242,232,calc(0.2 * var(--glow-opacity, 1))) 30%,
+      rgba(253,242,232,calc(0.06 * var(--glow-opacity, 1))) 50%,
+      transparent 65%);
   }
   .moon-img-wrap::after {
     content: ''; position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(circle at center, rgba(253,242,232,0.3) 0%, rgba(253,242,232,0.12) 35%, transparent 60%);
+    background: radial-gradient(circle at var(--glow-x, 50%) 50%,
+      rgba(253,242,232,calc(0.3 * var(--glow-opacity, 1))) 0%,
+      rgba(253,242,232,calc(0.1 * var(--glow-opacity, 1))) 30%,
+      transparent 55%);
     mix-blend-mode: screen;
   }
   .moon-img { width: 100%; height: 100%; object-fit: cover; display: block; mix-blend-mode: lighten; }
   .moon-info { padding: 10px 8px 14px; text-align: center; width: 100%; }
   .moon-phase { font-size: 10px; color: rgba(253,242,232,0.6); line-height: 1.3; font-weight: 500; letter-spacing: 0.3px; }
   .moon-pct { font-family: 'Satoshi', sans-serif; font-size: 18px; color: #FDF2E8; margin-bottom: 2px; font-weight: 600; }
+
+  .wotd-widget { background: rgba(253,242,232,0.55); backdrop-filter: blur(8px); border-radius: 24px; padding: 18px 20px; border: 1.5px solid #FDF2E8; }
+  .wotd-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .wotd-label { font-size: 10px; color: rgba(8,16,32,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .wotd-word { font-family: 'Satoshi', sans-serif; font-size: 24px; color: #0C1A35; font-weight: 700; line-height: 1.2; margin-bottom: 2px; }
+  .wotd-pronunciation { font-size: 12px; color: rgba(8,16,32,0.4); font-style: italic; margin-bottom: 10px; }
+  .wotd-pos { display: inline-block; font-size: 10px; color: rgba(8,16,32,0.5); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; background: rgba(8,16,32,0.06); border-radius: 6px; padding: 2px 8px; margin-bottom: 8px; }
+  .wotd-def { font-size: 13px; color: #0C1A35; line-height: 1.5; margin-bottom: 10px; }
+  .wotd-example { font-size: 12px; color: rgba(8,16,32,0.5); font-style: italic; line-height: 1.5; padding-left: 10px; border-left: 2px solid rgba(8,16,32,0.1); margin-bottom: 12px; }
+  .wotd-attribution { font-size: 9px; color: rgba(8,16,32,0.35); text-align: right; }
+  .wotd-attribution a { color: rgba(8,16,32,0.45); text-decoration: none; }
+  .wotd-shimmer { min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  .wotd-shimmer .wotd-label { color: rgba(8,16,32,0.3); }
 
   .calendar-widget { background: rgba(253,242,232,0.55); backdrop-filter: blur(8px); border-radius: 24px; padding: 18px 20px; border: 1.5px solid #FDF2E8; }
   .cal-header { font-size: 10px; color: rgba(8,16,32,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
@@ -621,16 +643,16 @@ const styles = `
   .pulse-text { font-size: 13px; color: #2a5f7a; }
   .pulse-text strong { color: #023047; }
 
-  .comm-card { margin: 12px 20px 0; background: rgba(8,16,32,0.55); backdrop-filter: blur(8px); border-radius: 24px; padding: 20px; border: 1.5px solid #FDF2E8; }
+  .comm-card { margin: 12px 20px 0; background: rgba(253,242,232,0.55); backdrop-filter: blur(8px); border-radius: 24px; padding: 20px; border: 1.5px solid #FDF2E8; }
   .comm-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
-  .comm-card-title { font-family: 'Satoshi', sans-serif; font-size: 17px; color: #FDF2E8; }
-  .comm-card-sub { font-size: 11px; color: rgba(253,242,232,0.5); margin-top: 2px; }
-  .comm-card-tag { font-size: 10px; color: rgba(253,242,232,0.5); background: rgba(253,242,232,0.08); padding: 4px 8px; border-radius: 8px; font-weight: 500; white-space: nowrap; margin-left: 8px; }
+  .comm-card-title { font-family: 'Satoshi', sans-serif; font-size: 17px; color: #0C1A35; }
+  .comm-card-sub { font-size: 11px; color: rgba(8,16,32,0.45); margin-top: 2px; }
+  .comm-card-tag { font-size: 10px; color: rgba(8,16,32,0.5); background: rgba(8,16,32,0.06); padding: 4px 8px; border-radius: 8px; font-weight: 500; white-space: nowrap; margin-left: 8px; }
 
   .poll-option {
     padding: 11px 16px; border-radius: 14px; font-size: 13px; font-weight: 500;
-    background: rgba(253,242,232,0.08); border: 1.5px solid rgba(253,242,232,0.25); cursor: pointer;
-    transition: all 0.18s; color: #FDF2E8; margin-bottom: 8px; display: block; width: 100%;
+    background: rgba(8,16,32,0.04); border: 1.5px solid rgba(8,16,32,0.15); cursor: pointer;
+    transition: all 0.18s; color: #0C1A35; margin-bottom: 8px; display: block; width: 100%;
     text-align: left;
   }
   .poll-option:last-child { margin-bottom: 0; }
@@ -640,25 +662,65 @@ const styles = `
   .poll-result { margin-bottom: 10px; }
   .poll-result:last-child { margin-bottom: 0; }
   .poll-result-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-  .poll-result-label { font-size: 13px; color: #FDF2E8; font-weight: 500; display: flex; align-items: center; gap: 6px; }
-  .poll-result-pct { font-size: 12px; color: rgba(253,242,232,0.7); font-weight: 600; }
-  .poll-result-track { height: 8px; background: rgba(253,242,232,0.1); border-radius: 4px; overflow: hidden; }
+  .poll-result-label { font-size: 13px; color: #0C1A35; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .poll-result-pct { font-size: 12px; color: rgba(8,16,32,0.5); font-weight: 600; }
+  .poll-result-track { height: 8px; background: rgba(8,16,32,0.08); border-radius: 4px; overflow: hidden; }
   .poll-result-fill { height: 100%; border-radius: 4px; background: #219EBC; transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
   .poll-result-fill.winner { background: #FFD166; }
   .poll-result-fill.chosen { background: linear-gradient(90deg, #fff8e7 0%, #FFD166 100%); }
-  .poll-total { font-size: 11px; color: rgba(253,242,232,0.5); margin-top: 12px; text-align: center; }
+  .poll-total { font-size: 11px; color: rgba(8,16,32,0.4); margin-top: 12px; text-align: center; }
 
-  .word-card { margin: 12px 20px 0; background: #023047; border-radius: 24px; padding: 24px 20px; border: 1.5px solid #FDF2E8; }
-  .word-tag { font-size: 10px; color: #F0D080; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
-  .word-main { font-family: 'Satoshi', sans-serif; font-size: 34px; color: #FDF2E8; }
-  .word-type { font-size: 11px; color: rgba(253,242,232,0.45); font-style: italic; margin-top: 4px; }
-  .word-def { font-size: 13px; color: rgba(253,242,232,0.65); line-height: 1.65; margin-top: 12px; }
+  .wotd-widget.wotd-dark { background: rgba(253,242,232,0.55); backdrop-filter: blur(8px); border-color: #FDF2E8; margin: 12px 20px 0; }
+  .wotd-dark .wotd-label { color: rgba(8,16,32,0.5); }
+  .wotd-dark .wotd-word { color: #0C1A35; }
+  .wotd-dark .wotd-pronunciation { color: rgba(8,16,32,0.4); }
+  .wotd-dark .wotd-pos { color: rgba(8,16,32,0.5); background: rgba(8,16,32,0.06); }
+  .wotd-dark .wotd-def { color: #0C1A35; }
+  .wotd-dark .wotd-example { color: rgba(8,16,32,0.5); border-left-color: rgba(8,16,32,0.1); }
+  .wotd-dark .wotd-attribution { color: rgba(8,16,32,0.35); }
+  .wotd-dark .wotd-attribution a { color: rgba(8,16,32,0.45); }
+  .wotd-dark.wotd-shimmer { }
+  .wotd-dark.wotd-shimmer .wotd-label { color: rgba(8,16,32,0.3); }
 
   .art-card { margin: 12px 20px 0; border-radius: 24px; overflow: hidden; border: 1.5px solid #FDF2E8; }
-  .art-image { height: 200px; background: #023047; display: flex; align-items: center; justify-content: center; position: relative; }
-  .art-info { background: rgba(8,16,32,0.55); backdrop-filter: blur(8px); padding: 16px 20px; }
-  .art-title { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #FDF2E8; }
-  .art-meta { font-size: 11px; color: rgba(253,242,232,0.5); margin-top: 3px; }
+  .art-image { min-height: 160px; max-height: 360px; background: #FDF2E8; display: flex; align-items: center; justify-content: center; position: relative; }
+  .art-image img { width: 100%; height: 100%; object-fit: contain; }
+  .art-info { background: #FDF2E8; padding: 28px 20px 18px; }
+  .art-title { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #0C1A35; }
+  .art-meta { font-size: 11px; color: rgba(8,16,32,0.5); margin-top: 3px; }
+  .art-desc { font-size: 12px; color: rgba(8,16,32,0.45); margin-top: 6px; line-height: 1.5; }
+
+  /* ── SPORTS ── */
+  .sports-bg { min-height: 100%; background: transparent; padding-bottom: 32px; }
+  .sports-header { padding: 16px 24px 12px; }
+  .sports-title { font-family: 'Fraunces', serif; font-size: 27.5px; font-weight: 600; color: #FDF2E8; }
+  .sports-subtitle { font-size: 13.5px; color: rgba(253,242,232,0.6); margin-top: 2px; }
+  .sports-league-section { margin-top: 16px; }
+  .sports-league-header { display: flex; align-items: center; gap: 8px; padding: 0 20px; margin-bottom: 8px; }
+  .sports-league-name { font-size: 12px; color: rgba(253,242,232,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .sports-league-badge { width: 18px; height: 18px; border-radius: 4px; }
+  .game-card { margin: 0 20px 8px; background: rgba(2,48,71,0.55); backdrop-filter: blur(16px); border-radius: 18px; padding: 14px 16px; border: 1.5px solid rgba(253,242,232,0.15); }
+  .game-status-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .game-status { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; }
+  .game-status.final { color: rgba(253,242,232,0.5); background: rgba(253,242,232,0.08); }
+  .game-status.live { color: #FF6B6B; background: rgba(255,107,107,0.15); }
+  .game-status.scheduled { color: #FFD166; background: rgba(255,209,102,0.12); }
+  .game-time { font-size: 10px; color: rgba(253,242,232,0.4); }
+  .game-teams { display: flex; flex-direction: column; gap: 6px; }
+  .game-team-row { display: flex; align-items: center; justify-content: space-between; }
+  .game-team-left { display: flex; align-items: center; gap: 8px; }
+  .game-team-badge { width: 22px; height: 22px; border-radius: 4px; object-fit: contain; }
+  .game-team-badge-placeholder { width: 22px; height: 22px; border-radius: 4px; background: rgba(253,242,232,0.08); }
+  .game-team-name { font-size: 14px; color: #FDF2E8; font-weight: 500; }
+  .game-team-name.winner { font-weight: 700; }
+  .game-score { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #FDF2E8; font-weight: 600; min-width: 24px; text-align: right; }
+  .game-score.winner { color: #FFD166; }
+  .game-score.pending { color: rgba(253,242,232,0.3); font-size: 13px; font-weight: 500; }
+  .game-venue { font-size: 10px; color: rgba(253,242,232,0.3); margin-top: 6px; }
+  .sports-skeleton { margin: 0 20px 8px; background: rgba(2,48,71,0.35); border-radius: 18px; padding: 14px 16px; border: 1.5px solid rgba(253,242,232,0.08); }
+  .sports-skeleton-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .sports-error { margin: 20px; text-align: center; padding: 40px 20px; }
+  .sports-error-msg { font-size: 13px; color: rgba(253,242,232,0.5); margin-top: 8px; }
 
   /* ── SETTINGS ── */
   .profile-bg { min-height: 100%; background: transparent; padding-bottom: 32px; }
@@ -1116,6 +1178,18 @@ const Icon = {
       <line x1="5.8" y1="10" x2="18.2" y2="10"/>
       <line x1="5.8" y1="12" x2="18.2" y2="12"/>
       <line x1="5.8" y1="14" x2="18.2" y2="14"/>
+    </svg>
+  ),
+  Trophy: ({ size = 22, color = "#8ec5d9" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+      <path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 19.24 7 20v2h10v-2c0-.76-.85-1.25-2.03-1.79C14.47 17.98 14 17.55 14 17v-2.34"/>
+      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+    </svg>
+  ),
+  BookOpen: ({ size = 22, color = "#8ec5d9" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
     </svg>
   ),
   Settings: ({ size = 22, color = "#8ec5d9" }) => (
@@ -1605,7 +1679,14 @@ function getMoonInfo(phase) {
   const p = phase % 1;
   const moon = MOON_PHASES.find(m => p >= m.min && p < m.max) ?? MOON_PHASES[0];
   const pct = Math.round(p <= 0.5 ? p * 200 : (1 - p) * 200);
-  return { name: moon.name, file: moon.file, pct };
+  // Illumination fraction 0→1 (0=new, 1=full, back to 0)
+  const illum = p <= 0.5 ? p * 2 : (1 - p) * 2;
+  // Glow X position: waxing (0–0.5) → right side, waning (0.5–1) → left side
+  // Near full → center, near new → doesn't matter (opacity 0)
+  const glowX = p <= 0.5
+    ? 50 + (1 - illum) * 35   // waxing: shift right (85% → 50%)
+    : 50 - (1 - illum) * 35;  // waning: shift left (15% → 50%)
+  return { name: moon.name, file: moon.file, pct, illum, glowX };
 }
 
 function MoonWidget({ moonphase }) {
@@ -1616,15 +1697,106 @@ function MoonWidget({ moonphase }) {
       <div className="moon-phase">Loading…</div>
     </div>
   );
-  const { name, file, pct } = getMoonInfo(moonphase);
+  const { name, file, pct, illum, glowX } = getMoonInfo(moonphase);
   return (
     <div className="moon-widget">
-      <div className="moon-img-wrap">
+      <div className="moon-img-wrap" style={{
+        '--glow-x': `${glowX}%`,
+        '--glow-opacity': illum,
+      }}>
         <img src={`/moon/${file}`} alt={name} className="moon-img" />
       </div>
       <div className="moon-info">
         <div className="moon-pct">{pct}%</div>
         <div className="moon-phase">{name}</div>
+      </div>
+    </div>
+  );
+}
+
+const MOCK_WOTD = {
+  word: "ineffable",
+  publishDate: new Date().toISOString().slice(0, 10),
+  definitions: [
+    { text: "Incapable of being expressed in words; unspeakable.", partOfSpeech: "adjective" },
+  ],
+  examples: [
+    { text: "The sunset over the canyon was an ineffable experience that no photograph could capture." },
+  ],
+  pronunciations: [{ raw: "ɪnˈɛfəbəl", rawType: "IPA" }],
+};
+
+function useWordOfTheDay() {
+  const [state, setState] = useState({ loading: true, data: null, error: null });
+
+  useEffect(() => {
+    const cacheKey = 'wotd-v1';
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey));
+      const today = new Date().toISOString().slice(0, 10);
+      if (cached && cached.date === today && cached.data) {
+        setState({ loading: false, data: cached.data, error: null });
+        return;
+      }
+    } catch {}
+
+    (async () => {
+      try {
+        const res = await fetch(`${WORKER_URL}/word-of-the-day`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        const today = new Date().toISOString().slice(0, 10);
+        localStorage.setItem(cacheKey, JSON.stringify({ date: today, data }));
+        setState({ loading: false, data, error: null });
+      } catch {
+        // Worker unavailable — use mock so the widget always renders
+        setState({ loading: false, data: MOCK_WOTD, error: null });
+      }
+    })();
+  }, []);
+
+  return state;
+}
+
+function WordOfTheDayWidget({ variant = "light" }) {
+  const { loading, data, error } = useWordOfTheDay();
+  const dark = variant === "dark";
+  const cls = dark ? "wotd-widget wotd-dark" : "wotd-widget";
+  const iconColor = "rgba(8,16,32,0.15)";
+  const unavailColor = "rgba(8,16,32,0.35)";
+
+  if (loading) return (
+    <div className={`${cls} wotd-shimmer widget-shimmer`}>
+      <Icon.BookOpen size={28} color={iconColor} />
+      <div className="wotd-label">Word of the Day</div>
+    </div>
+  );
+
+  if (error || !data) return (
+    <div className={`${cls} wotd-shimmer`}>
+      <Icon.BookOpen size={28} color={iconColor} />
+      <div className="wotd-label">Word of the Day</div>
+      <div style={{ fontSize: 11, color: unavailColor }}>Unavailable</div>
+    </div>
+  );
+
+  const pronunciation = data.pronunciations?.[0]?.raw;
+  const def = data.definitions?.[0];
+  const example = data.examples?.[0]?.text;
+
+  return (
+    <div className={cls}>
+      <div className="wotd-header">
+        <Icon.BookOpen size={16} color="rgba(8,16,32,0.4)" />
+        <div className="wotd-label">Word of the Day</div>
+      </div>
+      <div className="wotd-word">{data.word}</div>
+      {pronunciation && <div className="wotd-pronunciation">/{pronunciation}/</div>}
+      {def?.partOfSpeech && <div className="wotd-pos">{def.partOfSpeech}</div>}
+      {def?.text && <div className="wotd-def">{def.text}</div>}
+      {example && <div className="wotd-example">"{example}"</div>}
+      <div className="wotd-attribution">
+        Powered by <a href="https://www.wordnik.com/" target="_blank" rel="noopener noreferrer">Wordnik</a>
       </div>
     </div>
   );
@@ -1746,55 +1918,23 @@ function useOnThisDay() {
 
   useEffect(() => {
     const now = new Date();
-    const cacheKey = `otd-v2-${now.getMonth() + 1}-${now.getDate()}`;
+    const cacheKey = `otd-v3-${now.getMonth() + 1}-${now.getDate()}`;
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       try { setState({ loading: false, event: JSON.parse(cached), error: null }); return; } catch {}
     }
 
-    async function load() {
+    (async () => {
       try {
-        const month = now.getMonth() + 1;
-        const day = now.getDate();
-        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/feed/onthisday/events/${month}/${day}`);
-        const data = await res.json();
-        const events = (data.events || []).slice(0, 12);
-        const summaries = events.map(e => `Year ${e.year}: ${e.text}`).join('\n');
-
-        // Try AI curation; fall back to a random pick if it fails
-        let event = null;
-        try {
-          const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: 'claude-sonnet-4-20250514',
-              max_tokens: 200,
-              system: 'You are a curator for a feel-good morning digest app. From the historical events listed, pick the single most uplifting, wondrous, or genuinely fascinating one. STRICT RULES: Never pick events involving deaths, disasters, wars, violence, accidents, crimes, or any tragedy — even if historically significant. Prioritize: scientific breakthroughs, artistic milestones, exploration firsts, humanitarian achievements, cultural celebrations. Respond ONLY with valid JSON in this exact format: {"year":"YYYY","text":"One engaging sentence, 20-35 words.","location":"City or region where it happened","wiki_url":"URL"} — no markdown, no explanation, no extra fields.',
-              messages: [{ role: 'user', content: `Today is ${now.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}. Pick the best uplifting event (no deaths, no disasters, no violence):\n\n${summaries}\n\nAlso include the Wikipedia URL and a short location for each: ${JSON.stringify(events.map(e => ({ year: e.year, text: e.text, url: e.pages?.[0]?.content_urls?.desktop?.page })))}` }]
-            })
-          });
-          const aiData = await aiRes.json();
-          const raw = aiData.content?.[0]?.text || '';
-          const cleaned = raw.replace(/```json|```/g, '').trim();
-          event = JSON.parse(cleaned);
-        } catch {
-          // Fallback: pick a random event from Wikipedia results
-          const pick = events[Math.floor(Math.random() * Math.min(events.length, 5))];
-          event = {
-            year: String(pick.year),
-            text: pick.text,
-            location: pick.pages?.[0]?.description || null,
-            wiki_url: pick.pages?.[0]?.content_urls?.desktop?.page || null
-          };
-        }
+        const res = await fetch(`${WORKER_URL}/wikipedia`);
+        const event = await res.json();
+        if (event.error) throw new Error(event.error);
         localStorage.setItem(cacheKey, JSON.stringify(event));
         setState({ loading: false, event, error: null });
-      } catch (err) {
+      } catch {
         setState({ loading: false, event: null, error: 'Could not load today\'s event.' });
       }
-    }
-    load();
+    })();
   }, []);
 
   return state;
@@ -3164,6 +3304,277 @@ function FeedScreen({ enabledSubs, enabledNewsSources, mutedInMode = {}, alwaysB
 
 // ── WORLD SCREEN ──────────────────────────────────────────
 
+// ── SPORTS SCREEN ────────────────────────────────────────
+const LEAGUE_ORDER = ["nba", "nhl", "mlb", "nfl"];
+const LEAGUE_LABELS = { nba: "NBA", nhl: "NHL", mlb: "MLB", nfl: "NFL" };
+
+function useSportsScores() {
+  const [state, setState] = useState({ loading: true, data: null, error: null });
+
+  useEffect(() => {
+    const cacheKey = 'sports-v1';
+    const now = Date.now();
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey));
+      if (cached && (now - cached.ts) < 10 * 60 * 1000) {
+        setState({ loading: false, data: cached.data, error: null });
+        return;
+      }
+    } catch {}
+
+    (async () => {
+      try {
+        const res = await fetch(`${WORKER_URL}/sports`);
+        if (res.status === 429) throw new Error("Rate limited — try again shortly");
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data }));
+        setState({ loading: false, data, error: null });
+      } catch (err) {
+        setState({ loading: false, data: null, error: err.message });
+      }
+    })();
+  }, []);
+
+  return state;
+}
+
+function getGameStatus(game) {
+  if (game.status === "Match Finished" || game.status === "FT" ||
+      (game.homeScore != null && game.awayScore != null && !game.status?.includes("progress"))) {
+    return "final";
+  }
+  if (game.status && (game.status.includes("progress") || game.status.includes("Live") ||
+      /^\d/.test(game.status))) {
+    return "live";
+  }
+  return "scheduled";
+}
+
+function formatGameTime(game) {
+  if (!game.time) return "";
+  try {
+    const [h, m] = game.time.split(":");
+    const d = new Date();
+    d.setUTCHours(parseInt(h), parseInt(m));
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }).toLowerCase();
+  } catch { return game.time; }
+}
+
+function GameCard({ game }) {
+  const status = getGameStatus(game);
+  const homeScore = game.homeScore != null ? parseInt(game.homeScore) : null;
+  const awayScore = game.awayScore != null ? parseInt(game.awayScore) : null;
+  const homeWins = status === "final" && homeScore != null && awayScore != null && homeScore > awayScore;
+  const awayWins = status === "final" && homeScore != null && awayScore != null && awayScore > homeScore;
+
+  return (
+    <div className="game-card">
+      <div className="game-status-row">
+        <div className={`game-status ${status}`}>
+          {status === "live" ? (game.status || "Live") : status === "final" ? "Final" : formatGameTime(game) || "Scheduled"}
+        </div>
+        {game.date && <div className="game-time">{game.date}</div>}
+      </div>
+      <div className="game-teams">
+        <div className="game-team-row">
+          <div className="game-team-left">
+            {game.awayBadge
+              ? <img src={game.awayBadge} alt="" className="game-team-badge" />
+              : <div className="game-team-badge-placeholder" />}
+            <div className={`game-team-name ${awayWins ? "winner" : ""}`}>{game.awayTeam}</div>
+          </div>
+          {homeScore != null
+            ? <div className={`game-score ${awayWins ? "winner" : ""}`}>{awayScore}</div>
+            : <div className="game-score pending">—</div>}
+        </div>
+        <div className="game-team-row">
+          <div className="game-team-left">
+            {game.homeBadge
+              ? <img src={game.homeBadge} alt="" className="game-team-badge" />
+              : <div className="game-team-badge-placeholder" />}
+            <div className={`game-team-name ${homeWins ? "winner" : ""}`}>{game.homeTeam}</div>
+          </div>
+          {homeScore != null
+            ? <div className={`game-score ${homeWins ? "winner" : ""}`}>{homeScore}</div>
+            : <div className="game-score pending">—</div>}
+        </div>
+      </div>
+      {game.venue && <div className="game-venue">{game.venue}</div>}
+    </div>
+  );
+}
+
+function SportsSkeletons() {
+  return Array.from({ length: 4 }, (_, i) => (
+    <div className="sports-skeleton widget-shimmer" key={i}>
+      <div className="sports-skeleton-row">
+        <div className="skeleton" style={{ width: 50, height: 12 }} />
+        <div className="skeleton" style={{ width: 70, height: 10 }} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div className="sports-skeleton-row">
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div className="skeleton" style={{ width: 22, height: 22, borderRadius: 4 }} />
+            <div className="skeleton" style={{ width: 100, height: 13 }} />
+          </div>
+          <div className="skeleton" style={{ width: 24, height: 15 }} />
+        </div>
+        <div className="sports-skeleton-row">
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div className="skeleton" style={{ width: 22, height: 22, borderRadius: 4 }} />
+            <div className="skeleton" style={{ width: 90, height: 13 }} />
+          </div>
+          <div className="skeleton" style={{ width: 24, height: 15 }} />
+        </div>
+      </div>
+    </div>
+  ));
+}
+
+function SportsScreen() {
+  const { loading, data, error } = useSportsScores();
+
+  if (loading) return (
+    <div className="sports-bg">
+      <div className="sports-header fade-up fade-up-1">
+        <div className="sports-title">Scores</div>
+        <div className="sports-subtitle">Today's games & recent results</div>
+      </div>
+      <div className="fade-up fade-up-2"><SportsSkeletons /></div>
+    </div>
+  );
+
+  if (error || !data) return (
+    <div className="sports-bg">
+      <div className="sports-header fade-up fade-up-1">
+        <div className="sports-title">Scores</div>
+        <div className="sports-subtitle">Today's games & recent results</div>
+      </div>
+      <div className="sports-error fade-up fade-up-2">
+        <Icon.Trophy size={36} color="rgba(253,242,232,0.2)" />
+        <div className="sports-error-msg">{error || "Scores unavailable right now"}</div>
+      </div>
+    </div>
+  );
+
+  const leagues = data.leagues || {};
+
+  // Sort games: live first, then scheduled (today), then final (recent)
+  const sortGames = (games) => {
+    const order = { live: 0, scheduled: 1, final: 2 };
+    return [...games].sort((a, b) => order[getGameStatus(a)] - order[getGameStatus(b)]);
+  };
+
+  // Merge live + recent + upcoming per league, deduplicate by id
+  const mergeLeagueGames = (leagueData) => {
+    if (!leagueData) return [];
+    const all = [...(leagueData.live || []), ...(leagueData.upcoming || []), ...(leagueData.recent || [])];
+    const seen = new Set();
+    return sortGames(all.filter(g => {
+      if (seen.has(g.id)) return false;
+      seen.add(g.id);
+      return true;
+    }));
+  };
+
+  const hasAnyGames = LEAGUE_ORDER.some(l => mergeLeagueGames(leagues[l]).length > 0);
+
+  return (
+    <div className="sports-bg">
+      <div className="sports-header fade-up fade-up-1">
+        <div className="sports-title">Scores</div>
+        <div className="sports-subtitle">Today's games & recent results</div>
+      </div>
+      {!hasAnyGames ? (
+        <div className="sports-error fade-up fade-up-2">
+          <Icon.Trophy size={36} color="rgba(253,242,232,0.2)" />
+          <div className="sports-error-msg">No games scheduled right now</div>
+        </div>
+      ) : (
+        LEAGUE_ORDER.map((league, li) => {
+          const games = mergeLeagueGames(leagues[league]);
+          if (!games.length) return null;
+          return (
+            <div className={`sports-league-section fade-up fade-up-${li + 2}`} key={league}>
+              <div className="sports-league-header">
+                <div className="sports-league-name">{LEAGUE_LABELS[league]}</div>
+              </div>
+              {games.map(g => <GameCard game={g} key={g.id} />)}
+            </div>
+          );
+        })
+      )}
+      <div className="wotd-attribution fade-up fade-up-7" style={{ margin: '16px 20px 0', color: 'rgba(253,242,232,0.3)' }}>
+        Powered by <a href="https://www.thesportsdb.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(253,242,232,0.4)' }}>TheSportsDB</a>
+      </div>
+    </div>
+  );
+}
+
+function useArtOfTheDay() {
+  const [state, setState] = useState({ loading: true, data: null });
+
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const cacheKey = `art-v1-${today}`;
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey));
+      if (cached) { setState({ loading: false, data: cached }); return; }
+    } catch {}
+
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, "artOfTheDay", today));
+        if (snap.exists()) {
+          const data = snap.data();
+          localStorage.setItem(cacheKey, JSON.stringify(data));
+          setState({ loading: false, data });
+        } else {
+          setState({ loading: false, data: null });
+        }
+      } catch {
+        setState({ loading: false, data: null });
+      }
+    })();
+  }, []);
+
+  return state;
+}
+
+function ArtOfTheDayCard() {
+  const { loading, data } = useArtOfTheDay();
+
+  if (loading) return (
+    <div className="art-card widget-shimmer" style={{ minHeight: 160 }}>
+      <div className="art-image"><Icon.Painting size={64} /></div>
+      <div className="art-info">
+        <div className="skeleton" style={{ width: '60%', height: 14 }} />
+        <div className="skeleton" style={{ width: '80%', height: 10, marginTop: 6 }} />
+      </div>
+    </div>
+  );
+
+  if (!data) return null;
+
+  return (
+    <div className="art-card">
+      <div className="art-image">
+        {data.imageUrl ? (
+          <img src={data.imageUrl} alt={data.title} />
+        ) : (
+          <Icon.Painting size={64} />
+        )}
+      </div>
+      <div className="art-info">
+        <div className="art-title">{data.title}</div>
+        <div className="art-meta">{data.artist}{data.yearSource ? ` · ${data.yearSource}` : ''}</div>
+        {data.description && <div className="art-desc">{data.description}</div>}
+      </div>
+    </div>
+  );
+}
+
 function WorldScreen() {
   const [vote, setVote] = useState(null);
   const [animating, setAnimating] = useState(false);
@@ -3276,7 +3687,7 @@ function WorldScreen() {
                       {isChosen && <Icon.Check size={13} color="#FFBC42" />}
                       <span style={{ color: isChosen ? "#FFBC42" : "#023047", fontWeight: isChosen ? 600 : 500 }}>{opt.label}</span>
                     </div>
-                    <div className="poll-result-pct" style={{ color: isWinner ? "#FFBC42" : "#2a5f7a" }}>{pct}%</div>
+                    <div className="poll-result-pct" style={{ color: isWinner ? "#FFBC42" : undefined }}>{pct}%</div>
                   </div>
                   <div className="poll-result-track">
                     <div className={`poll-result-fill ${isWinner ? "winner" : ""} ${isChosen && !isWinner ? "chosen" : ""}`}
@@ -3290,19 +3701,12 @@ function WorldScreen() {
         )}
       </div>
 
-      <div className="word-card fade-up fade-up-5">
-        <div className="word-tag">Word of the Day</div>
-        <div className="word-main">Sonder</div>
-        <div className="word-type">noun · coined word</div>
-        <div className="word-def">The realization that each passerby has a life as vivid and complex as one's own — filled with their own ambitions, routines, and quiet joys.</div>
+      <div className="fade-up fade-up-5">
+        <WordOfTheDayWidget variant="dark" />
       </div>
 
-      <div className="art-card fade-up fade-up-6">
-        <div className="art-image"><Icon.Painting size={64} /></div>
-        <div className="art-info">
-          <div className="art-title">Starry Night Over the Rhône</div>
-          <div className="art-meta">Vincent van Gogh · 1888 · Musée d'Orsay, Paris</div>
-        </div>
+      <div className="fade-up fade-up-6">
+        <ArtOfTheDayCard />
       </div>
     </div>
   );
@@ -3515,6 +3919,22 @@ function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggle
         </div>
       ))}
 
+      <span className="section-label fade-up fade-up-5">Sports Scores</span>
+      {[
+        { league: "nba", Ico: Icon.Basketball, label: "NBA", value: "Basketball" },
+        { league: "nfl", Ico: Icon.Trophy, label: "NFL", value: "Football" },
+        { league: "mlb", Ico: Icon.Trophy, label: "MLB", value: "Baseball" },
+        { league: "nhl", Ico: Icon.Trophy, label: "NHL", value: "Hockey" },
+      ].map(s => (
+        <div className="setting-row fade-up fade-up-5" key={s.league}>
+          <div className="setting-left">
+            <div className="setting-icon"><s.Ico size={18} color="#023047" /></div>
+            <div><div className="setting-name">{s.label}</div><div className="setting-value">{s.value}</div></div>
+          </div>
+          <Toggle on={true} onToggle={() => {}} />
+        </div>
+      ))}
+
       <span className="section-label fade-up fade-up-5">Notifications</span>
       {[
         { key: "notification", Ico: Icon.Bell, label: "Morning reminder", value: "Daily at 7:00 AM" },
@@ -3556,6 +3976,7 @@ const TABS = [
   { id: "home",     label: "Home",     ActiveIcon: p => <Icon.Home     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Home     {...p} color="rgba(12,26,53,0.35)" /> },
   { id: "feed",     label: "Feed",     ActiveIcon: p => <Icon.Feed     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Feed     {...p} color="rgba(12,26,53,0.35)" /> },
   { id: "world",    label: "World",    ActiveIcon: p => <Icon.Globe    {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Globe    {...p} color="rgba(12,26,53,0.35)" /> },
+  { id: "sports",   label: "Scores",   ActiveIcon: p => <Icon.Trophy   {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Trophy   {...p} color="rgba(12,26,53,0.35)" /> },
   { id: "settings", label: "Settings", ActiveIcon: p => <Icon.Settings {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Settings {...p} color="rgba(12,26,53,0.35)" /> },
 ];
 
@@ -3632,6 +4053,7 @@ export default function MorningScrollApp() {
       case "home":     return <HomeScreen onOpenWordle={() => setWordleOpen(true)} />;
       case "feed":     return <FeedScreen enabledSubs={enabledSubs} enabledNewsSources={enabledNewsSources} mutedInMode={mutedInMode} alwaysBlock={alwaysBlock} />;
       case "world":    return <WorldScreen />;
+      case "sports":   return <SportsScreen />;
       case "settings": return <SettingsScreen enabledSubs={enabledSubs} onToggleSub={toggleSub} enabledNewsSources={enabledNewsSources} onToggleNewsSource={toggleNewsSource} mutedInMode={mutedInMode} onToggleMutedInMode={toggleMutedInMode} alwaysBlock={alwaysBlock} onToggleAlwaysBlock={toggleAlwaysBlock} />;
       default:         return <HomeScreen onOpenWordle={() => setWordleOpen(true)} />;
     }

@@ -1,0 +1,388 @@
+import { useState, useEffect, useCallback } from "react";
+import { auth, db, storage } from "./firebase.js";
+import {
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
+import {
+  collection,
+  doc,
+  setDoc,
+  getDocs,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+} from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+// ── STYLES ──────────────────────────────────────────────
+const STYLES = `
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Satoshi:wght@400;500;600;700&family=Space+Mono&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Satoshi', sans-serif; background: #0C1A35; color: #FDF2E8; min-height: 100vh; }
+
+  .admin-shell { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+  .admin-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .admin-title { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 600; }
+  .admin-logout { font-size: 12px; color: rgba(253,242,232,0.5); background: rgba(253,242,232,0.08); border: 1px solid rgba(253,242,232,0.15); border-radius: 8px; padding: 6px 14px; cursor: pointer; }
+  .admin-logout:hover { background: rgba(253,242,232,0.15); }
+
+  .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .login-card { background: rgba(253,242,232,0.06); border: 1.5px solid rgba(253,242,232,0.15); border-radius: 24px; padding: 40px 32px; width: 360px; }
+  .login-title { font-family: 'Fraunces', serif; font-size: 24px; text-align: center; margin-bottom: 24px; }
+  .login-input { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid rgba(253,242,232,0.2); background: rgba(253,242,232,0.06); color: #FDF2E8; font-size: 14px; font-family: 'Satoshi', sans-serif; outline: none; margin-bottom: 12px; }
+  .login-input:focus { border-color: rgba(253,242,232,0.5); }
+  .login-input::placeholder { color: rgba(253,242,232,0.3); }
+  .login-btn { width: 100%; padding: 12px; border-radius: 12px; border: none; background: #FFD166; color: #023047; font-size: 14px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
+  .login-btn:hover { background: #FFBC42; }
+  .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .login-err { font-size: 12px; color: #FF6B6B; text-align: center; margin-top: 10px; }
+
+  .form-section { background: rgba(253,242,232,0.06); border: 1.5px solid rgba(253,242,232,0.15); border-radius: 24px; padding: 24px; margin-bottom: 24px; }
+  .form-section-title { font-size: 12px; color: rgba(253,242,232,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; }
+  .form-row { display: flex; gap: 12px; margin-bottom: 12px; }
+  .form-row > * { flex: 1; }
+  .form-label { font-size: 11px; color: rgba(253,242,232,0.5); font-weight: 500; margin-bottom: 4px; display: block; }
+  .form-input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1.5px solid rgba(253,242,232,0.15); background: rgba(253,242,232,0.04); color: #FDF2E8; font-size: 13px; font-family: 'Satoshi', sans-serif; outline: none; }
+  .form-input:focus { border-color: rgba(253,242,232,0.4); }
+  .form-input::placeholder { color: rgba(253,242,232,0.25); }
+  .form-textarea { resize: vertical; min-height: 70px; }
+
+  .dropzone {
+    border: 2px dashed rgba(253,242,232,0.2); border-radius: 16px; padding: 32px; text-align: center;
+    cursor: pointer; transition: all 0.2s; margin-bottom: 12px; position: relative;
+  }
+  .dropzone:hover, .dropzone.drag-over { border-color: #FFD166; background: rgba(255,209,102,0.05); }
+  .dropzone-text { font-size: 13px; color: rgba(253,242,232,0.4); }
+  .dropzone-hint { font-size: 11px; color: rgba(253,242,232,0.25); margin-top: 4px; }
+  .dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .dropzone-preview { width: 100%; max-height: 300px; object-fit: contain; border-radius: 12px; }
+
+  .save-btn { padding: 12px 32px; border-radius: 12px; border: none; background: #FFD166; color: #023047; font-size: 14px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
+  .save-btn:hover { background: #FFBC42; }
+  .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .save-status { font-size: 12px; color: rgba(253,242,232,0.5); margin-left: 12px; }
+  .save-row { display: flex; align-items: center; margin-top: 16px; }
+
+  .queue-section { margin-top: 32px; }
+  .queue-title { font-size: 12px; color: rgba(253,242,232,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+  .queue-empty { font-size: 13px; color: rgba(253,242,232,0.3); text-align: center; padding: 24px; }
+  .queue-item { display: flex; align-items: center; gap: 14px; padding: 12px; background: rgba(253,242,232,0.04); border-radius: 14px; margin-bottom: 8px; border: 1px solid rgba(253,242,232,0.08); }
+  .queue-thumb { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: #023047; flex-shrink: 0; }
+  .queue-info { flex: 1; min-width: 0; }
+  .queue-date { font-size: 11px; color: #FFD166; font-weight: 600; font-family: 'Space Mono', monospace; }
+  .queue-art-title { font-size: 14px; color: #FDF2E8; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .queue-art-meta { font-size: 11px; color: rgba(253,242,232,0.4); }
+  .queue-today { border-color: #FFD166; background: rgba(255,209,102,0.06); }
+  .queue-delete { font-size: 11px; color: #FF6B6B; background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.2); border-radius: 8px; padding: 4px 10px; cursor: pointer; flex-shrink: 0; }
+  .queue-delete:hover { background: rgba(255,107,107,0.2); }
+
+  .preview-section { margin-top: 24px; }
+  .preview-label { font-size: 12px; color: rgba(253,242,232,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+  .preview-frame { background: linear-gradient(175deg, #081020, #162D52, #80A8B5, #FFF4E0); border-radius: 24px; padding: 20px; }
+
+  /* App card preview — matches real app styles */
+  .art-card { border-radius: 24px; overflow: hidden; border: 1.5px solid #FDF2E8; }
+  .art-image { min-height: 160px; max-height: 360px; background: #FDF2E8; display: flex; align-items: center; justify-content: center; position: relative; }
+  .art-image img { width: 100%; height: 100%; object-fit: contain; }
+  .art-info { background: rgba(253,242,232,0.55); backdrop-filter: blur(8px); padding: 16px 20px; }
+  .art-title { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #0C1A35; }
+  .art-meta { font-size: 11px; color: rgba(8,16,32,0.5); margin-top: 3px; }
+  .art-desc { font-size: 12px; color: rgba(8,16,32,0.45); margin-top: 6px; line-height: 1.5; }
+`;
+
+// ── LOGIN SCREEN ────────────────────────────────────────
+function LoginScreen({ onAuth }) {
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [err, setErr] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setErr(null);
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (ex) {
+      setErr(ex.message.replace("Firebase: ", ""));
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="login-wrap">
+      <form className="login-card" onSubmit={handleLogin}>
+        <div className="login-title">Morning Scroll Admin</div>
+        <input className="login-input" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input className="login-input" type="password" placeholder="Password" value={pass} onChange={(e) => setPass(e.target.value)} />
+        <button className="login-btn" type="submit" disabled={loading}>{loading ? "Signing in..." : "Sign In"}</button>
+        {err && <div className="login-err">{err}</div>}
+      </form>
+    </div>
+  );
+}
+
+// ── ADMIN DASHBOARD ─────────────────────────────────────
+function AdminDashboard() {
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Form state
+  const [date, setDate] = useState(today);
+  const [artist, setArtist] = useState("");
+  const [title, setTitle] = useState("");
+  const [yearSource, setYearSource] = useState("");
+  const [description, setDescription] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  // Queue state
+  const [queue, setQueue] = useState([]);
+  const [queueLoading, setQueueLoading] = useState(true);
+
+  // Load queue
+  const loadQueue = useCallback(async () => {
+    setQueueLoading(true);
+    try {
+      const q = query(
+        collection(db, "artOfTheDay"),
+        where("date", ">=", today),
+        orderBy("date", "asc")
+      );
+      const snap = await getDocs(q);
+      setQueue(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    } catch {
+      // Also load past entries to show recently published
+      try {
+        const q = query(collection(db, "artOfTheDay"), orderBy("date", "desc"));
+        const snap = await getDocs(q);
+        setQueue(snap.docs.map((d) => ({ id: d.id, ...d.data() })).slice(0, 30));
+      } catch {}
+    }
+    setQueueLoading(false);
+  }, [today]);
+
+  useEffect(() => { loadQueue(); }, [loadQueue]);
+
+  // Image handling
+  const handleImageSelect = (file) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => setImagePreview(e.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    handleImageSelect(file);
+  };
+
+  // Save
+  const handleSave = async () => {
+    if (!date || !title || !artist) {
+      setSaveMsg("Date, artist, and title are required.");
+      return;
+    }
+    setSaving(true);
+    setSaveMsg(null);
+
+    try {
+      let imageUrl = null;
+
+      if (imageFile) {
+        const path = `art/${date}-${Date.now()}.jpg`;
+        const storageRef = ref(storage, path);
+        await uploadBytes(storageRef, imageFile);
+        imageUrl = await getDownloadURL(storageRef);
+      }
+
+      const docData = {
+        date,
+        artist,
+        title,
+        yearSource,
+        description,
+        imageUrl,
+        createdAt: new Date().toISOString(),
+      };
+
+      await setDoc(doc(db, "artOfTheDay", date), docData);
+      setSaveMsg("Saved!");
+      setArtist("");
+      setTitle("");
+      setYearSource("");
+      setDescription("");
+      setImageFile(null);
+      setImagePreview(null);
+      loadQueue();
+    } catch (err) {
+      setSaveMsg(`Error: ${err.message}`);
+    }
+    setSaving(false);
+  };
+
+  // Delete
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this entry?")) return;
+    try {
+      await deleteDoc(doc(db, "artOfTheDay", id));
+      loadQueue();
+    } catch {}
+  };
+
+  // Load existing entry when date changes
+  useEffect(() => {
+    const existing = queue.find((q) => q.date === date);
+    if (existing) {
+      setArtist(existing.artist || "");
+      setTitle(existing.title || "");
+      setYearSource(existing.yearSource || "");
+      setDescription(existing.description || "");
+      setImagePreview(existing.imageUrl || null);
+      setImageFile(null);
+    }
+  }, [date, queue]);
+
+  return (
+    <div className="admin-shell">
+      <div className="admin-top">
+        <div className="admin-title">Art of the Day</div>
+        <button className="admin-logout" onClick={() => signOut(auth)}>Sign Out</button>
+      </div>
+
+      {/* Date picker */}
+      <div className="form-section">
+        <div className="form-section-title">Publish Date</div>
+        <input className="form-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+      </div>
+
+      {/* Image upload */}
+      <div className="form-section">
+        <div className="form-section-title">Artwork Image</div>
+        <div
+          className={`dropzone ${dragOver ? "drag-over" : ""}`}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+        >
+          <input type="file" accept="image/*" onChange={(e) => handleImageSelect(e.target.files[0])} />
+          {imagePreview ? (
+            <img src={imagePreview} alt="Preview" className="dropzone-preview" />
+          ) : (
+            <>
+              <div className="dropzone-text">Drop an image here or click to browse</div>
+              <div className="dropzone-hint">JPG, PNG, WebP</div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Text fields */}
+      <div className="form-section">
+        <div className="form-section-title">Details</div>
+        <div className="form-row">
+          <div>
+            <label className="form-label">Artist Name</label>
+            <input className="form-input" placeholder="Vincent van Gogh" value={artist} onChange={(e) => setArtist(e.target.value)} />
+          </div>
+          <div>
+            <label className="form-label">Artwork Title</label>
+            <input className="form-input" placeholder="Starry Night Over the Rhone" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+        </div>
+        <div className="form-row">
+          <div>
+            <label className="form-label">Year / Source</label>
+            <input className="form-input" placeholder="1888 · Musee d'Orsay, Paris" value={yearSource} onChange={(e) => setYearSource(e.target.value)} />
+          </div>
+        </div>
+        <div>
+          <label className="form-label">Description</label>
+          <textarea className="form-input form-textarea" placeholder="A short description of the artwork..." value={description} onChange={(e) => setDescription(e.target.value)} />
+        </div>
+      </div>
+
+      {/* Save */}
+      <div className="save-row">
+        <button className="save-btn" onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Entry"}</button>
+        {saveMsg && <span className="save-status">{saveMsg}</span>}
+      </div>
+
+      {/* Live preview */}
+      <div className="preview-section">
+        <div className="preview-label">Live Preview</div>
+        <div className="preview-frame">
+          <div className="art-card">
+            <div className="art-image">
+              {imagePreview ? (
+                <img src={imagePreview} alt={title} />
+              ) : (
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(142,202,230,0.18)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/>
+                </svg>
+              )}
+            </div>
+            <div className="art-info">
+              <div className="art-title">{title || "Artwork Title"}</div>
+              <div className="art-meta">
+                {artist || "Artist"}{yearSource ? ` · ${yearSource}` : ""}
+              </div>
+              {description && <div className="art-desc">{description}</div>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Queue */}
+      <div className="queue-section">
+        <div className="queue-title">Scheduled Queue</div>
+        {queueLoading ? (
+          <div className="queue-empty">Loading...</div>
+        ) : queue.length === 0 ? (
+          <div className="queue-empty">No entries scheduled yet</div>
+        ) : (
+          queue.map((item) => (
+            <div className={`queue-item ${item.date === today ? "queue-today" : ""}`} key={item.id}>
+              {item.imageUrl ? (
+                <img src={item.imageUrl} alt={item.title} className="queue-thumb" />
+              ) : (
+                <div className="queue-thumb" />
+              )}
+              <div className="queue-info">
+                <div className="queue-date">{item.date}{item.date === today ? " — TODAY" : ""}</div>
+                <div className="queue-art-title">{item.title}</div>
+                <div className="queue-art-meta">{item.artist}{item.yearSource ? ` · ${item.yearSource}` : ""}</div>
+              </div>
+              <button className="queue-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── ROOT ────────────────────────────────────────────────
+export default function AdminApp() {
+  const [user, setUser] = useState(undefined); // undefined = loading
+
+  useEffect(() => {
+    return onAuthStateChanged(auth, (u) => setUser(u));
+  }, []);
+
+  return (
+    <>
+      <style>{STYLES}</style>
+      {user === undefined ? null : user ? <AdminDashboard /> : <LoginScreen />}
+    </>
+  );
+}
