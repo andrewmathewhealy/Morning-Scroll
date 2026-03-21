@@ -82,13 +82,13 @@ const STYLES = `
 
   .preview-section { margin-top: 24px; }
   .preview-label { font-size: 12px; color: rgba(253,242,232,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
-  .preview-frame { background: linear-gradient(175deg, #081020, #162D52, #80A8B5, #FFF4E0); border-radius: 24px; padding: 20px; }
+  .preview-frame { background: linear-gradient(175deg, #081020, #162D52, #80A8B5, #FFF4E0); border-radius: 24px; padding: 20px; max-width: 390px; margin: 0 auto; }
 
   /* App card preview — matches real app styles */
   .art-card { border-radius: 24px; overflow: hidden; border: 1.5px solid #FDF2E8; }
   .art-image { min-height: 160px; max-height: 360px; background: #FDF2E8; display: flex; align-items: center; justify-content: center; position: relative; }
   .art-image img { width: 100%; height: 100%; object-fit: contain; }
-  .art-info { background: rgba(253,242,232,0.55); backdrop-filter: blur(8px); padding: 16px 20px; }
+  .art-info { background: #FDF2E8; padding: 28px 20px 18px; }
   .art-title { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #0C1A35; }
   .art-meta { font-size: 11px; color: rgba(8,16,32,0.5); margin-top: 3px; }
   .art-desc { font-size: 12px; color: rgba(8,16,32,0.45); margin-top: 6px; line-height: 1.5; }
@@ -239,7 +239,7 @@ function AdminDashboard() {
     } catch {}
   };
 
-  // Load existing entry when date changes
+  // Load existing entry when date changes, or clear fields for empty dates
   useEffect(() => {
     const existing = queue.find((q) => q.date === date);
     if (existing) {
@@ -249,7 +249,15 @@ function AdminDashboard() {
       setDescription(existing.description || "");
       setImagePreview(existing.imageUrl || null);
       setImageFile(null);
+    } else {
+      setArtist("");
+      setTitle("");
+      setYearSource("");
+      setDescription("");
+      setImagePreview(null);
+      setImageFile(null);
     }
+    setSaveMsg(null);
   }, [date, queue]);
 
   return (
