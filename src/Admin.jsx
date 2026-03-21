@@ -80,6 +80,23 @@ const STYLES = `
   .queue-delete { font-size: 11px; color: #FF6B6B; background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.2); border-radius: 8px; padding: 4px 10px; cursor: pointer; flex-shrink: 0; }
   .queue-delete:hover { background: rgba(255,107,107,0.2); }
 
+  .admin-tabs { display: flex; gap: 4px; margin-bottom: 28px; background: rgba(253,242,232,0.06); border-radius: 14px; padding: 4px; }
+  .admin-tab { flex: 1; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; font-family: 'Satoshi', sans-serif; color: rgba(253,242,232,0.4); background: none; border: none; cursor: pointer; text-align: center; transition: all 0.2s; }
+  .admin-tab.active { background: rgba(253,242,232,0.12); color: #FDF2E8; }
+  .admin-tab:hover:not(.active) { color: rgba(253,242,232,0.6); }
+
+  .poll-option-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .poll-option-row .form-input { flex: 1; }
+  .poll-remove-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,107,107,0.2); background: rgba(255,107,107,0.1); color: #FF6B6B; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .poll-remove-btn:hover { background: rgba(255,107,107,0.2); }
+  .poll-add-btn { padding: 8px 16px; border-radius: 10px; border: 1.5px dashed rgba(253,242,232,0.2); background: none; color: rgba(253,242,232,0.4); font-size: 12px; font-weight: 500; font-family: 'Satoshi', sans-serif; cursor: pointer; width: 100%; margin-top: 4px; }
+  .poll-add-btn:hover { border-color: rgba(253,242,232,0.4); color: rgba(253,242,232,0.6); }
+  .poll-preview-card { background: rgba(253,242,232,0.55); border-radius: 24px; padding: 20px; border: 1.5px solid #FDF2E8; }
+  .poll-preview-title { font-family: 'Satoshi', sans-serif; font-size: 17px; color: #0C1A35; margin-bottom: 4px; }
+  .poll-preview-sub { font-size: 11px; color: rgba(8,16,32,0.45); margin-bottom: 14px; }
+  .poll-preview-option { padding: 11px 16px; border-radius: 14px; font-size: 13px; font-weight: 500; background: rgba(8,16,32,0.04); border: 1.5px solid rgba(8,16,32,0.15); color: #0C1A35; margin-bottom: 8px; }
+  .poll-preview-option:last-child { margin-bottom: 0; }
+
   .preview-section { margin-top: 24px; }
   .preview-label { font-size: 12px; color: rgba(253,242,232,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
   .preview-frame { background: linear-gradient(175deg, #081020, #162D52, #80A8B5, #FFF4E0); border-radius: 24px; padding: 20px; max-width: 390px; margin: 0 auto; }
@@ -127,8 +144,172 @@ function LoginScreen({ onAuth }) {
 }
 
 // ── ADMIN DASHBOARD ─────────────────────────────────────
+// ── POLL EDITOR ─────────────────────────────────────────
+function PollEditor() {
+  const today = new Date().toISOString().slice(0, 10);
+  const [date, setDate] = useState(today);
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState(["", "", ""]);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState(null);
+  const [queue, setQueue] = useState([]);
+  const [queueLoading, setQueueLoading] = useState(true);
+
+  const loadQueue = useCallback(async () => {
+    setQueueLoading(true);
+    try {
+      const q = query(collection(db, "polls"), orderBy("date", "desc"));
+      const snap = await getDocs(q);
+      setQueue(snap.docs.map((d) => ({ id: d.id, ...d.data() })).slice(0, 30));
+    } catch {}
+    setQueueLoading(false);
+  }, []);
+
+  useEffect(() => { loadQueue(); }, [loadQueue]);
+
+  // Load existing poll when date changes
+  useEffect(() => {
+    const existing = queue.find((q) => q.date === date);
+    if (existing) {
+      setQuestion(existing.question || "");
+      setOptions(existing.options || ["", "", ""]);
+    } else {
+      setQuestion("");
+      setOptions(["", "", ""]);
+    }
+    setSaveMsg(null);
+  }, [date, queue]);
+
+  const updateOption = (i, val) => {
+    const next = [...options];
+    next[i] = val;
+    setOptions(next);
+  };
+
+  const removeOption = (i) => {
+    if (options.length <= 2) return;
+    setOptions(options.filter((_, idx) => idx !== i));
+  };
+
+  const addOption = () => {
+    if (options.length >= 8) return;
+    setOptions([...options, ""]);
+  };
+
+  const handleSave = async () => {
+    const filledOptions = options.filter((o) => o.trim());
+    if (!date || !question.trim() || filledOptions.length < 2) {
+      setSaveMsg("Need a date, question, and at least 2 options.");
+      return;
+    }
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      await setDoc(doc(db, "polls", date), {
+        date,
+        question: question.trim(),
+        options: filledOptions,
+        createdAt: new Date().toISOString(),
+      });
+      setSaveMsg("Saved!");
+      loadQueue();
+    } catch (err) {
+      setSaveMsg(`Error: ${err.message}`);
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this poll?")) return;
+    try {
+      await deleteDoc(doc(db, "polls", id));
+      loadQueue();
+    } catch {}
+  };
+
+  return (
+    <>
+      {/* Date picker */}
+      <div className="form-section">
+        <div className="form-section-title">Poll Date</div>
+        <input className="form-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+      </div>
+
+      {/* Question */}
+      <div className="form-section">
+        <div className="form-section-title">Question</div>
+        <input className="form-input" placeholder="How are you waking up?" value={question} onChange={(e) => setQuestion(e.target.value)} />
+      </div>
+
+      {/* Options */}
+      <div className="form-section">
+        <div className="form-section-title">Options</div>
+        {options.map((opt, i) => (
+          <div className="poll-option-row" key={i}>
+            <input
+              className="form-input"
+              placeholder={`Option ${i + 1}`}
+              value={opt}
+              onChange={(e) => updateOption(i, e.target.value)}
+            />
+            {options.length > 2 && (
+              <button className="poll-remove-btn" onClick={() => removeOption(i)}>×</button>
+            )}
+          </div>
+        ))}
+        {options.length < 8 && (
+          <button className="poll-add-btn" onClick={addOption}>+ Add Option</button>
+        )}
+      </div>
+
+      {/* Save */}
+      <div className="save-row">
+        <button className="save-btn" onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Poll"}</button>
+        {saveMsg && <span className="save-status">{saveMsg}</span>}
+      </div>
+
+      {/* Preview */}
+      <div className="preview-section">
+        <div className="preview-label">Live Preview</div>
+        <div className="preview-frame">
+          <div className="poll-preview-card">
+            <div className="poll-preview-title">{question || "Your question here"}</div>
+            <div className="poll-preview-sub">Tap to share anonymously</div>
+            {options.filter((o) => o.trim()).map((opt, i) => (
+              <div className="poll-preview-option" key={i}>{opt}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Queue */}
+      <div className="queue-section">
+        <div className="queue-title">Poll Schedule</div>
+        {queueLoading ? (
+          <div className="queue-empty">Loading...</div>
+        ) : queue.length === 0 ? (
+          <div className="queue-empty">No polls scheduled yet</div>
+        ) : (
+          queue.map((item) => (
+            <div className={`queue-item ${item.date === today ? "queue-today" : ""}`} key={item.id}>
+              <div className="queue-info">
+                <div className="queue-date">{item.date}{item.date === today ? " — TODAY" : ""}</div>
+                <div className="queue-art-title">{item.question}</div>
+                <div className="queue-art-meta">{item.options?.length || 0} options</div>
+              </div>
+              <button className="queue-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+            </div>
+          ))
+        )}
+      </div>
+    </>
+  );
+}
+
+// ── ART EDITOR ──────────────────────────────────────────
 function AdminDashboard() {
   const today = new Date().toISOString().slice(0, 10);
+  const [activeTab, setActiveTab] = useState("art");
 
   // Form state
   const [date, setDate] = useState(today);
@@ -263,9 +444,16 @@ function AdminDashboard() {
   return (
     <div className="admin-shell">
       <div className="admin-top">
-        <div className="admin-title">Art of the Day</div>
+        <div className="admin-title">Morning Scroll Admin</div>
         <button className="admin-logout" onClick={() => signOut(auth)}>Sign Out</button>
       </div>
+
+      <div className="admin-tabs">
+        <button className={`admin-tab ${activeTab === "art" ? "active" : ""}`} onClick={() => setActiveTab("art")}>Art of the Day</button>
+        <button className={`admin-tab ${activeTab === "polls" ? "active" : ""}`} onClick={() => setActiveTab("polls")}>Polls</button>
+      </div>
+
+      {activeTab === "polls" ? <PollEditor /> : <>
 
       {/* Date picker */}
       <div className="form-section">
@@ -350,9 +538,9 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* Queue */}
+      {/* Art Queue */}
       <div className="queue-section">
-        <div className="queue-title">Scheduled Queue</div>
+        <div className="queue-title">Art Schedule</div>
         {queueLoading ? (
           <div className="queue-empty">Loading...</div>
         ) : queue.length === 0 ? (
@@ -375,6 +563,7 @@ function AdminDashboard() {
           ))
         )}
       </div>
+      </>}
     </div>
   );
 }

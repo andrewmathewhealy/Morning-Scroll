@@ -1292,14 +1292,48 @@ function Toggle({ on, onToggle }) {
 }
 
 // ── POLL DATA ─────────────────────────────────────────────
-const POLL_OPTIONS = [
+const DEFAULT_POLL_OPTIONS = [
   { label: "Calm & rested", votes: 1240 },
   { label: "Hopeful", votes: 980 },
   { label: "Ready to go", votes: 620 },
   { label: "Still waking up", votes: 870 },
   { label: "Grateful", votes: 730 },
 ];
-const TOTAL_VOTES = POLL_OPTIONS.reduce((s, o) => s + o.votes, 0);
+const DEFAULT_POLL_QUESTION = "How are you waking up?";
+
+function useTodaysPoll() {
+  const [poll, setPoll] = useState({ loading: true, question: DEFAULT_POLL_QUESTION, options: DEFAULT_POLL_OPTIONS });
+
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const cacheKey = `poll-v1-${today}`;
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey));
+      if (cached) { setPoll({ loading: false, question: cached.question, options: cached.options }); return; }
+    } catch {}
+
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, "polls", today));
+        if (snap.exists()) {
+          const data = snap.data();
+          const options = data.options.map((label, i) => ({
+            label,
+            votes: Math.floor(Math.random() * 800) + 200, // simulated votes for display
+          }));
+          localStorage.setItem(cacheKey, JSON.stringify({ question: data.question, options }));
+          setPoll({ loading: false, question: data.question, options });
+        } else {
+          setPoll({ loading: false, question: DEFAULT_POLL_QUESTION, options: DEFAULT_POLL_OPTIONS });
+        }
+      } catch {
+        setPoll({ loading: false, question: DEFAULT_POLL_QUESTION, options: DEFAULT_POLL_OPTIONS });
+      }
+    })();
+  }, []);
+
+  return poll;
+}
 
 // ── WORDLE LOGIC ──────────────────────────────────────────
 // Word lists are fetched from a free public CDN at runtime.
@@ -3579,6 +3613,8 @@ function WorldScreen() {
   const [vote, setVote] = useState(null);
   const [animating, setAnimating] = useState(false);
   const [globeExpanded, setGlobeExpanded] = useState(false);
+  const { question: pollQuestion, options: POLL_OPTIONS } = useTodaysPoll();
+  const TOTAL_VOTES = POLL_OPTIONS.reduce((s, o) => s + o.votes, 0);
   const winnerVotes = Math.max(...POLL_OPTIONS.map(o => o.votes));
 
   const handleVote = (label) => {
@@ -3663,7 +3699,7 @@ function WorldScreen() {
       <div className="comm-card fade-up fade-up-3">
         <div className="comm-card-header">
           <div>
-            <div className="comm-card-title">How are you waking up?</div>
+            <div className="comm-card-title">{pollQuestion}</div>
             <div className="comm-card-sub">{vote ? `${(TOTAL_VOTES + 1).toLocaleString()} responses · anonymous` : "Tap to share anonymously"}</div>
           </div>
           <div className="comm-card-tag">{vote ? "Results" : "Today"}</div>
