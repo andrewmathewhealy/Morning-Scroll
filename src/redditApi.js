@@ -69,21 +69,38 @@ export async function fetchSubreddit(subreddit, limit = 10, sort = "hot") {
 
 /**
  * Fetch posts from multiple subreddits concurrently.
- * Returns a flat array merged by score — no shuffle, so hot/top posts surface first.
- * Failed subreddits are silently skipped.
+ * Fetches 15 posts per sub to get a good pool, then for each sub:
+ *   - Takes ALL videos from the top 15 (these are high-quality, upvoted videos)
+ *   - Fills remaining slots (up to perSub total) with highest-ranked photo/image posts
+ * Finally ranks everything across subs using Reddit's hot-score algorithm.
  */
-export async function fetchMultipleSubreddits(subreddits, limitPerSub = 5, sort = "hot") {
+export async function fetchMultipleSubreddits(subreddits, perSub = 8, sort = "hot") {
+  const FETCH_POOL = 15; // fetch more than we keep, to find videos
   const results = await Promise.allSettled(
-    subreddits.map((sub) => fetchSubreddit(sub, limitPerSub, sort))
+    subreddits.map((sub) => fetchSubreddit(sub, FETCH_POOL, sort))
   );
 
-  const posts = results
-    .filter((r) => r.status === "fulfilled")
-    .flatMap((r) => r.value);
+  const posts = [];
 
-  // Sort by a hot-score: blends upvotes with recency so fresh viral posts
-  // surface above old high-score posts, but a highly-upvoted post beats
-  // something brand-new with 3 votes.
+  for (const r of results) {
+    if (r.status !== "fulfilled") continue;
+    const subPosts = r.value;
+
+    // Split into videos and non-videos (photos/self posts)
+    const videos = subPosts.filter(p => p.isVideo);
+    const nonVideos = subPosts.filter(p => !p.isVideo);
+
+    // Take all videos from the top pool, then fill with photos up to perSub
+    const selected = [...videos];
+    const remaining = perSub - selected.length;
+    if (remaining > 0) {
+      selected.push(...nonVideos.slice(0, remaining));
+    }
+
+    posts.push(...selected);
+  }
+
+  // Rank everything across all subs by hot-score
   return rankByHotScore(posts);
 }
 
@@ -112,6 +129,9 @@ function normalizePost(raw, subreddit) {
 
   const image = extractImage(raw);
   const video = extractVideo(raw);
+
+  // Skip link-only posts with no visual content
+  if (!image && !video && !raw.is_self) return null;
 
   return {
     id: raw.id,
@@ -244,7 +264,10 @@ function decodeHtmlEntities(str) {
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n));
 }
 
 /** Invalidate the cache for one or all subreddits */

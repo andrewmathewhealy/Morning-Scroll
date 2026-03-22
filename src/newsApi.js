@@ -142,8 +142,8 @@ function normalizeArticle(raw) {
     sourceType: "news",
     sourceName,
     sourceId: raw.source?.id ?? "unknown",
-    title: raw.title ?? "",
-    summary: raw.description ?? "",
+    title: decodeHtmlEntities(raw.title ?? ""),
+    summary: decodeHtmlEntities(raw.description ?? ""),
     url: raw.url ?? "#",
     image: raw.urlToImage ?? null,
     publishedAt: raw.publishedAt ? new Date(raw.publishedAt).getTime() / 1000 : Date.now() / 1000,
@@ -195,6 +195,20 @@ function getMockArticles(sourceNames) {
 }
 
 // ── HELPERS ───────────────────────────────────────────────
+
+function decodeHtmlEntities(str) {
+  if (!str) return str;
+  return str
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'")
+    .replace(/&#x2F;/g, "/")
+    .replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n));
+}
 
 function timeAgo(utcSeconds) {
   const diff = Math.floor(Date.now() / 1000) - utcSeconds;
