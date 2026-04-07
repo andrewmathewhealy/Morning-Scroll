@@ -292,6 +292,21 @@ const FONTS = `@import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,400
 // White:        #EAF4FB
 
 const styles = `
+  @keyframes liveBadgePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,80,80,0.7); transform: scale(1); }
+    50%      { box-shadow: 0 0 0 5px rgba(255,80,80,0); transform: scale(1.15); }
+  }
+  @keyframes liveBadgeBreathe {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220,40,40,0); }
+    50%      { box-shadow: 0 0 12px 1px rgba(255,60,60,0.55); }
+  }
+  .scores-row .game-card { margin: 0; width: 100%; box-sizing: border-box; }
+  .live-badge { animation: liveBadgeBreathe 2s ease-in-out infinite; }
+  .live-badge-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #fff;
+    animation: liveBadgePulse 1.4s ease-in-out infinite;
+  }
+
   ${FONTS}
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #023047; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Satoshi', sans-serif; }
@@ -2158,7 +2173,7 @@ function JournalWidget() {
       document.body.classList.remove("journal-open");
     }
     return () => document.body.classList.remove("journal-open");
-  }, [expanded]);
+  }, [expanded, diaryOpen]);
 
   // Load today's entry if user is logged in
   useEffect(() => {
@@ -3465,6 +3480,8 @@ function FeedScreen({ enabledSubs, mutedInMode = {}, alwaysBlock = [] }) {
 
       {loading && <FeedSkeleton />}
 
+      {!loading && mode.id === "sports" && <ScoresSection />}
+
       {!loading && feedUser && <YouTubeFeedSection user={feedUser} />}
 
       {!loading && feedItems.length === 0 && (
@@ -3658,81 +3675,89 @@ function SportsSkeletons() {
   ));
 }
 
-function SportsScreen() {
+function ScoresSection() {
   const { loading, data, error } = useSportsScores();
 
-  if (loading) return (
-    <div className="sports-bg">
-      <div className="sports-header fade-up fade-up-1">
-        <div className="sports-title">Scores</div>
-        <div className="sports-subtitle">Today's games & recent results</div>
-      </div>
-      <div className="fade-up fade-up-2"><SportsSkeletons /></div>
-    </div>
-  );
-
-  if (error || !data) return (
-    <div className="sports-bg">
-      <div className="sports-header fade-up fade-up-1">
-        <div className="sports-title">Scores</div>
-        <div className="sports-subtitle">Today's games & recent results</div>
-      </div>
-      <div className="sports-error fade-up fade-up-2">
-        <Icon.Trophy size={36} color="rgba(253,242,232,0.2)" />
-        <div className="sports-error-msg">{error || "Scores unavailable right now"}</div>
-      </div>
-    </div>
-  );
-
-  const leagues = data.leagues || {};
-
-  // Sort games: live first, then scheduled (today), then final (recent)
   const sortGames = (games) => {
     const order = { live: 0, scheduled: 1, final: 2 };
     return [...games].sort((a, b) => order[getGameStatus(a)] - order[getGameStatus(b)]);
   };
 
-  // Merge live + recent + upcoming per league, deduplicate by id
-  const mergeLeagueGames = (leagueData) => {
-    if (!leagueData) return [];
-    const all = [...(leagueData.live || []), ...(leagueData.upcoming || []), ...(leagueData.recent || [])];
+  // Flatten all leagues into a single sorted list, dedup by id.
+  // Drop "final" games older than 7 days so stale results (e.g. an offseason
+  // NFL Super Bowl) don't crowd out current sports.
+  const allGames = (() => {
+    if (!data?.leagues) return [];
+    const RECENCY_DAYS = 7;
+    const cutoff = Date.now() - RECENCY_DAYS * 24 * 60 * 60 * 1000;
+    const isFresh = (g) => {
+      if (getGameStatus(g) !== "final") return true;
+      if (!g.date) return false;
+      const t = Date.parse(g.date);
+      return Number.isFinite(t) && t >= cutoff;
+    };
     const seen = new Set();
-    return sortGames(all.filter(g => {
-      if (seen.has(g.id)) return false;
-      seen.add(g.id);
-      return true;
-    }));
+    const merged = [];
+    for (const league of LEAGUE_ORDER) {
+      const ld = data.leagues[league];
+      if (!ld) continue;
+      for (const g of [...(ld.live || []), ...(ld.upcoming || []), ...(ld.recent || [])]) {
+        if (seen.has(g.id)) continue;
+        if (!isFresh(g)) continue;
+        seen.add(g.id);
+        merged.push(g);
+      }
+    }
+    return sortGames(merged);
+  })();
+
+  const header = (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "0 20px", marginBottom: 10,
+    }}>
+      <span style={{ width: 8, height: 8, borderRadius: 2, background: "#FF6B6B" }} />
+      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: "rgba(2,48,71,0.6)" }}>Scores</span>
+    </div>
+  );
+
+  const rowStyle = {
+    display: "flex", gap: 10, overflowX: "auto",
+    padding: "4px 20px 8px 22px",
+    scrollSnapType: "x mandatory",
+    scrollPaddingLeft: 22,
+    scrollbarWidth: "none",
   };
 
-  const hasAnyGames = LEAGUE_ORDER.some(l => mergeLeagueGames(leagues[l]).length > 0);
+  if (loading) return (
+    <div style={{ marginTop: 4, marginBottom: 14 }}>
+      {header}
+      <div className="scores-row" style={rowStyle}>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="widget-shimmer" style={{ flex: "0 0 220px", height: 110, borderRadius: 14, background: "rgba(2,48,71,0.06)", scrollSnapAlign: "start" }} />
+        ))}
+      </div>
+    </div>
+  );
+
+  if (error || !data || allGames.length === 0) return (
+    <div style={{ marginTop: 4, marginBottom: 14 }}>
+      {header}
+      <div style={{ padding: "0 22px", fontSize: 12, color: "rgba(2,48,71,0.45)" }}>
+        {error || "No games scheduled right now"}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="sports-bg">
-      <div className="sports-header fade-up fade-up-1">
-        <div className="sports-title">Scores</div>
-        <div className="sports-subtitle">Today's games & recent results</div>
-      </div>
-      {!hasAnyGames ? (
-        <div className="sports-error fade-up fade-up-2">
-          <Icon.Trophy size={36} color="rgba(253,242,232,0.2)" />
-          <div className="sports-error-msg">No games scheduled right now</div>
-        </div>
-      ) : (
-        LEAGUE_ORDER.map((league, li) => {
-          const games = mergeLeagueGames(leagues[league]);
-          if (!games.length) return null;
-          return (
-            <div className={`sports-league-section fade-up fade-up-${li + 2}`} key={league}>
-              <div className="sports-league-header">
-                <div className="sports-league-name">{LEAGUE_LABELS[league]}</div>
-              </div>
-              {games.map(g => <GameCard game={g} key={g.id} />)}
-            </div>
-          );
-        })
-      )}
-      <div className="fade-up fade-up-7" style={{ fontSize: 9, textAlign: 'right', margin: '16px 20px 0', color: 'rgba(253,242,232,0.3)' }}>
-        Powered by <a href="https://www.thesportsdb.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(253,242,232,0.4)' }}>TheSportsDB</a>
+    <div style={{ marginTop: 4, marginBottom: 14 }}>
+      {header}
+      <div className="scores-row" style={rowStyle}>
+        {allGames.map(g => (
+          <div key={g.id} style={{ flex: "0 0 240px", scrollSnapAlign: "start" }}>
+            <GameCard game={g} />
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -3801,10 +3826,165 @@ function ArtOfTheDayCard() {
   );
 }
 
+// Curated always-on YouTube live streams. Swap videoIds if any go offline.
+const LIVE_STREAM_CATEGORIES = {
+  Space: [
+    { id: "iss",    title: "ISS Outside View", location: "Low Earth Orbit", videoId: "0FBiyFpV__g" },
+    { id: "aurora", title: "Northern Lights",  location: "Iceland",         videoId: "ccTVAhJU5lg" },
+  ],
+  Cities: [
+    { id: "nyc-aerial",  title: "NYC Aerial",      location: "New York, USA",     videoId: "2_PDaUJbfuI" },
+    { id: "venice-beach", title: "Venice Beach",   location: "California, USA",   videoId: "EO_1LWqsCNE" },
+    { id: "dublin",      title: "Dublin",          location: "Dublin, Ireland",   videoId: "3nyPER2kzqk" },
+    { id: "western-wall", title: "Western Wall",   location: "Jerusalem",         videoId: "77akujLn4k8" },
+  ],
+  Nature: [
+    { id: "eagle",   title: "Bald Eagle Nest",   location: "Big Bear, California", videoId: "B4-L2nfGcuE" },
+    { id: "reef",    title: "Coral Reef",        location: "Tropical Aquarium",    videoId: "DHUnz4dyb54" },
+    { id: "africam", title: "African Watering Hole", location: "Nkorho Bush Lodge", videoId: "gdrNUUf-cQw" },
+    { id: "namib",   title: "Namib Desert",      location: "Namibia",              videoId: "ydYDqZQpim8" },
+    { id: "birds",   title: "Bird Feeder Cam",   location: "Recke, Germany",       videoId: "x10vL6_47Dw" },
+  ],
+};
+
+const LIVE_CAT_COLORS = { Space: "#8B5CF6", Cities: "#45aaf2", Nature: "#26de81" };
+
+function useLiveStatus(allStreams) {
+  const [status, setStatus] = useState(null); // null = loading, {} = checked
+  useEffect(() => {
+    const ids = allStreams.map(s => s.videoId).join(",");
+    const cacheKey = "live-status-v1";
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey));
+      if (cached && cached.ids === ids && Date.now() - cached.ts < 5 * 60 * 1000) {
+        setStatus(cached.data);
+        return;
+      }
+    } catch {}
+    (async () => {
+      try {
+        const res = await fetch(`${WORKER_URL}/youtube/live-status?ids=${ids}`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        setStatus(data.status);
+        try { localStorage.setItem(cacheKey, JSON.stringify({ ids, ts: Date.now(), data: data.status })); } catch {}
+      } catch {
+        // On failure, show everything (fail-open)
+        const fallback = {};
+        allStreams.forEach(s => { fallback[s.videoId] = { live: true }; });
+        setStatus(fallback);
+      }
+    })();
+  }, []); // eslint-disable-line
+  return status;
+}
+
+function LiveStreamPlayer({ stream, onClose }) {
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 9999,
+        background: "#000",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        animation: "globeOverlayIn 0.3s ease-out both",
+      }}
+    >
+      {/* Video — fills viewport while preserving 16:9 (letterboxes naturally) */}
+      <iframe
+        src={`https://www.youtube.com/embed/${stream.videoId}?autoplay=1&mute=1&playsinline=1`}
+        title={stream.title}
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        style={{
+          width: "min(100vw, calc(100vh * 16 / 9))",
+          height: "min(100vh, calc(100vw * 9 / 16))",
+          border: 0, background: "#000",
+        }}
+      />
+
+      {/* Title overlay — top-left */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0,
+        padding: "16px 20px 28px",
+        background: "linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)",
+        color: "#FDF2E8", pointerEvents: "none",
+      }}>
+        <div style={{ fontSize: 16, fontWeight: 700 }}>{stream.title}</div>
+        <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>{stream.location} · LIVE</div>
+      </div>
+
+      {/* Close button — top-right floating */}
+      <button onClick={onClose} style={{
+        position: "absolute", top: 14, right: 14, zIndex: 2,
+        background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)",
+        border: "1px solid rgba(255,255,255,0.15)",
+        color: "#FDF2E8", fontSize: 12, fontWeight: 600, padding: "8px 16px",
+        borderRadius: 12, cursor: "pointer",
+      }}>Close</button>
+    </div>
+  );
+}
+
+function LiveStreamCard({ stream, onOpen }) {
+  return (
+    <div
+      onClick={() => onOpen(stream)}
+      style={{
+        position: "relative", flex: "0 0 220px", borderRadius: 16, overflow: "hidden", cursor: "pointer",
+        aspectRatio: "16/9", background: "#0a1a24",
+        border: "1px solid rgba(255,255,255,0.08)",
+        boxShadow: "0 4px 16px rgba(0,20,60,0.25)",
+        scrollSnapAlign: "start",
+      }}
+    >
+      <img
+        src={`https://i.ytimg.com/vi/${stream.videoId}/mqdefault.jpg`}
+        alt={stream.title}
+        loading="lazy"
+        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        onError={e => { e.target.style.display = "none"; }}
+      />
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(to top, rgba(2,3,8,0.85) 0%, rgba(2,3,8,0.1) 50%, transparent 100%)",
+      }} />
+      <div className="live-badge" style={{
+        position: "absolute", top: 8, left: 8,
+        display: "flex", alignItems: "center", gap: 5,
+        background: "rgba(220,40,40,0.95)", color: "#fff",
+        fontSize: 9, fontWeight: 800, letterSpacing: 0.8,
+        padding: "3px 8px", borderRadius: 6,
+      }}>
+        <span className="live-badge-dot" />
+        LIVE
+      </div>
+      <div style={{ position: "absolute", left: 12, right: 12, bottom: 10, color: "#FDF2E8" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.25 }}>{stream.title}</div>
+        <div style={{ fontSize: 10, opacity: 0.75, marginTop: 2 }}>{stream.location}</div>
+      </div>
+    </div>
+  );
+}
+
 function WorldScreen() {
   const [vote, setVote] = useState(null);
   const [animating, setAnimating] = useState(false);
   const [globeExpanded, setGlobeExpanded] = useState(false);
+  const [openStream, setOpenStream] = useState(null);
+  const allStreams = useMemo(
+    () => Object.values(LIVE_STREAM_CATEGORIES).flat(),
+    []
+  );
+  const liveStatus = useLiveStatus(allStreams);
+  const liveCategories = useMemo(() => {
+    if (!liveStatus) return null;
+    const out = {};
+    for (const [cat, streams] of Object.entries(LIVE_STREAM_CATEGORIES)) {
+      const live = streams.filter(s => liveStatus[s.videoId]?.live);
+      if (live.length) out[cat] = live;
+    }
+    return out;
+  }, [liveStatus]);
   const { question: pollQuestion, options: POLL_OPTIONS } = useTodaysPoll();
   const TOTAL_VOTES = POLL_OPTIONS.reduce((s, o) => s + o.votes, 0);
   const winnerVotes = Math.max(...POLL_OPTIONS.map(o => o.votes));
@@ -3929,7 +4109,49 @@ function WorldScreen() {
         )}
       </div>
 
-      <div className="fade-up fade-up-6">
+      <div className="fade-up fade-up-5" style={{ marginTop: 20 }}>
+        {!liveCategories && (
+          <div style={{ padding: "0 20px", fontSize: 11, color: "rgba(253,242,232,0.4)", letterSpacing: 0.5 }}>
+            Checking live streams…
+          </div>
+        )}
+        {liveCategories && Object.entries(liveCategories).map(([cat, streams]) => (
+          <div key={cat} style={{ marginBottom: 18 }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "0 20px", marginBottom: 10,
+            }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, background: LIVE_CAT_COLORS[cat] }} />
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: "rgba(253,242,232,0.7)" }}>{cat}</span>
+            </div>
+            <div style={{
+              display: "flex", gap: 10, overflowX: "auto",
+              padding: "4px 20px 8px 22px",
+              scrollSnapType: "x mandatory",
+              scrollPaddingLeft: 22,
+              scrollbarWidth: "none",
+            }}>
+              {streams.map(s => (
+                <LiveStreamCard key={s.id} stream={s} onOpen={setOpenStream} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {openStream && <LiveStreamPlayer stream={openStream} onClose={() => setOpenStream(null)} />}
+    </div>
+  );
+}
+
+function NewsScreen() {
+  return (
+    <div className="community-bg">
+      <div className="community-header fade-up fade-up-1">
+        <div className="community-title">News</div>
+        <div className="community-subtitle">Daily art & stories</div>
+      </div>
+      <div className="fade-up fade-up-2">
         <ArtOfTheDayCard />
       </div>
     </div>
@@ -4525,7 +4747,7 @@ const TABS = [
   { id: "home",     label: "Home",     ActiveIcon: p => <Icon.Home     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Home     {...p} color="rgba(12,26,53,0.35)" /> },
   { id: "feed",     label: "Feed",     ActiveIcon: p => <Icon.Feed     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Feed     {...p} color="rgba(12,26,53,0.35)" /> },
   { id: "world",    label: "World",    ActiveIcon: p => <Icon.Globe    {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Globe    {...p} color="rgba(12,26,53,0.35)" /> },
-  { id: "sports",   label: "Scores",   ActiveIcon: p => <Icon.Trophy   {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Trophy   {...p} color="rgba(12,26,53,0.35)" /> },
+  { id: "news",     label: "News",     ActiveIcon: p => <Icon.BookOpen {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.BookOpen {...p} color="rgba(12,26,53,0.35)" /> },
   { id: "settings", label: "Settings", ActiveIcon: p => <Icon.Settings {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Settings {...p} color="rgba(12,26,53,0.35)" /> },
 ];
 
@@ -4595,7 +4817,7 @@ export default function MorningScrollApp() {
       case "home":     return <HomeScreen onOpenWordle={() => setWordleOpen(true)} />;
       case "feed":     return <FeedScreen enabledSubs={enabledSubs} mutedInMode={mutedInMode} alwaysBlock={alwaysBlock} />;
       case "world":    return <WorldScreen />;
-      case "sports":   return <SportsScreen />;
+      case "news":     return <NewsScreen />;
       case "settings": return <SettingsScreen enabledSubs={enabledSubs} onToggleSub={toggleSub} mutedInMode={mutedInMode} onToggleMutedInMode={toggleMutedInMode} alwaysBlock={alwaysBlock} onToggleAlwaysBlock={toggleAlwaysBlock} />;
       default:         return <HomeScreen onOpenWordle={() => setWordleOpen(true)} />;
     }

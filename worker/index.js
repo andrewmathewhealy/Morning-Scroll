@@ -19,6 +19,7 @@ export default {
     if (path === "/journal-prompt") return handleJournalPrompt(request, env);
     if (path === "/youtube") return handleYouTube(request, env, url);
     if (path === "/youtube/channel") return handleYouTubeChannel(request, env, url);
+    if (path === "/youtube/live-status") return handleYouTubeLiveStatus(request, env, url);
 
     return json({ error: "Not found" }, 404);
   },
@@ -307,8 +308,8 @@ async function handleJournalPrompt(request, env) {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 150,
-        system: `You generate warm, thoughtful morning journal prompts for a feel-good daily digest app. Each prompt should be introspective but uplifting — inviting the user to reflect on gratitude, growth, small joys, or meaningful connections. Keep it to 1-2 sentences. Be seasonally aware based on the date. Vary the style: sometimes a question, sometimes a gentle invitation, sometimes a "what if" scenario. Respond with ONLY the prompt text, nothing else.${recentSection}`,
+        max_tokens: 60,
+        system: `You generate short, simple morning journal prompts for a feel-good daily digest app. STRICT RULES: One single sentence. Maximum 15 words. Plain language — no flowery metaphors, no compound questions, no "and" joining two ideas. The prompt must be answerable in one or two sentences by the user. Focus on small, concrete things: a moment, a person, a feeling, something today. Be seasonally aware based on the date. Vary the style: question, gentle invitation, or simple noticing. Respond with ONLY the prompt text, nothing else.${recentSection}`,
         messages: [
           { role: "user", content: `Generate a morning journal prompt for ${dateLabel}.` },
         ],
@@ -454,6 +455,48 @@ async function handleYouTubeChannel(request, env, url) {
       name: ch.snippet.channelTitle,
       avatar: ch.snippet.thumbnails?.medium?.url || ch.snippet.thumbnails?.default?.url,
     });
+  } catch (err) {
+    return json({ error: "Worker exception", detail: err.message }, 500);
+  }
+}
+
+// Check which video IDs are currently live. Cached 5 minutes.
+let liveStatusCache = { ts: 0, key: "", data: null };
+const LIVE_STATUS_TTL = 5 * 60 * 1000;
+
+async function handleYouTubeLiveStatus(request, env, url) {
+  try {
+    const apiKey = env.YOUTUBE_API_KEY;
+    if (!apiKey) return json({ error: "YOUTUBE_API_KEY not configured" }, 500);
+
+    const idsParam = url.searchParams.get("ids");
+    if (!idsParam) return json({ error: "ids param required" }, 400);
+
+    const ids = idsParam.split(",").filter(Boolean).slice(0, 50);
+    const cacheKey = ids.slice().sort().join(",");
+    const now = Date.now();
+    if (liveStatusCache.key === cacheKey && (now - liveStatusCache.ts) < LIVE_STATUS_TTL) {
+      return json(liveStatusCache.data);
+    }
+
+    const upstream = `https://www.googleapis.com/youtube/v3/videos?part=snippet,liveStreamingDetails&id=${ids.join(",")}&key=${apiKey}`;
+    const res = await fetch(upstream, { headers: { "User-Agent": "MorningScroll/1.0" } });
+    const data = await res.json();
+
+    const status = {};
+    for (const id of ids) status[id] = { live: false };
+    for (const item of (data.items || [])) {
+      const isLive = item.snippet?.liveBroadcastContent === "live"
+        || (item.liveStreamingDetails?.actualStartTime && !item.liveStreamingDetails?.actualEndTime);
+      status[item.id] = {
+        live: !!isLive,
+        thumbnail: item.snippet?.thumbnails?.medium?.url || null,
+      };
+    }
+
+    const result = { status };
+    liveStatusCache = { ts: now, key: cacheKey, data: result };
+    return json(result);
   } catch (err) {
     return json({ error: "Worker exception", detail: err.message }, 500);
   }
