@@ -13,9 +13,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    if (path === "/news") return handleNews(request, env, url);
     if (path === "/weather") return handleWeather(request, env, url);
-    if (path === "/word-of-the-day") return handleWordOfTheDay(request, env);
     if (path === "/sports") return handleSports(request, env, url);
     if (path === "/wikipedia") return handleWikipedia(request, env);
     if (path === "/journal-prompt") return handleJournalPrompt(request, env);
@@ -25,33 +23,6 @@ export default {
     return json({ error: "Not found" }, 404);
   },
 };
-
-async function handleNews(request, env, url) {
-  try {
-    const apiKey = env.NEWS_API_KEY;
-    if (!apiKey) return json({ error: "NEWS_API_KEY not configured" }, 500);
-
-    const sources  = url.searchParams.get("sources") ?? "";
-    const pageSize = url.searchParams.get("pageSize") ?? "40";
-
-    if (!sources) return json({ error: "sources param required" }, 400);
-
-    const upstream = new URL("https://newsapi.org/v2/top-headlines");
-    upstream.searchParams.set("sources",  sources);
-    upstream.searchParams.set("pageSize", pageSize);
-    upstream.searchParams.set("apiKey",   apiKey);
-
-    const response = await fetch(upstream.toString(), {
-      headers: {
-        "User-Agent": "MorningScroll/1.0",
-      },
-    });
-    const body = await response.json();
-    return json(body, response.status);
-  } catch (err) {
-    return json({ error: "Worker exception", detail: err.message }, 500);
-  }
-}
 
 async function handleWeather(request, env, url) {
   try {
@@ -76,71 +47,6 @@ async function handleWeather(request, env, url) {
     return json(body, response.status);
   } catch (err) {
     return json({ error: "Worker exception", detail: err.message }, 500);
-  }
-}
-
-// --- Word of the Day (Wordnik) ---
-// In-memory cache: refreshes once per calendar day
-let wotdCache = { date: null, data: null };
-
-const MOCK_WOTD = {
-  word: "ineffable",
-  publishDate: new Date().toISOString().slice(0, 10),
-  definitions: [
-    {
-      text: "Incapable of being expressed in words; unspeakable.",
-      partOfSpeech: "adjective",
-      source: "wordnik",
-    },
-    {
-      text: "Not to be uttered; taboo.",
-      partOfSpeech: "adjective",
-      source: "wordnik",
-    },
-  ],
-  examples: [
-    {
-      text: "The sunset over the canyon was an ineffable experience that no photograph could capture.",
-    },
-  ],
-  note: "From Latin ineffābilis: in- (not) + effābilis (utterable).",
-  pronunciations: [
-    { raw: "ɪnˈɛfəbəl", rawType: "IPA" },
-  ],
-};
-
-async function handleWordOfTheDay(request, env) {
-  try {
-    const today = new Date().toISOString().slice(0, 10);
-
-    // Return cached response if we already fetched today's word
-    if (wotdCache.date === today && wotdCache.data) {
-      return json(wotdCache.data);
-    }
-
-    const apiKey = env.WORDNIK_API_KEY;
-
-    // No API key yet — return mock
-    if (!apiKey) {
-      wotdCache = { date: today, data: MOCK_WOTD };
-      return json(MOCK_WOTD);
-    }
-
-    // Real Wordnik fetch
-    const upstream = new URL("https://api.wordnik.com/v4/words.json/wordOfTheDay");
-    upstream.searchParams.set("api_key", apiKey);
-
-    const response = await fetch(upstream.toString(), {
-      headers: { "User-Agent": "MorningScroll/1.0" },
-      cf: { cacheTtl: 86400 },           // Cloudflare edge cache 24h
-    });
-    const body = await response.json();
-
-    wotdCache = { date: today, data: body };
-    return json(body, response.status);
-  } catch (err) {
-    // If live fetch fails, fall back to mock so the widget still renders
-    return json(MOCK_WOTD);
   }
 }
 

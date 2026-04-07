@@ -78,7 +78,6 @@ export const FEED_MODES = [
     colorInactive: "#4a5a7a",
     borderInactive: "#a0aec0",
     categories: ["Science", "Global/Wonder"],
-    includeNews: true,
   },
   {
     id: "curious",

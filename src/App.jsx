@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { SUBREDDIT_CATEGORIES, ALL_SUBREDDITS, FEED_MODES } from "./subreddits.js";
-import { NEWS_SOURCES, NEWS_SOURCE_CATEGORIES, ALL_NEWS_SOURCE_NAMES } from "./newsApi.js";
 import { useRedditFeed } from "./useRedditFeed.js";
-import { useNewsFeed } from "./useNewsFeed.js";
 import { cleanRedditText } from "./redditApi.js";
 import GlobeCanvas from "./Globe.jsx";
 import { auth, db } from "./firebase.js";
@@ -505,26 +503,6 @@ const styles = `
   .moon-phase { font-size: 10px; color: rgba(253,242,232,0.6); line-height: 1.3; font-weight: 500; letter-spacing: 0.3px; }
   .moon-pct { font-family: 'Satoshi', sans-serif; font-size: 18px; color: #FDF2E8; margin-bottom: 2px; font-weight: 600; }
 
-  .wotd-widget {
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border-radius: 18px; padding: 18px 20px;
-    border: 1px solid rgba(255,255,255,0.22);
-    border-left: 4px solid rgba(220,50,50,0.5);
-    box-shadow: 0 8px 32px rgba(0,20,60,0.25), 0 1px 3px rgba(8,20,50,0.06);
-  }
-  .wotd-header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
-  .wotd-label { font-size: 10px; color: rgba(8,16,32,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
-  .wotd-word { font-family: 'Satoshi', sans-serif; font-size: 24px; color: #0C1A35; font-weight: 700; line-height: 1.2; margin-bottom: 2px; }
-  .wotd-pronunciation { font-size: 12px; color: rgba(8,16,32,0.4); font-style: italic; margin-bottom: 10px; }
-  .wotd-pos { display: inline-block; font-size: 10px; color: rgba(8,16,32,0.5); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; background: rgba(8,16,32,0.06); border-radius: 6px; padding: 2px 8px; margin-bottom: 8px; }
-  .wotd-def { font-size: 13px; color: #0C1A35; line-height: 1.5; margin-bottom: 10px; }
-  .wotd-example { font-size: 12px; color: rgba(8,16,32,0.5); font-style: italic; line-height: 1.5; padding-left: 10px; border-left: 2px solid rgba(8,16,32,0.1); margin-bottom: 12px; }
-  .wotd-attribution { font-size: 9px; color: rgba(8,16,32,0.35); text-align: right; }
-  .wotd-attribution a { color: rgba(8,16,32,0.45); text-decoration: none; }
-  .wotd-shimmer { min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
-  .wotd-shimmer .wotd-label { color: rgba(8,16,32,0.3); }
-
   .calendar-widget {
     background: rgba(255,255,255,0.15);
     backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -702,8 +680,6 @@ const styles = `
   .poll-result-fill.winner { background: #FFD166; }
   .poll-result-fill.chosen { background: linear-gradient(90deg, #fff8e7 0%, #FFD166 100%); }
   .poll-total { font-size: 11px; color: rgba(8,16,32,0.4); margin-top: 12px; text-align: center; }
-
-  .wotd-widget.wotd-dark { margin: 12px 20px 0; }
 
   .art-card { margin: 12px 20px 0; border-radius: 24px; overflow: hidden; border: 1.5px solid #FDF2E8; box-shadow: 0 8px 32px rgba(0,20,60,0.25), 0 1px 3px rgba(8,20,50,0.06); }
   .art-image { min-height: 160px; max-height: 360px; background: #FDF2E8; display: flex; align-items: center; justify-content: center; position: relative; }
@@ -1135,17 +1111,6 @@ const styles = `
   }
   .reader-open-web:active { opacity: 0.8; }
 
-  /* ── NEWS CARD BADGES ── */
-  .news-source-badge { display: flex; align-items: center; gap: 5px; }
-  .news-source-name { font-size: 11px; font-weight: 700; letter-spacing: 0.3px; }
-  .news-section-tag {
-    font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
-    padding: 2px 8px; border-radius: 8px;
-  }
-  .news-summary {
-    font-size: 12px; color: #3d5a6a; line-height: 1.55; margin-top: 6px;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
 `;
 
 // ── WORDLE CSS ─────────────────────────────────────────────
@@ -1935,94 +1900,6 @@ function MoonWidget({ moonphase }) {
   );
 }
 
-const MOCK_WOTD = {
-  word: "ineffable",
-  publishDate: new Date().toISOString().slice(0, 10),
-  definitions: [
-    { text: "Incapable of being expressed in words; unspeakable.", partOfSpeech: "adjective" },
-  ],
-  examples: [
-    { text: "The sunset over the canyon was an ineffable experience that no photograph could capture." },
-  ],
-  pronunciations: [{ raw: "ɪnˈɛfəbəl", rawType: "IPA" }],
-};
-
-function useWordOfTheDay() {
-  const [state, setState] = useState({ loading: true, data: null, error: null });
-
-  useEffect(() => {
-    const cacheKey = 'wotd-v1';
-    try {
-      const cached = JSON.parse(localStorage.getItem(cacheKey));
-      const today = new Date().toISOString().slice(0, 10);
-      if (cached && cached.date === today && cached.data) {
-        setState({ loading: false, data: cached.data, error: null });
-        return;
-      }
-    } catch {}
-
-    (async () => {
-      try {
-        const res = await fetch(`${WORKER_URL}/word-of-the-day`);
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
-        const today = new Date().toISOString().slice(0, 10);
-        localStorage.setItem(cacheKey, JSON.stringify({ date: today, data }));
-        setState({ loading: false, data, error: null });
-      } catch {
-        // Worker unavailable — use mock so the widget always renders
-        setState({ loading: false, data: MOCK_WOTD, error: null });
-      }
-    })();
-  }, []);
-
-  return state;
-}
-
-function WordOfTheDayWidget({ variant = "light" }) {
-  const { loading, data, error } = useWordOfTheDay();
-  const dark = variant === "dark";
-  const cls = dark ? "wotd-widget wotd-dark" : "wotd-widget";
-  const iconColor = "rgba(8,16,32,0.15)";
-  const unavailColor = "rgba(8,16,32,0.35)";
-
-  if (loading) return (
-    <div className={`${cls} wotd-shimmer widget-shimmer`}>
-      <Icon.BookOpen size={28} color={iconColor} />
-      <div className="wotd-label">Word of the Day</div>
-    </div>
-  );
-
-  if (error || !data) return (
-    <div className={`${cls} wotd-shimmer`}>
-      <Icon.BookOpen size={28} color={iconColor} />
-      <div className="wotd-label">Word of the Day</div>
-      <div style={{ fontSize: 11, color: unavailColor }}>Unavailable</div>
-    </div>
-  );
-
-  const pronunciation = data.pronunciations?.[0]?.raw;
-  const def = data.definitions?.[0];
-  const example = data.examples?.[0]?.text;
-
-  return (
-    <div className={cls}>
-      <div className="wotd-header">
-        <Icon.BookOpen size={16} color="rgba(8,16,32,0.4)" />
-        <div className="wotd-label">Word of the Day</div>
-      </div>
-      <div className="wotd-word">{data.word}</div>
-      {pronunciation && <div className="wotd-pronunciation">/{pronunciation}/</div>}
-      {def?.partOfSpeech && <div className="wotd-pos">{def.partOfSpeech}</div>}
-      {def?.text && <div className="wotd-def">{def.text}</div>}
-      {example && <div className="wotd-example">"{example}"</div>}
-      <div className="wotd-attribution">
-        Powered by <a href="https://www.wordnik.com/" target="_blank" rel="noopener noreferrer">Wordnik</a>
-      </div>
-    </div>
-  );
-}
-
 function useWeather() {
   const [weather, setWeather] = useState({ loading: true, data: null, error: null });
 
@@ -2684,102 +2561,17 @@ function HomeScreen({ onOpenWordle }) {
   );
 }
 
-// ── NEWS CATEGORY ICONS ───────────────────────────────────
-// Minimal single-stroke SVG icons for each news super-category.
-// Used in the top-left corner of news article cards.
-const NewsCatIcon = {
-  General: ({ size = 14, color = "currentColor" }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      {/* Newspaper / broadcast tower */}
-      <circle cx="8" cy="8" r="6.5"/>
-      <line x1="1.5" y1="8" x2="14.5" y2="8"/>
-      <path d="M8 1.5 C5.5 4 5.5 12 8 14.5"/>
-      <path d="M8 1.5 C10.5 4 10.5 12 8 14.5"/>
-    </svg>
-  ),
-  Technology: ({ size = 14, color = "currentColor" }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      {/* Circuit / chip */}
-      <rect x="4.5" y="4.5" width="7" height="7" rx="1.5"/>
-      <line x1="4.5" y1="6.5" x2="2" y2="6.5"/>
-      <line x1="4.5" y1="9.5" x2="2" y2="9.5"/>
-      <line x1="11.5" y1="6.5" x2="14" y2="6.5"/>
-      <line x1="11.5" y1="9.5" x2="14" y2="9.5"/>
-      <line x1="6.5" y1="4.5" x2="6.5" y2="2"/>
-      <line x1="9.5" y1="4.5" x2="9.5" y2="2"/>
-      <line x1="6.5" y1="11.5" x2="6.5" y2="14"/>
-      <line x1="9.5" y1="11.5" x2="9.5" y2="14"/>
-    </svg>
-  ),
-  Science: ({ size = 14, color = "currentColor" }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      {/* Flask / beaker */}
-      <path d="M5.5 2 L5.5 7 L2.5 12.5 Q2 13.5 3 13.5 L13 13.5 Q14 13.5 13.5 12.5 L10.5 7 L10.5 2"/>
-      <line x1="4.5" y1="2" x2="11.5" y2="2"/>
-      <line x1="4" y1="10" x2="12" y2="10"/>
-    </svg>
-  ),
-  Business: ({ size = 14, color = "currentColor" }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      {/* Bar chart trending up */}
-      <polyline points="1.5,12.5 5.5,8 8.5,10 14.5,3.5"/>
-      <polyline points="11.5,3.5 14.5,3.5 14.5,6.5"/>
-    </svg>
-  ),
-  Sports: ({ size = 14, color = "currentColor" }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      {/* Stopwatch */}
-      <circle cx="8" cy="9" r="5.5"/>
-      <line x1="8" y1="3.5" x2="8" y2="6"/>
-      <line x1="6.5" y1="1.5" x2="9.5" y2="1.5"/>
-      <line x1="8" y1="9" x2="10.5" y2="7"/>
-    </svg>
-  ),
-  Entertainment: ({ size = 14, color = "currentColor" }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      {/* Clapperboard */}
-      <rect x="1.5" y="4.5" width="13" height="10" rx="1.5"/>
-      <line x1="1.5" y1="7.5" x2="14.5" y2="7.5"/>
-      <line x1="4.5" y1="4.5" x2="3" y2="1.5"/>
-      <line x1="7.5" y1="4.5" x2="6" y2="1.5"/>
-      <line x1="10.5" y1="4.5" x2="9" y2="1.5"/>
-      <line x1="13.5" y1="4.5" x2="12" y2="1.5"/>
-    </svg>
-  ),
-  Health: ({ size = 14, color = "currentColor" }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-      {/* Cross / pulse */}
-      <polyline points="1.5,8 4,8 5.5,5 7.5,11 9.5,6.5 11,8 14.5,8"/>
-    </svg>
-  ),
-};
-
 // ── CATEGORY COLOR MAP ────────────────────────────────────
-// Shared palette — Reddit super-categories + news categories.
-// Sports and Science are intentionally the same color across both systems.
 const CAT_COLORS = {
-  // Reddit super-categories
   Animals:        "#FF9F43",
   Nature:         "#26de81",
-  Sports:         "#FF6B6B",   // matches NEWS_CAT_COLORS.Sports
+  Sports:         "#FF6B6B",
   Music:          "#a55eea",
   Food:           "#fd9644",
   "Art & Design": "#45aaf2",
-  Science:        "#2bcbba",   // matches NEWS_CAT_COLORS.Science
+  Science:        "#2bcbba",
   Uplifting:      "#FFD166",
   "Global/Wonder":"#219EBC",
-  News:           "#8B5CF6",
-};
-
-// News super-category colors — Sports + Science deliberately match CAT_COLORS above
-const NEWS_CAT_COLORS = {
-  General:       "#8B5CF6",
-  Technology:    "#45aaf2",   // matches Art & Design blue — feels techy
-  Science:       "#2bcbba",   // matches Reddit Science
-  Business:      "#f7b731",
-  Sports:        "#FF6B6B",   // matches Reddit Sports
-  Entertainment: "#a55eea",   // matches Reddit Music/creative
-  Health:        "#26de81",   // matches Reddit Nature — green = wellbeing
 };
 
 // ── FEED SKELETON ─────────────────────────────────────────
@@ -3142,157 +2934,12 @@ function RedditSmallCard({ post, onOpen }) {
   );
 }
 
-// ── NEWS IMAGE PLACEHOLDER ───────────────────────────────
-// A clean branded placeholder used when no image is available
-// or when an image URL fails to load (common with news CORS).
-function NewsImagePlaceholder({ article, color, large = false }) {
-  // Pick an icon character based on section
-  const sectionIcons = {
-    science: "🔬", technology: "💻", tech: "💻", sports: "⚽", sport: "⚽",
-    health: "🌿", environment: "🌍", climate: "🌍", culture: "🎨",
-    art: "🎨", music: "🎵", food: "🍴", travel: "✈️", business: "📈",
-    economy: "📈", politics: "🏛️", world: "🌐", society: "🤝",
-    education: "📚", science: "🔭", astronomy: "🔭",
-  };
-  const sectionKey = (article.section ?? "").toLowerCase();
-  const icon = Object.entries(sectionIcons).find(([k]) => sectionKey.includes(k))?.[1] ?? "📰";
-
-  if (!large) {
-    // Small square thumbnail
-    return (
-      <div style={{
-        width: 80, alignSelf: "stretch", minHeight: 80, borderRadius: 0, flexShrink: 0,
-        background: `linear-gradient(135deg, ${color}22, ${color}44)`,
-        border: `1px solid ${color}33`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 28,
-      }}>
-        {icon}
-      </div>
-    );
-  }
-
-  // Large hero image area
-  const initials = article.sourceName.split(" ").map(w => w[0]).join("").slice(0, 3);
-  return (
-    <div style={{
-      position: "absolute", inset: 0,
-      background: `linear-gradient(135deg, ${color}18 0%, ${color}08 50%, transparent 100%)`,
-      display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center", gap: 12,
-    }}>
-      {/* Big icon */}
-      <div style={{ fontSize: 40, lineHeight: 1 }}>{icon}</div>
-      {/* Source name pill */}
-      <div style={{
-        background: color, color: "#fff",
-        fontSize: 10, fontWeight: 700, letterSpacing: 1.5,
-        padding: "4px 12px", borderRadius: 20,
-        textTransform: "uppercase",
-      }}>
-        {article.sourceName}
-      </div>
-      {article.section && (
-        <div style={{ fontSize: 11, color: `${color}bb`, letterSpacing: 0.5 }}>
-          {article.section}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Image with fallback component
-function ImgWithFallback({ src, alt, className, fallback }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) return fallback;
-  return <img className={className} src={src} alt={alt} onError={() => setFailed(true)} />;
-}
-
-// ── NEWS HERO CARD ────────────────────────────────────────
-function NewsHeroCard({ article, onOpen }) {
-  const sourceColor = NEWS_SOURCES[article.sourceName]?.color ?? "#8B5CF6";
-  const sourceCategory = NEWS_SOURCES[article.sourceName]?.category ?? "General";
-  const catColor = NEWS_CAT_COLORS[sourceCategory] ?? "#8B5CF6";
-  const CatIcon = NewsCatIcon[sourceCategory] ?? NewsCatIcon.General;
-  return (
-    <div className="feed-card" style={{ cursor: "pointer", borderLeft: `3px solid ${catColor}` }} onClick={() => onOpen(article)}>
-      <div className="feed-card-image" style={{ background: `${catColor}80` }}>
-        {article.image
-          ? <ImgWithFallback className="feed-image" src={article.image} alt={article.title} fallback={<NewsImagePlaceholder article={article} color={catColor} large />} />
-          : <NewsImagePlaceholder article={article} color={catColor} large />
-        }
-        {/* Category icon badge — top left */}
-        <div style={{
-          position: "absolute", top: 10, left: 10, zIndex: 3,
-          background: "rgba(255,255,255,0.92)", backdropFilter: "blur(4px)",
-          borderRadius: 8, padding: "5px 6px",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
-        }}>
-          <CatIcon size={14} color="#023047" />
-        </div>
-      </div>
-      <div className="feed-card-body">
-        <div className="feed-card-source" style={{ justifyContent: "space-between" }}>
-          <div className="news-source-badge">
-            <span style={{ width: 8, height: 8, borderRadius: 2, background: catColor, display: "inline-block", flexShrink: 0 }} />
-            <span className="news-source-name" style={{ color: catColor }}>{article.sourceName}</span>
-          </div>
-          {article.section && (
-            <div className="news-section-tag" style={{ background: `${catColor}25`, color: catColor }}>{article.section}</div>
-          )}
-        </div>
-        <div className="feed-card-title" style={{ color: "#023047" }}>{article.title}</div>
-        {article.summary && <div className="news-summary">{article.summary}</div>}
-        <div className="feed-card-meta"><span>{article.ageLabel}</span></div>
-      </div>
-    </div>
-  );
-}
-
-// ── NEWS SMALL CARD ───────────────────────────────────────
-function NewsSmallCard({ article, onOpen }) {
-  const sourceCategory = NEWS_SOURCES[article.sourceName]?.category ?? "General";
-  const catColor = NEWS_CAT_COLORS[sourceCategory] ?? "#8B5CF6";
-  const CatIcon = NewsCatIcon[sourceCategory] ?? NewsCatIcon.General;
-  return (
-    <div className="feed-card-small" style={{
-      cursor: "pointer",
-      background: `linear-gradient(${catColor}80, ${catColor}80), white`,
-      outline: `2px dashed ${catColor}`,
-      outlineOffset: "-1px",
-      boxShadow: "0 2px 10px rgba(2,48,71,0.05)",
-    }} onClick={() => onOpen(article)}>
-      {/* Thumbnail with category icon badge overlaid */}
-      <div style={{ position: "relative", flexShrink: 0, alignSelf: "stretch", display: "flex" }}>
-        {article.image
-          ? <ImgWithFallback src={article.image} alt={article.title} className="feed-small-img" fallback={<NewsImagePlaceholder article={article} color={catColor} />} />
-          : <NewsImagePlaceholder article={article} color={catColor} />
-        }
-        <div style={{
-          position: "absolute", top: 6, left: 6,
-          background: "rgba(255,255,255,0.95)", borderRadius: 6,
-          padding: "3px 4px", display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-        }}>
-          <CatIcon size={11} color="#023047" />
-        </div>
-      </div>
-      <div style={{ padding: "12px 14px 12px 0", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-        <div className="feed-small-source" style={{ color: catColor }}>{article.sourceName}</div>
-        <div className="feed-small-title">{article.title}</div>
-        <div className="feed-small-meta">{article.ageLabel}{article.section ? ` · ${article.section}` : ""}</div>
-      </div>
-    </div>
-  );
-}
-
 // ── UNIFIED FEED ITEM ─────────────────────────────────────
 function FeedItem({ item, hero = false, expanded = false, onOpen, seen = false, readerOpen = false }) {
-  const forceHero = hero || expanded || (item.sourceType !== "news" && item.isVideo);
-  const card = item.sourceType === "news"
-    ? (forceHero ? <NewsHeroCard article={item} onOpen={onOpen} /> : <NewsSmallCard article={item} onOpen={onOpen} />)
-    : (forceHero ? <RedditHeroCard post={item} onOpen={onOpen} readerOpen={readerOpen} /> : <RedditSmallCard post={item} onOpen={onOpen} />);
+  const forceHero = hero || expanded || item.isVideo;
+  const card = forceHero
+    ? <RedditHeroCard post={item} onOpen={onOpen} readerOpen={readerOpen} />
+    : <RedditSmallCard post={item} onOpen={onOpen} />;
 
   if (!seen) return card;
 
@@ -3329,10 +2976,7 @@ function ReaderSheet({ item, onClose, allItems = [], onNavigate, videoStartTime 
   const [dragY, setDragY] = useState(0);
   const [swipeDir, setSwipeDir] = useState(null); // 'v' | 'h' | null
 
-  const isReddit = item.sourceType !== "news";
-  const color = isReddit
-    ? (CAT_COLORS[item.category] ?? "#219EBC")
-    : (NEWS_SOURCES[item.sourceName]?.color ?? "#8B5CF6");
+  const color = CAT_COLORS[item.category] ?? "#219EBC";
 
   const currentIndex = allItems.findIndex(i => i.id === item.id);
   const hasPrev = currentIndex > 0;
@@ -3340,7 +2984,7 @@ function ReaderSheet({ item, onClose, allItems = [], onNavigate, videoStartTime 
 
   // Fetch Reddit comments only when details opened
   useEffect(() => {
-    if (!isReddit || !detailsOpen) return;
+    if (!detailsOpen) return;
     if (comments.length > 0 || commentsLoading) return;
     setCommentsLoading(true);
     setCommentsError(false);
@@ -3414,7 +3058,7 @@ function ReaderSheet({ item, onClose, allItems = [], onNavigate, videoStartTime 
     opacity: Math.max(0.4, 1 - dragY / 400),
   } : {};
 
-  const hasMedia = isReddit ? !!(item.video || item.image) : !!item.image;
+  const hasMedia = !!(item.video || item.image);
 
   return (
     <div
@@ -3429,8 +3073,8 @@ function ReaderSheet({ item, onClose, allItems = [], onNavigate, videoStartTime 
       {!hasMedia && (
         <div className="reader-topbar">
           <div className="reader-source-pill" style={{ background: `${color}18`, color }}>
-            <span style={{ width: 8, height: 8, borderRadius: isReddit ? "50%" : 2, background: color, flexShrink: 0 }} />
-            <span>{isReddit ? `r/${item.subreddit}` : item.sourceName}</span>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
+            <span>{`r/${item.subreddit}`}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {hasPrev && (
@@ -3449,8 +3093,8 @@ function ReaderSheet({ item, onClose, allItems = [], onNavigate, videoStartTime 
         {hasMedia && (
           <div className="reader-topbar-overlay">
             <div className="reader-source-pill" style={{ background: `rgba(255,255,255,0.15)`, color: "#fff" }}>
-              <span style={{ width: 8, height: 8, borderRadius: isReddit ? "50%" : 2, background: color, flexShrink: 0 }} />
-              <span>{isReddit ? `r/${item.subreddit}` : item.sourceName}</span>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
+              <span>{`r/${item.subreddit}`}</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {hasPrev && (
@@ -3464,21 +3108,17 @@ function ReaderSheet({ item, onClose, allItems = [], onNavigate, videoStartTime 
           </div>
         )}
 
-        {/* Hero: video player, image, or news placeholder */}
-        {isReddit && item.video
+        {/* Hero: video player or image */}
+        {item.video
           ? <VideoPlayer video={item.video} poster={item.image} autoplay fullscreen startTime={videoStartTime} />
-          : item.image
-            ? <img
+          : item.image && (
+              <img
                 className="reader-hero-img"
                 src={item.image}
                 alt={item.title}
                 onError={e => { e.target.style.display = "none"; }}
               />
-            : !isReddit && (
-                <div className="reader-hero-placeholder" style={{ background: `${color}10` }}>
-                  <NewsImagePlaceholder article={item} color={color} large />
-                </div>
-              )
+            )
         }
 
         {/* Content area — warm background sits below full-bleed media */}
@@ -3493,30 +3133,21 @@ function ReaderSheet({ item, onClose, allItems = [], onNavigate, videoStartTime 
         <div className="reader-body">
           <div className="reader-meta">
             <span className="reader-meta-tag">{item.ageLabel}</span>
-            {isReddit && item.author && <>
+            {item.author && <>
               <div className="reader-meta-dot" />
               <span className="reader-meta-tag">u/{item.author}</span>
-            </>}
-            {item.section && <>
-              <div className="reader-meta-dot" />
-              <span className="reader-meta-tag">{item.section}</span>
             </>}
           </div>
 
           <div className="reader-title">{item.title}</div>
 
           {/* Self text (Reddit text posts) */}
-          {isReddit && item.selfText && (
+          {item.selfText && (
             <div className="reader-summary">{item.selfText}</div>
           )}
 
-          {/* News summary */}
-          {!isReddit && item.summary && (
-            <div className="reader-summary">{item.summary}</div>
-          )}
-
           {/* Collapsed stats row — tap to expand */}
-          {isReddit && (
+          {(
             <div
               className="reader-stats-collapsed"
               onClick={() => setDetailsOpen(o => !o)}
@@ -3529,7 +3160,7 @@ function ReaderSheet({ item, onClose, allItems = [], onNavigate, videoStartTime 
         </div>
 
         {/* Expanded details: full stats + comments */}
-        {isReddit && detailsOpen && (
+        {detailsOpen && (
           <>
             <div className="reader-stats">
               <div className="reader-stat">
@@ -3598,7 +3229,7 @@ function ReaderSheet({ item, onClose, allItems = [], onNavigate, videoStartTime 
 }
 
 // ── FEED SCREEN ───────────────────────────────────────────
-function FeedScreen({ enabledSubs, enabledNewsSources, mutedInMode = {}, alwaysBlock = [] }) {
+function FeedScreen({ enabledSubs, mutedInMode = {}, alwaysBlock = [] }) {
   const feedUser = useAuth();
   const [readerItem, setReaderItem] = useState(null);
   const [readerClosing, setReaderClosing] = useState(false);
@@ -3682,20 +3313,9 @@ function FeedScreen({ enabledSubs, enabledNewsSources, mutedInMode = {}, alwaysB
     return mode.categories.flatMap(cat => SUBREDDIT_CATEGORIES[cat] ?? []).filter(filter).slice(0, 20);
   }, [mode, enabledSubs, mutedInMode, alwaysBlock]);
 
-  // News sources for the current mode — apply always block
-  const targetNews = useMemo(() => {
-    const blocked = alwaysBlock.map(s => s.toLowerCase());
-    const filter = n => !blocked.includes(n.toLowerCase());
-    if (mode.id === "my-morning") return enabledNewsSources.filter(filter);
-    if (mode.id === "drift") return enabledNewsSources.filter(filter);
-    if (mode.includeNews) return enabledNewsSources.filter(filter);
-    return [];
-  }, [mode, enabledNewsSources, alwaysBlock]);
-
   const { posts: rawPosts, loading: postsLoading } = useRedditFeed(targetSubs, 8, "top&t=day", retryKey);
-  const { articles: rawArticles, loading: newsLoading } = useNewsFeed(targetNews, retryKey);
 
-  const loading = postsLoading || newsLoading;
+  const loading = postsLoading;
 
   // Scroll position memory per tab
   const feedScrollRef = useRef(null);
@@ -3721,48 +3341,22 @@ function FeedScreen({ enabledSubs, enabledNewsSources, mutedInMode = {}, alwaysB
     restoreScrollPosition(activeMode);
   }, [activeMode]); // eslint-disable-line
 
-  // Merge Reddit posts and news, ranking Reddit by hot-score and interleaving news by recency
   const feedItems = useMemo(() => {
-    // News appears in my-morning, drift, and plugged-in modes
-    const showNews = mode.id === "my-morning" || mode.id === "drift" || mode.includeNews;
     // For my-morning, respect the user's enabled subs. For all other modes, show everything fetched.
     const filteredPosts = mode.id === "my-morning"
       ? rawPosts.filter(p => enabledSubSet.has(p.subreddit.toLowerCase()))
       : rawPosts;
-    const filteredArticles = showNews ? rawArticles : [];
-
-    // Dedup articles by URL
-    const seenUrls = new Set();
-    const dedupedArticles = filteredArticles.filter(a => {
-      if (!a.url || seenUrls.has(a.url)) return false;
-      seenUrls.add(a.url);
-      return true;
-    });
-
-    if (dedupedArticles.length === 0) return filteredPosts;
-    if (filteredPosts.length === 0) return dedupedArticles;
-
-    // Interleave: roughly one news item per 3 Reddit posts
-    const merged = [];
-    let ni = 0;
-    filteredPosts.forEach((post, i) => {
-      merged.push(post);
-      if ((i + 1) % 3 === 0 && ni < dedupedArticles.length) {
-        merged.push(dedupedArticles[ni++]);
-      }
-    });
-    while (ni < dedupedArticles.length) merged.push(dedupedArticles[ni++]);
 
     // Push posts that were already seen (from a previous session) to the bottom,
     // preserving relative order within each group (unseen first, then seen).
     const prevSeen = previouslySeenIds.current;
     if (prevSeen.size > 0) {
-      const unseen = merged.filter(item => !prevSeen.has(item.id));
-      const seen = merged.filter(item => prevSeen.has(item.id));
+      const unseen = filteredPosts.filter(item => !prevSeen.has(item.id));
+      const seen = filteredPosts.filter(item => prevSeen.has(item.id));
       return [...unseen, ...seen];
     }
-    return merged;
-  }, [rawPosts, rawArticles, enabledSubSet, mode]);
+    return filteredPosts;
+  }, [rawPosts, enabledSubSet, mode]);
 
   const FEED_CAP = 50;
   const hero = feedItems[0] ?? null;
@@ -3778,7 +3372,7 @@ function FeedScreen({ enabledSubs, enabledNewsSources, mutedInMode = {}, alwaysB
       <div className="feed-header fade-up fade-up-1">
         <div>
           <div className="feed-title">Your Feed</div>
-          <div className="feed-subtitle">{mode.id === "my-morning" ? "your curated morning" : mode.id === "drift" ? "just scroll · something for everyone" : mode.id === "gentle" ? "calm · nature · mindfulness" : mode.id === "plugged-in" ? "news · science · world" : "art · music · food · travel"}</div>
+          <div className="feed-subtitle">{mode.id === "my-morning" ? "your curated morning" : mode.id === "drift" ? "just scroll · something for everyone" : mode.id === "gentle" ? "calm · nature · mindfulness" : mode.id === "plugged-in" ? "science · world · wonder" : "art · music · food · travel"}</div>
         </div>
         {/* Compact / Expanded view toggle */}
         <button
@@ -4137,7 +3731,7 @@ function SportsScreen() {
           );
         })
       )}
-      <div className="wotd-attribution fade-up fade-up-7" style={{ margin: '16px 20px 0', color: 'rgba(253,242,232,0.3)' }}>
+      <div className="fade-up fade-up-7" style={{ fontSize: 9, textAlign: 'right', margin: '16px 20px 0', color: 'rgba(253,242,232,0.3)' }}>
         Powered by <a href="https://www.thesportsdb.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(253,242,232,0.4)' }}>TheSportsDB</a>
       </div>
     </div>
@@ -4333,10 +3927,6 @@ function WorldScreen() {
             <div className="poll-total">{(TOTAL_VOTES + 1).toLocaleString()} people have responded today</div>
           </>
         )}
-      </div>
-
-      <div className="fade-up fade-up-5">
-        <WordOfTheDayWidget variant="dark" />
       </div>
 
       <div className="fade-up fade-up-6">
@@ -4738,8 +4328,8 @@ function Accordion({ title, count, total, accentColor, children, defaultOpen = f
   );
 }
 
-function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggleNewsSource, mutedInMode, onToggleMutedInMode, alwaysBlock, onToggleAlwaysBlock }) {
-  const [toggles, setToggles] = useState({ noNews: true, slowScroll: false, notification: true, sleepData: false });
+function SettingsScreen({ enabledSubs, onToggleSub, mutedInMode, onToggleMutedInMode, alwaysBlock, onToggleAlwaysBlock }) {
+  const [toggles, setToggles] = useState({ slowScroll: false, notification: true, sleepData: false });
   const toggle = k => setToggles(t => ({ ...t, [k]: !t[k] }));
   const ytUser = useAuth();
 
@@ -4749,9 +4339,6 @@ function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggle
     Science: "#2bcbba", Uplifting: "#FFD166", "Global/Wonder": "#219EBC",
     Zen: "#a0b8d0", Travel: "#45aaf2",
   };
-
-  // All sources that can be always-blocked (all subs + all news)
-  const allSources = [...ALL_SUBREDDITS, ...ALL_NEWS_SOURCE_NAMES];
 
   return (
     <div className="profile-bg">
@@ -4769,26 +4356,6 @@ function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggle
       <span className="section-label fade-up fade-up-2">
         My Morning <span style={{ color: "rgba(253,242,232,0.5)", fontWeight: 400, letterSpacing: 0 }}>· your custom feed</span>
       </span>
-
-      {/* News sources for My Morning */}
-      {Object.entries(NEWS_SOURCE_CATEGORIES).map(([cat, names]) => {
-        const enabledInCat = names.filter(n => enabledNewsSources.includes(n)).length;
-        return (
-          <Accordion key={cat} title={cat} count={enabledInCat} total={names.length} accentColor="#8B5CF6">
-            {names.map(name => {
-              const source = NEWS_SOURCES[name];
-              const on = enabledNewsSources.includes(name);
-              return (
-                <div key={name} className={`sub-chip ${on ? "on" : "off"}`}
-                  style={on ? { background: source.color, borderColor: source.color, color: "#fff" } : {}}
-                  onClick={() => onToggleNewsSource(name)}>
-                  {name}
-                </div>
-              );
-            })}
-          </Accordion>
-        );
-      })}
 
       {/* Subreddits for My Morning */}
       {Object.entries(SUBREDDIT_CATEGORIES).map(([category, subs]) => {
@@ -4870,31 +4437,9 @@ function SettingsScreen({ enabledSubs, onToggleSub, enabledNewsSources, onToggle
         </Accordion>
       ))}
 
-      {Object.entries(NEWS_SOURCE_CATEGORIES).map(([cat, names]) => (
-        <Accordion key={`block-news-${cat}`} title={cat}
-          count={names.filter(n => !alwaysBlock.includes(n)).length}
-          total={names.length} accentColor="#8B5CF6">
-          {names.map(name => {
-            const blocked = alwaysBlock.includes(name);
-            const source = NEWS_SOURCES[name];
-            return (
-              <div key={name}
-                className={`sub-chip ${blocked ? "off" : "on"}`}
-                style={blocked
-                  ? { opacity: 0.45, textDecoration: "line-through" }
-                  : { background: source.color, borderColor: source.color, color: "#fff" }}
-                onClick={() => onToggleAlwaysBlock(name)}>
-                {name}
-              </div>
-            );
-          })}
-        </Accordion>
-      ))}
-
       {/* ── OTHER SETTINGS ── */}
       <span className="section-label fade-up fade-up-4">Feed Settings</span>
       {[
-        { key: "noNews", Ico: Icon.Bell, label: "No bad news mode", value: "Hide crisis & conflict" },
         { key: "slowScroll", Ico: Icon.Turtle, label: "Slow scroll mode", value: "15 cards per morning" },
       ].map(s => (
         <div className="setting-row fade-up fade-up-4" key={s.key}>
@@ -4995,9 +4540,8 @@ export default function MorningScrollApp() {
 
   // Living sunrise is pure CSS — no JS state needed (see .phone animation)
 
-  // All subs + all news sources enabled by default
+  // All subs enabled by default
   const [enabledSubs, setEnabledSubs] = useState(ALL_SUBREDDITS);
-  const [enabledNewsSources, setEnabledNewsSources] = useState(ALL_NEWS_SOURCE_NAMES);
 
   // Per-mode muted subs: { gentle: ['Meditation'], curious: [] ... }
   const [mutedInMode, setMutedInMode] = useState(() => {
@@ -5039,12 +4583,6 @@ export default function MorningScrollApp() {
     );
   };
 
-  const toggleNewsSource = (name) => {
-    setEnabledNewsSources(prev =>
-      prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
-    );
-  };
-
   useEffect(() => { if (screenRef.current) screenRef.current.scrollTop = 0; }, [tab]);
 
   const closeWordle = () => {
@@ -5055,10 +4593,10 @@ export default function MorningScrollApp() {
   const Screen = () => {
     switch (tab) {
       case "home":     return <HomeScreen onOpenWordle={() => setWordleOpen(true)} />;
-      case "feed":     return <FeedScreen enabledSubs={enabledSubs} enabledNewsSources={enabledNewsSources} mutedInMode={mutedInMode} alwaysBlock={alwaysBlock} />;
+      case "feed":     return <FeedScreen enabledSubs={enabledSubs} mutedInMode={mutedInMode} alwaysBlock={alwaysBlock} />;
       case "world":    return <WorldScreen />;
       case "sports":   return <SportsScreen />;
-      case "settings": return <SettingsScreen enabledSubs={enabledSubs} onToggleSub={toggleSub} enabledNewsSources={enabledNewsSources} onToggleNewsSource={toggleNewsSource} mutedInMode={mutedInMode} onToggleMutedInMode={toggleMutedInMode} alwaysBlock={alwaysBlock} onToggleAlwaysBlock={toggleAlwaysBlock} />;
+      case "settings": return <SettingsScreen enabledSubs={enabledSubs} onToggleSub={toggleSub} mutedInMode={mutedInMode} onToggleMutedInMode={toggleMutedInMode} alwaysBlock={alwaysBlock} onToggleAlwaysBlock={toggleAlwaysBlock} />;
       default:         return <HomeScreen onOpenWordle={() => setWordleOpen(true)} />;
     }
   };
