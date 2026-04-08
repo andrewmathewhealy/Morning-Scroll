@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense, Component } from "react";
 import { createPortal } from "react-dom";
 import { SUBREDDIT_CATEGORIES, ALL_SUBREDDITS, FEED_MODES } from "./subreddits.js";
 import { useRedditFeed } from "./useRedditFeed.js";
@@ -9,6 +9,37 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebas
 import { doc, getDoc, setDoc, collection, getDocs, query, orderBy, limit as fbLimit } from "firebase/firestore";
 import "./styles/app.css";
 import "./styles/wordle.css";
+
+// ── ERROR BOUNDARY ────────────────────────────────────────
+// Isolates render/runtime errors in a subtree so one broken widget
+// doesn't take down the whole app. Usage: <ErrorBoundary label="..."><Widget/></ErrorBoundary>
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error, info) {
+    // eslint-disable-next-line no-console
+    console.error(`[ErrorBoundary${this.props.label ? ` ${this.props.label}` : ""}]`, error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback ?? (
+        <div style={{
+          padding: 20, borderRadius: 16,
+          background: "rgba(255,255,255,0.08)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          color: "rgba(253,242,232,0.55)",
+          fontSize: 12, textAlign: "center",
+        }}>
+          Something went sideways here. Try again later.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // ── GYROSCOPE PARALLAX HOOK ───────────────────────────────
 function useGyroscope() {
@@ -1928,7 +1959,9 @@ function RedditHeroCard({ post, onOpen, readerOpen = false }) {
       {/* Video posts: inline autoplay preview */}
       {hasVideo ? (
         <div onClick={e => e.stopPropagation()}>
-          <VideoPlayer video={post.video} poster={post.image} autoplay onTimeUpdate={(t) => { videoTimeRef.current = t; }} paused={readerOpen} />
+          <ErrorBoundary label="VideoPlayer">
+            <VideoPlayer video={post.video} poster={post.image} autoplay onTimeUpdate={(t) => { videoTimeRef.current = t; }} paused={readerOpen} />
+          </ErrorBoundary>
           {/* Tap-to-expand overlay on video */}
           <div
             onClick={(e) => { e.stopPropagation(); handleOpen(); }}
@@ -2203,7 +2236,7 @@ function ReaderSheet({ item, onClose, allItems = [], onNavigate, videoStartTime 
 
         {/* Hero: video player or image */}
         {item.video
-          ? <VideoPlayer video={item.video} poster={item.image} autoplay fullscreen startTime={videoStartTime} />
+          ? <ErrorBoundary label="VideoPlayer fullscreen"><VideoPlayer video={item.video} poster={item.image} autoplay fullscreen startTime={videoStartTime} /></ErrorBoundary>
           : item.image && (
               <img
                 className="reader-hero-img"
@@ -2611,13 +2644,15 @@ function FeedScreen({ enabledSubs, mutedInMode = {}, alwaysBlock = [] }) {
 
       {/* In-app reader sheet */}
       {readerItem && (
-        <ReaderSheet
-          item={readerItem}
-          onClose={closeReader}
-          allItems={feedItems}
-          onNavigate={(item) => { markSeen(item.id); setVideoStartTime(0); setReaderItem(item); }}
-          videoStartTime={videoStartTime}
-        />
+        <ErrorBoundary label="ReaderSheet" fallback={null}>
+          <ReaderSheet
+            item={readerItem}
+            onClose={closeReader}
+            allItems={feedItems}
+            onNavigate={(item) => { markSeen(item.id); setVideoStartTime(0); setReaderItem(item); }}
+            videoStartTime={videoStartTime}
+          />
+        </ErrorBoundary>
       )}
     </div>
   );
@@ -3318,7 +3353,9 @@ function NewsScreen() {
         <div className="community-subtitle">A dispatch from somewhere larger</div>
       </div>
       <div className="fade-up fade-up-2">
-        <CosmicBriefCard />
+        <ErrorBoundary label="CosmicBriefCard">
+          <CosmicBriefCard />
+        </ErrorBoundary>
       </div>
       <div className="fade-up fade-up-3">
         <ArtOfTheDayCard />
@@ -3618,16 +3655,17 @@ function YouTubeFeedSection({ user }) {
         <div className="yt-section-label">YouTube</div>
       </div>
       {items.map(({ channel, video, isNew }) => (
-        <YouTubeCard
-          key={video.videoId}
-          channel={channel}
-          video={video}
-          isNew={isNew}
-          onTap={() => {
-            markRead(video.videoId);
-            setPlaying({ channel, video });
-          }}
-        />
+        <ErrorBoundary key={video.videoId} label="YouTubeCard" fallback={null}>
+          <YouTubeCard
+            channel={channel}
+            video={video}
+            isNew={isNew}
+            onTap={() => {
+              markRead(video.videoId);
+              setPlaying({ channel, video });
+            }}
+          />
+        </ErrorBoundary>
       ))}
       {playing && (
         <YouTubePlayer
