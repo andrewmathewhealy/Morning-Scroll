@@ -1887,8 +1887,9 @@ function ReaderSheet({ item, onClose, allItems = [], onNavigate, videoStartTime 
     const dy = e.changedTouches[0].clientY - swipeStartY.current;
     const dx = e.changedTouches[0].clientX - swipeStartX.current;
 
-    if (swipeDir === 'v' && dy > 80) {
-      handleClose();
+    if (swipeDir === 'v') {
+      if (dy > 80) handleClose();
+      else if (dy < -60 && hasNext) onNavigate(allItems[currentIndex + 1]);
     } else if (swipeDir === 'h') {
       if (dx < -60 && hasNext) onNavigate(allItems[currentIndex + 1]);
       else if (dx > 60 && hasPrev) onNavigate(allItems[currentIndex - 1]);
