@@ -175,13 +175,13 @@
     background: radial-gradient(circle, rgba(255,183,3,0.12) 0%, transparent 70%);
   }
   .weather-temp { font-family: 'Satoshi', sans-serif; font-size: 48px; color: #FDF2E8; line-height: 1; position: relative; z-index: 1; }
-  .weather-label { font-size: 11px; color: rgba(253,242,232,0.5); margin-top: 4px; letter-spacing: 0.5px; position: relative; z-index: 1; }
-  .weather-condition { font-size: 13px; color: rgba(253,242,232,0.7); margin-top: 8px; position: relative; z-index: 1; }
+  .weather-label { font-size: 11px; color: rgba(253,242,232,0.75); margin-top: 4px; letter-spacing: 0.5px; position: relative; z-index: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+  .weather-condition { font-size: 13px; color: #FDF2E8; margin-top: 8px; position: relative; z-index: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
   .weather-icon-wrap { margin-bottom: 6px; }
-  .weather-forecast { display: flex; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(253,242,232,0.15); position: relative; z-index: 1; }
-  .weather-hour { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
-  .weather-hour-time { font-size: 9px; color: rgba(253,242,232,0.5); letter-spacing: 0.3px; }
-  .weather-hour-temp { font-size: 11px; color: rgba(253,242,232,0.9); font-weight: 600; }
+  .weather-forecast { display: flex; gap: 5px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(253,242,232,0.3); position: relative; z-index: 1; }
+  .weather-hour { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .weather-hour-time { font-size: 10px; color: #FDF2E8; font-weight: 700; letter-spacing: 0.3px; text-shadow: 0 1px 2px rgba(0,0,0,0.25); }
+  .weather-hour-temp { font-size: 12px; color: #FDF2E8; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.25); }
 
   .moon-widget {
     background: #000; border-radius: 24px; width: 130px; overflow: hidden;

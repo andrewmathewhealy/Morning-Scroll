@@ -853,7 +853,7 @@ function WeatherWidget() {
             return (
               <div className="weather-hour" key={i}>
                 <div className="weather-hour-time">{label}</div>
-                <HourIcon size={14} color="rgba(255,255,255,0.8)" />
+                <HourIcon size={14} color="#FDF2E8" />
                 <div className="weather-hour-temp">{h.temp}°</div>
               </div>
             );
@@ -1362,10 +1362,6 @@ function HomeScreen({ onOpenWordle }) {
             <div className="photo-caption">Trip to Colorado</div>
           </div>
         </div>
-      </div>
-
-      <div className="section-pad spring-in spring-in-5 depth-mid">
-        <OnThisDayWidget />
       </div>
 
       <div className="section-pad spring-in spring-in-6 depth-mid">
@@ -2957,12 +2953,17 @@ function WorldScreen() {
         )}
         {liveCategories && Object.entries(liveCategories).map(([cat, streams]) => (
           <div key={cat} style={{ marginBottom: 18 }}>
-            <div style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "0 20px", marginBottom: 10,
-            }}>
-              <span style={{ width: 8, height: 8, borderRadius: 2, background: LIVE_CAT_COLORS[cat] }} />
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: "rgba(253,242,232,0.7)" }}>{cat}</span>
+            <div style={{ padding: "0 20px", marginBottom: 10 }}>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "6px 12px 6px 10px",
+                borderRadius: 999,
+                background: "#FDF2E8",
+                border: "1.5px solid rgba(12,26,53,0.08)",
+              }}>
+                <span style={{ width: 8, height: 8, borderRadius: 2, background: LIVE_CAT_COLORS[cat] }} />
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: "#023047" }}>{cat}</span>
+              </div>
             </div>
             <div style={{
               display: "flex", gap: 10, overflowX: "auto",
@@ -3080,7 +3081,12 @@ function NewsScreen() {
           <CosmicBriefCard />
         </ErrorBoundary>
       </div>
-      <div className="fade-up fade-up-3">
+      <div className="section-pad fade-up fade-up-3">
+        <ErrorBoundary label="OnThisDayWidget">
+          <OnThisDayWidget />
+        </ErrorBoundary>
+      </div>
+      <div className="fade-up fade-up-4">
         <ArtOfTheDayCard />
       </div>
     </div>
