@@ -897,7 +897,7 @@ function OnThisDayWidget() {
   return (
     <div className="otd-widget">
       <div className="otd-label">
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="#2a5f7a" strokeWidth="1.2"/><line x1="5" y1="2.5" x2="5" y2="5" stroke="#2a5f7a" strokeWidth="1.2" strokeLinecap="round"/><line x1="5" y1="5" x2="7" y2="5" stroke="#2a5f7a" strokeWidth="1.2" strokeLinecap="round"/></svg>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="#D4940A" strokeWidth="1.2"/><line x1="5" y1="2.5" x2="5" y2="5" stroke="#D4940A" strokeWidth="1.2" strokeLinecap="round"/><line x1="5" y1="5" x2="7" y2="5" stroke="#D4940A" strokeWidth="1.2" strokeLinecap="round"/></svg>
         On This Day
       </div>
       {loading && (
@@ -921,7 +921,7 @@ function OnThisDayWidget() {
           )}
         </>
       )}
-      {!loading && error && <div className="otd-text" style={{ color: '#8ec5d9' }}>{error}</div>}
+      {!loading && error && <div className="otd-text" style={{ color: 'rgba(2,48,71,0.55)' }}>{error}</div>}
     </div>
   );
 }
@@ -1067,7 +1067,7 @@ function JournalWidget() {
 
   if (promptLoading) return (
     <div className="journal-card journal-shimmer widget-shimmer">
-      <Icon.Feather size={24} color="rgba(139,92,246,0.3)" />
+      <Icon.Feather size={24} color="rgba(212,148,10,0.35)" />
       <div className="journal-label">Journal</div>
     </div>
   );
@@ -1077,7 +1077,7 @@ function JournalWidget() {
       {/* Inline card — collapsed view */}
       <div className="journal-card" onClick={() => { if (user) setExpanded(true); }}>
         <div className="journal-header">
-          <Icon.Feather size={14} color="rgba(139,92,246,0.7)" />
+          <Icon.Feather size={14} color="#D4940A" />
           <div className="journal-label">Morning Journal</div>
         </div>
         <div className="journal-prompt">{prompt}</div>
@@ -1085,7 +1085,7 @@ function JournalWidget() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ color: 'rgba(8,16,32,0.3)', fontStyle: 'italic', fontSize: 12 }}>Tap to write...</div>
             <button className="journal-history-btn" onClick={(e) => { e.stopPropagation(); setDiaryOpen(true); }}>
-              <Icon.BookOpen size={13} color="rgba(8,16,32,0.4)" /> Past entries
+              <Icon.BookOpen size={13} color="#D4940A" /> Past entries
             </button>
           </div>
         ) : loginMode ? (
@@ -1113,7 +1113,7 @@ function JournalWidget() {
               onTouchEnd={handleTouchEnd}
             />
             <div className="journal-header">
-              <Icon.Feather size={14} color="rgba(8,16,32,0.4)" />
+              <Icon.Feather size={14} color="#D4940A" />
               <div className="journal-label">Morning Journal</div>
             </div>
             <div className="journal-prompt">{prompt}</div>
@@ -1126,7 +1126,7 @@ function JournalWidget() {
             />
             <div className="journal-actions">
               <button className="journal-history-btn" onClick={() => setDiaryOpen(true)}>
-                <Icon.BookOpen size={13} color="rgba(8,16,32,0.4)" /> Past entries
+                <Icon.BookOpen size={13} color="#D4940A" /> Past entries
               </button>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 {saved && <span className="journal-saved">Saved</span>}
@@ -2683,7 +2683,7 @@ const LIVE_STREAM_CATEGORIES = {
   ],
 };
 
-const LIVE_CAT_COLORS = { Space: "#8B5CF6", Cities: "#45aaf2", Nature: "#26de81" };
+const LIVE_CAT_COLORS = { Space: "#8ECAE6", Cities: "#219EBC", Nature: "#7A9E52" };
 
 function useLiveStatus(allStreams) {
   const [status, setStatus] = useState(null); // null = loading, {} = checked
@@ -3048,7 +3048,7 @@ function CosmicBriefCard() {
       <div className="art-info">
         <div style={{
           fontSize: 9, fontWeight: 700, letterSpacing: 1.4,
-          textTransform: "uppercase", color: "rgba(8,16,32,0.4)", marginBottom: 8,
+          textTransform: "uppercase", color: "#D4940A", marginBottom: 8,
         }}>The Cosmic Brief</div>
         <div className="art-title" style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 800 }}>
           {cosmic_brief?.headline}
