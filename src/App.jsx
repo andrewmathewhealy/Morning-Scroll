@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { SUBREDDIT_CATEGORIES, ALL_SUBREDDITS, FEED_MODES } from "./subreddits.js";
 import { useRedditFeed } from "./useRedditFeed.js";
 import { cleanRedditText } from "./redditApi.js";
-import GlobeCanvas from "./Globe.jsx";
+const GlobeCanvas = lazy(() => import("./Globe.jsx"));
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, getDocs, query, orderBy, limit as fbLimit } from "firebase/firestore";
@@ -3088,7 +3088,9 @@ function WorldScreen() {
         style={{ overflow: "hidden", padding: 0, cursor: "pointer" }}
         onClick={() => setGlobeExpanded(true)}
       >
-        <GlobeCanvas style={{ width: "100%", height: "100%", minHeight: 320, borderRadius: "inherit" }} />
+        <Suspense fallback={<div style={{ width: "100%", minHeight: 320, background: "#010f18" }} />}>
+          <GlobeCanvas style={{ width: "100%", height: "100%", minHeight: 320, borderRadius: "inherit" }} />
+        </Suspense>
         <div
           style={{
             position: "absolute", top: 12, right: 12, zIndex: 10,
@@ -3121,7 +3123,9 @@ function WorldScreen() {
           }} />
           {/* Globe canvas — fills the middle */}
           <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
-            <GlobeCanvas style={{ width: "100%", height: "100%" }} fullscreen />
+            <Suspense fallback={<div style={{ width: "100%", height: "100%", background: "#020308" }} />}>
+              <GlobeCanvas style={{ width: "100%", height: "100%" }} fullscreen />
+            </Suspense>
           </div>
           {/* Bottom gradient buffer */}
           <div style={{
