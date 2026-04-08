@@ -590,10 +590,7 @@ async function loadWordLists() {
   if (cachedAnswers && cachedValid) return { answers: cachedAnswers, valid: cachedValid };
   try {
     // Using the official Wordle answer list from a public GitHub repo
-    const [answersRes, validRes] = await Promise.all([
-      fetch("https://raw.githubusercontent.com/tabatkins/wordle-list/main/words"),
-      fetch("https://raw.githubusercontent.com/tabatkins/wordle-list/main/words"),
-    ]);
+    const answersRes = await fetch("https://raw.githubusercontent.com/tabatkins/wordle-list/main/words");
     const answersText = await answersRes.text();
     const words = answersText.trim().split("\n").map(w => w.trim().toUpperCase()).filter(w => w.length === 5);
     cachedAnswers = words;
@@ -2341,7 +2338,7 @@ function FeedScreen({ enabledSubs, mutedInMode = {}, alwaysBlock = [] }) {
         return new Set();
       }
       const stored = JSON.parse(localStorage.getItem("ms_seen_posts") ?? "[]");
-      return new Set(stored.filter(id => !String(id).startsWith("mock_")));
+      return new Set(stored);
     }
     catch { return new Set(); }
   });
