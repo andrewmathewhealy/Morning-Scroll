@@ -2518,20 +2518,7 @@ function HomeScreen({ onOpenWordle }) {
       </div>
 
       <div className="section-pad spring-in spring-in-3 depth-mid">
-        <div className="calendar-widget widget-shimmer">
-          <div className="cal-header">Today's Schedule</div>
-          {[
-            { time: "9am", title: "Team standup", color: "#219EBC" },
-            { time: "12pm", title: "Lunch with Sarah", color: "#FFD166" },
-            { time: "3pm", title: "Design review", color: "#FFBC42" },
-          ].map((e, i) => (
-            <div className="cal-event" key={i}>
-              <div className="cal-dot" style={{ background: e.color }} />
-              <div className="cal-time">{e.time}</div>
-              <div className="cal-title">{e.title}</div>
-            </div>
-          ))}
-        </div>
+        <JournalWidget />
       </div>
 
       <div className="section-pad spring-in spring-in-4 depth-mid">
@@ -2550,7 +2537,20 @@ function HomeScreen({ onOpenWordle }) {
       </div>
 
       <div className="section-pad spring-in spring-in-6 depth-mid">
-        <JournalWidget />
+        <div className="calendar-widget widget-shimmer">
+          <div className="cal-header">Today's Schedule</div>
+          {[
+            { time: "9am", title: "Team standup", color: "#219EBC" },
+            { time: "12pm", title: "Lunch with Sarah", color: "#FFD166" },
+            { time: "3pm", title: "Design review", color: "#FFBC42" },
+          ].map((e, i) => (
+            <div className="cal-event" key={i}>
+              <div className="cal-dot" style={{ background: e.color }} />
+              <div className="cal-time">{e.time}</div>
+              <div className="cal-title">{e.title}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="section-pad spring-in spring-in-7 depth-mid">
@@ -4144,14 +4144,101 @@ function WorldScreen() {
   );
 }
 
+function useDailyBrief() {
+  const [state, setState] = useState({ loading: true, data: null, error: null });
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const cacheKey = `daily-brief-${today}`;
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey));
+      if (cached) { setState({ loading: false, data: cached, error: null }); return; }
+    } catch {}
+    (async () => {
+      try {
+        const res = await fetch(`${WORKER_URL}/api/daily`);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+        try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch {}
+        setState({ loading: false, data, error: null });
+      } catch (err) {
+        setState({ loading: false, data: null, error: err.message });
+      }
+    })();
+  }, []);
+  return state;
+}
+
+function CosmicBriefCard() {
+  const { loading, data, error } = useDailyBrief();
+
+  if (loading) return (
+    <div className="art-card widget-shimmer" style={{ minHeight: 280 }}>
+      <div className="art-image" />
+      <div className="art-info">
+        <div className="skeleton" style={{ width: '70%', height: 14 }} />
+        <div className="skeleton" style={{ width: '90%', height: 10, marginTop: 8 }} />
+        <div className="skeleton" style={{ width: '85%', height: 10, marginTop: 4 }} />
+      </div>
+    </div>
+  );
+
+  if (error || !data) return (
+    <div className="art-card" style={{ padding: 24, textAlign: "center", color: "rgba(8,16,32,0.5)", fontSize: 13 }}>
+      The Cosmic Brief is unavailable right now.
+    </div>
+  );
+
+  const { apod, cosmic_brief } = data;
+  const isVideo = apod?.url && (apod.url.includes("youtube") || apod.url.includes("vimeo"));
+
+  return (
+    <div className="art-card">
+      <div className="art-image" style={{ background: "#0a1a24" }}>
+        {apod?.url && !isVideo && <img src={apod.url} alt={apod.title} />}
+        {isVideo && (
+          <iframe
+            src={apod.url}
+            title={apod.title}
+            allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            style={{ width: "100%", aspectRatio: "16/9", border: 0 }}
+          />
+        )}
+      </div>
+      <div className="art-info">
+        <div style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: 1.4,
+          textTransform: "uppercase", color: "rgba(8,16,32,0.4)", marginBottom: 8,
+        }}>The Cosmic Brief</div>
+        <div className="art-title" style={{ fontSize: 18, lineHeight: 1.25 }}>
+          {cosmic_brief?.headline}
+        </div>
+        {cosmic_brief?.article && (
+          <div className="art-desc" style={{ marginTop: 10, lineHeight: 1.6 }}>
+            {cosmic_brief.article}
+          </div>
+        )}
+        {apod?.title && (
+          <div className="art-meta" style={{ marginTop: 14, fontSize: 10, opacity: 0.6 }}>
+            Image: {apod.title} · NASA APOD
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function NewsScreen() {
   return (
     <div className="community-bg">
       <div className="community-header fade-up fade-up-1">
         <div className="community-title">News</div>
-        <div className="community-subtitle">Daily art & stories</div>
+        <div className="community-subtitle">A dispatch from somewhere larger</div>
       </div>
       <div className="fade-up fade-up-2">
+        <CosmicBriefCard />
+      </div>
+      <div className="fade-up fade-up-3">
         <ArtOfTheDayCard />
       </div>
     </div>

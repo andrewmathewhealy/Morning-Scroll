@@ -1,13 +1,86 @@
+// Origins allowed to call this worker. Add your production domain(s) here
+// once deployed (e.g. "https://morning-scroll.pages.dev").
+const ALLOWED_ORIGINS = new Set([
+  "http://localhost:5173",
+  "http://localhost:4173",
+  "http://127.0.0.1:5173",
+]);
+
+// Reflected back on responses. The actual security gate is isAllowedOrigin()
+// below — these headers just unblock the browser for legitimate callers.
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+function isAllowedOrigin(request) {
+  const origin = request.headers.get("Origin");
+  // No Origin header = non-browser request (curl, server-to-server). Block
+  // these too — legitimate clients always send Origin.
+  if (!origin) return false;
+  return ALLOWED_ORIGINS.has(origin);
+}
+
+// ── DAILY PROMPTS (edit freely) ────────────────────────────
+const COSMIC_BRIEF_PROMPT = `You are the editor of The Cosmic Brief, a single daily dispatch reporting on the nature of reality in the style of a straight-faced wire service.
+
+Your reader is already in on the joke. They know they are a spiritual being having a human experience. They know the material world is temporary and a little absurd. You are not teaching them — you are sharing a knowing look with them.
+
+The core duality: spiritual (infinite, eternal, vast) vs. material (mundane, biological, bureaucratic). The humor is never constructed. It comes entirely from the act of reporting eternal or cosmic truths in a straight wire service format. Do not write jokes. Do not add punchlines. Do not editorialize. Simply report. The format is the humor.
+
+Worldview: The Cosmic Brief operates from the perspective that all conscious beings are already complete, already free, and already home. The great irony it reports on — gently, without judgment — is that human civilization collectively organizes enormous effort toward the external world, while the one thing that would end all seeking requires nothing, costs nothing, and is available in any moment. This is not reported as a criticism. It is the central, loving joke of existence — that God went looking for God, using increasingly sophisticated equipment. The goal is not to be clever. The goal is to give the reader a brief moment of genuine expansion — a reminder of their connection to something larger than their daily concerns. Warmth is more important than wit. If a headline makes someone feel something, it has succeeded. If it only makes them think something, it has missed.
+
+Format: one headline, then a short 3-4 sentence article in the same deadpan wire service tone.
+
+Rules:
+- Report plainly. The absurdity is inherent, not constructed.
+- No complex scientific or technical language.
+- The joke is never on the reader or on humans generally.
+- Third person only.
+- No specific religious figures (Jesus, Mohammed, etc.). God, the universe, consciousness, awareness, the infinite are all fine.
+- No references to death or dying.
+- No nihilism. The underlying note is always warmth and okayness.
+- Single clean headline. No dateline, no quote marks.
+- The APOD image title and description below may loosely inspire the theme. Do not force it.
+
+Today's NASA APOD image:
+Title: [APOD_TITLE]
+Description: [APOD_DESCRIPTION]
+
+Generate one headline and one short article.`;
+
+const JOURNAL_PROMPT_INSTRUCTIONS = `You generate a single daily journal prompt for a morning app.
+
+The prompt should be light, playful, and imaginative. It requires no spiritual knowledge, no self-improvement mindset, and no deep reflection. It should be genuinely answerable in one or two sentences.
+
+Formats to rotate between freely:
+- A preference between two random things
+- A hypothetical scenario with no real stakes
+- A memory prompt
+- A completely random question about life, food, travel, animals, music, movies, or anything ordinary
+
+Rules:
+- No politics, no news, no self-improvement language
+- No prompts about death, loss, or hardship
+- Should feel like a question a friend texts you randomly
+- One sentence only. No explanation, no context.
+
+Generate one prompt.`;
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
+      // Preflight: only respond with CORS headers if the origin is allowed
+      if (!isAllowedOrigin(request)) return new Response(null, { status: 403 });
       return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+
+    if (!isAllowedOrigin(request)) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const url = new URL(request.url);
@@ -20,6 +93,7 @@ export default {
     if (path === "/youtube") return handleYouTube(request, env, url);
     if (path === "/youtube/channel") return handleYouTubeChannel(request, env, url);
     if (path === "/youtube/live-status") return handleYouTubeLiveStatus(request, env, url);
+    if (path === "/api/daily") return handleDaily(request, env, ctx);
 
     return json({ error: "Not found" }, 404);
   },
@@ -309,7 +383,23 @@ async function handleJournalPrompt(request, env) {
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 60,
-        system: `You generate short, simple morning journal prompts for a feel-good daily digest app. STRICT RULES: One single sentence. Maximum 15 words. Plain language — no flowery metaphors, no compound questions, no "and" joining two ideas. The prompt must be answerable in one or two sentences by the user. Focus on small, concrete things: a moment, a person, a feeling, something today. Be seasonally aware based on the date. Vary the style: question, gentle invitation, or simple noticing. Respond with ONLY the prompt text, nothing else.${recentSection}`,
+        system: `You generate a single daily journal prompt for a morning app.
+
+The prompt should be light, playful, and imaginative. It requires no spiritual knowledge, no self-improvement mindset, and no deep reflection. It should be genuinely answerable in one or two sentences.
+
+Formats to rotate between freely:
+- A preference between two random things
+- A hypothetical scenario with no real stakes
+- A memory prompt
+- A completely random question about life, food, travel, animals, music, movies, or anything ordinary
+
+Rules:
+- No politics, no news, no self-improvement language
+- No prompts about death, loss, or hardship
+- Should feel like a question a friend texts you randomly
+- One sentence only. No explanation, no context.
+
+Generate one prompt.${recentSection}`,
         messages: [
           { role: "user", content: `Generate a morning journal prompt for ${dateLabel}.` },
         ],
@@ -497,6 +587,105 @@ async function handleYouTubeLiveStatus(request, env, url) {
     const result = { status };
     liveStatusCache = { ts: now, key: cacheKey, data: result };
     return json(result);
+  } catch (err) {
+    return json({ error: "Worker exception", detail: err.message }, 500);
+  }
+}
+
+// ── /api/daily — APOD + Cosmic Brief + Journal Prompt ─────
+async function handleDaily(request, env, ctx) {
+  const cache = caches.default;
+  const cacheUrl = new URL(request.url);
+  cacheUrl.search = ""; // ignore query for cache key
+  const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
+
+  // Try cache first
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    // Re-emit with CORS headers (cached responses preserve original headers)
+    const body = await cached.text();
+    return new Response(body, {
+      status: 200,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json", "X-Cache": "HIT" },
+    });
+  }
+
+  try {
+    // 1. NASA APOD
+    const nasaKey = env.NASA_API_KEY || "DEMO_KEY";
+    const apodRes = await fetch(`https://api.nasa.gov/planetary/apod?api_key=${nasaKey}`);
+    const apodRaw = await apodRes.json();
+    const apod = {
+      url: apodRaw.url || null,
+      title: apodRaw.title || "",
+      explanation: apodRaw.explanation || "",
+    };
+
+    // 2. Two Claude calls in parallel
+    const anthropicKey = env.Claude;
+    if (!anthropicKey) {
+      return json({ error: "Claude key not configured" }, 500);
+    }
+
+    const callClaude = async (system, userMsg, maxTokens) => {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": anthropicKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: maxTokens,
+          system,
+          messages: [{ role: "user", content: userMsg }],
+        }),
+      });
+      const data = await res.json();
+      return (data.content?.[0]?.text || "").trim();
+    };
+
+    const cosmicSystem = COSMIC_BRIEF_PROMPT
+      .replace("[APOD_TITLE]", apod.title)
+      .replace("[APOD_DESCRIPTION]", apod.explanation);
+
+    const dateLabel = new Date().toLocaleDateString("en-US", {
+      weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
+    });
+
+    const [cosmicRaw, journalPrompt] = await Promise.all([
+      callClaude(cosmicSystem, "Generate today's Cosmic Brief.", 400),
+      callClaude(JOURNAL_PROMPT_INSTRUCTIONS, `Generate a morning journal prompt for ${dateLabel}.`, 60),
+    ]);
+
+    // 3. Parse cosmic brief: first line = headline, rest = article
+    const firstBreak = cosmicRaw.indexOf("\n");
+    const headline = (firstBreak === -1 ? cosmicRaw : cosmicRaw.slice(0, firstBreak)).trim();
+    const article = (firstBreak === -1 ? "" : cosmicRaw.slice(firstBreak + 1)).trim();
+
+    const payload = {
+      apod,
+      cosmic_brief: { headline, article },
+      journal_prompt: journalPrompt,
+    };
+
+    const fresh = new Response(JSON.stringify(payload), {
+      status: 200,
+      headers: {
+        ...CORS_HEADERS,
+        "Content-Type": "application/json",
+        "Cache-Control": "public, max-age=86400",
+        "X-Cache": "MISS",
+      },
+    });
+
+    if (ctx?.waitUntil) {
+      ctx.waitUntil(cache.put(cacheKey, fresh.clone()));
+    } else {
+      await cache.put(cacheKey, fresh.clone());
+    }
+    return fresh;
   } catch (err) {
     return json({ error: "Worker exception", detail: err.message }, 500);
   }
