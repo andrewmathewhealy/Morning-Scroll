@@ -611,15 +611,36 @@ async function handleDaily(request, env, ctx) {
   }
 
   try {
-    // 1. NASA APOD
+    // 1. NASA APOD (with fallback to previous days if today's fails)
     const nasaKey = env.NASA_API_KEY || "DEMO_KEY";
-    const apodRes = await fetch(`https://api.nasa.gov/planetary/apod?api_key=${nasaKey}`);
-    const apodRaw = await apodRes.json();
-    const apod = {
-      url: apodRaw.url || null,
-      title: apodRaw.title || "",
-      explanation: apodRaw.explanation || "",
+    const fetchApod = async (dateParam) => {
+      const url = `https://api.nasa.gov/planetary/apod?api_key=${nasaKey}${dateParam ? `&date=${dateParam}` : ""}`;
+      const r = await fetch(url);
+      if (!r.ok) return null;
+      const raw = await r.json();
+      // Only accept image results with a usable url
+      if (!raw?.url) return null;
+      if (raw.media_type && raw.media_type !== "image" && raw.media_type !== "video") return null;
+      return {
+        url: raw.url,
+        title: raw.title || "",
+        explanation: raw.explanation || "",
+        media_type: raw.media_type || "image",
+      };
     };
+
+    let apod = await fetchApod(null);
+    if (!apod) {
+      // Try the previous 3 days as fallback
+      for (let i = 1; i <= 3 && !apod; i++) {
+        const d = new Date();
+        d.setUTCDate(d.getUTCDate() - i);
+        apod = await fetchApod(d.toISOString().slice(0, 10));
+      }
+    }
+    if (!apod) {
+      apod = { url: null, title: "", explanation: "", media_type: "image" };
+    }
 
     // 2. Two Claude calls in parallel
     const anthropicKey = env.Claude;
@@ -661,8 +682,9 @@ async function handleDaily(request, env, ctx) {
 
     // 3. Parse cosmic brief: first line = headline, rest = article
     const firstBreak = cosmicRaw.indexOf("\n");
-    const headline = (firstBreak === -1 ? cosmicRaw : cosmicRaw.slice(0, firstBreak)).trim();
-    const article = (firstBreak === -1 ? "" : cosmicRaw.slice(firstBreak + 1)).trim();
+    const stripMd = (s) => s.replace(/\*\*/g, "").replace(/^#+\s*/, "").replace(/^["']|["']$/g, "").trim();
+    const headline = stripMd(firstBreak === -1 ? cosmicRaw : cosmicRaw.slice(0, firstBreak));
+    const article = stripMd(firstBreak === -1 ? "" : cosmicRaw.slice(firstBreak + 1));
 
     const payload = {
       apod,

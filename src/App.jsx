@@ -1336,17 +1336,19 @@ const Icon = {
       <rect x="3" y="16" width="18" height="4.5" rx="2.25"/>
     </svg>
   ),
-  Globe: ({ size = 22, color = "#8ec5d9" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10.2"/>
-      <circle cx="12" cy="12" r="6.2"/>
-      <path d="M12 5.8 Q14.5 9 14.5 12 Q14.5 15 12 18.2"/>
-      <path d="M12 5.8 Q9.5 9 9.5 12 Q9.5 15 12 18.2"/>
-      <line x1="5.8" y1="10" x2="18.2" y2="10"/>
-      <line x1="5.8" y1="12" x2="18.2" y2="12"/>
-      <line x1="5.8" y1="14" x2="18.2" y2="14"/>
-    </svg>
-  ),
+  Globe: ({ size = 22, color = "#8ec5d9" }) => {
+    // Dim to ~35% when the caller passes the inactive color
+    const isInactive = typeof color === "string" && color.includes("0.35");
+    return (
+      <img
+        src="/globe.png"
+        width={size}
+        height={size}
+        alt=""
+        style={{ display: "block", opacity: isInactive ? 0.35 : 1 }}
+      />
+    );
+  },
   Trophy: ({ size = 22, color = "#8ec5d9" }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
@@ -1589,12 +1591,32 @@ function WordleTile({ letter, state, animDelay = 0, winBounce = false, isNew = f
 }
 
 // ── WORDLE GAME ───────────────────────────────────────────
+const WORDLE_STORAGE_KEY = "morning-scroll:wordle";
+const todayKey = () => new Date().toISOString().slice(0, 10);
+
+function loadWordleProgress() {
+  try {
+    const raw = localStorage.getItem(WORDLE_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed?.date !== todayKey()) return null;
+    return parsed;
+  } catch { return null; }
+}
+
+function saveWordleProgress(data) {
+  try {
+    localStorage.setItem(WORDLE_STORAGE_KEY, JSON.stringify({ date: todayKey(), ...data }));
+  } catch {}
+}
+
 function WordleGame() {
   const [wordData, setWordData] = useState(null); // { answer, valid }
   const [loading, setLoading] = useState(true);
-  const [guesses, setGuesses] = useState([]);
+  const saved = useRef(loadWordleProgress());
+  const [guesses, setGuesses] = useState(() => saved.current?.guesses || []);
   const [current, setCurrent] = useState("");
-  const [gameState, setGameState] = useState("playing");
+  const [gameState, setGameState] = useState(() => saved.current?.gameState || "playing");
   const [toast, setToast] = useState("");
   const [shakeRow, setShakeRow] = useState(null);
   const [newLetterIdx, setNewLetterIdx] = useState(null);
@@ -1605,6 +1627,12 @@ function WordleGame() {
       setLoading(false);
     });
   }, []);
+
+  // Persist progress whenever guesses or game state changes
+  useEffect(() => {
+    if (loading) return;
+    saveWordleProgress({ guesses, gameState });
+  }, [guesses, gameState, loading]);
 
   const letterStates = {};
   guesses.forEach(({ word, states }) => {
@@ -4210,7 +4238,7 @@ function CosmicBriefCard() {
           fontSize: 9, fontWeight: 700, letterSpacing: 1.4,
           textTransform: "uppercase", color: "rgba(8,16,32,0.4)", marginBottom: 8,
         }}>The Cosmic Brief</div>
-        <div className="art-title" style={{ fontSize: 18, lineHeight: 1.25 }}>
+        <div className="art-title" style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 800 }}>
           {cosmic_brief?.headline}
         </div>
         {cosmic_brief?.article && (
