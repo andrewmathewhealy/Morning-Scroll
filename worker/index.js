@@ -68,6 +68,47 @@ Rules:
 
 Generate one prompt.`;
 
+// ── EDGE CACHE HELPER ──────────────────────────────────────
+// Wrap a handler with Cloudflare's persistent edge cache (caches.default).
+// Unlike in-memory Maps, this survives deploys and is shared across regions.
+//
+// ttl: seconds to cache
+// keySuffix: optional string appended to the cache-key URL (e.g. today's date
+//   for endpoints whose request URL doesn't uniquely identify the content)
+async function withEdgeCache(request, ctx, handler, ttl, keySuffix) {
+  const cache = caches.default;
+  const cacheUrl = new URL(request.url);
+  if (keySuffix) cacheUrl.searchParams.set("_k", keySuffix);
+  const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
+
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    const body = await cached.text();
+    return new Response(body, {
+      status: cached.status,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json", "X-Cache": "HIT" },
+    });
+  }
+
+  const res = await handler();
+  // Only cache successful JSON responses
+  if (res.ok) {
+    const body = await res.clone().text();
+    const cacheable = new Response(body, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": `public, max-age=${ttl}`,
+      },
+    });
+    const put = cache.put(cacheKey, cacheable);
+    if (ctx?.waitUntil) ctx.waitUntil(put); else await put;
+  }
+  return res;
+}
+
+const todayUTC = () => new Date().toISOString().slice(0, 10);
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
@@ -86,14 +127,15 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    if (path === "/weather") return handleWeather(request, env, url);
-    if (path === "/sports") return handleSports(request, env, url);
-    if (path === "/wikipedia") return handleWikipedia(request, env);
-    if (path === "/journal-prompt") return handleJournalPrompt(request, env);
-    if (path === "/youtube") return handleYouTube(request, env, url);
-    if (path === "/youtube/channel") return handleYouTubeChannel(request, env, url);
-    if (path === "/youtube/live-status") return handleYouTubeLiveStatus(request, env, url);
-    if (path === "/api/daily") return handleDaily(request, env, ctx);
+    // Each endpoint's TTL reflects how stale its data can be.
+    if (path === "/weather")            return withEdgeCache(request, ctx, () => handleWeather(request, env, url),          600);            // 10 min
+    if (path === "/sports")             return withEdgeCache(request, ctx, () => handleSports(request, env, url),           600);            // 10 min
+    if (path === "/wikipedia")          return withEdgeCache(request, ctx, () => handleWikipedia(request, env),             86400, todayUTC()); // daily
+    if (path === "/journal-prompt")     return withEdgeCache(request, ctx, () => handleJournalPrompt(request, env),         86400, todayUTC()); // daily
+    if (path === "/youtube")            return withEdgeCache(request, ctx, () => handleYouTube(request, env, url),          10800);          // 3 hours
+    if (path === "/youtube/channel")    return withEdgeCache(request, ctx, () => handleYouTubeChannel(request, env, url),   86400);          // 1 day
+    if (path === "/youtube/live-status")return withEdgeCache(request, ctx, () => handleYouTubeLiveStatus(request, env, url),300);            // 5 min
+    if (path === "/api/daily")          return handleDaily(request, env, ctx); // has its own cache logic
 
     return json({ error: "Not found" }, 404);
   },
@@ -134,14 +176,6 @@ const LEAGUES = {
   nhl:  4380,
 };
 
-// In-memory cache: keyed by "{league}:{type}:{date}", TTL 10 min
-let sportsCache = {};
-const SPORTS_CACHE_TTL = 10 * 60 * 1000;
-
-function getSportsCacheKey(league, type, date) {
-  return `${league}:${type}:${date || "none"}`;
-}
-
 async function handleSports(request, env, url) {
   try {
     const apiKey = env.SPORTSDB_API_KEY || "123";
@@ -162,20 +196,12 @@ async function handleSports(request, env, url) {
       ? typeParam.toLowerCase().split(",")
       : ["live", "recent", "upcoming"];
 
-    const now = Date.now();
     const fetches = [];
 
     for (const league of requestedLeagues) {
       const leagueId = LEAGUES[league];
 
       for (const type of types) {
-        const cacheKey = getSportsCacheKey(league, type, date);
-        const cached = sportsCache[cacheKey];
-        if (cached && (now - cached.ts) < SPORTS_CACHE_TTL) {
-          fetches.push(Promise.resolve({ league, type, data: cached.data }));
-          continue;
-        }
-
         let endpoint;
         if (type === "live") {
           endpoint = `${base}/eventsday.php?d=${date}&l=${leagueId}`;
@@ -190,11 +216,7 @@ async function handleSports(request, env, url) {
         fetches.push(
           fetch(endpoint, { headers: { "User-Agent": "MorningScroll/1.0" } })
             .then(r => r.json())
-            .then(body => {
-              const events = body.events || [];
-              sportsCache[cacheKey] = { ts: Date.now(), data: events };
-              return { league, type, data: events };
-            })
+            .then(body => ({ league, type, data: body.events || [] }))
             .catch(() => ({ league, type, data: [] }))
         );
       }
@@ -233,19 +255,11 @@ async function handleSports(request, env, url) {
 }
 
 // --- Wikipedia "On This Day" + AI curation ---
-let wikiCache = { date: null, data: null };
-
 async function handleWikipedia(request, env) {
   try {
     const now = new Date();
     const month = now.getUTCMonth() + 1;
     const day = now.getUTCDate();
-    const today = `${month}-${day}`;
-
-    // Return cached if we already curated today
-    if (wikiCache.date === today && wikiCache.data) {
-      return json(wikiCache.data);
-    }
 
     // 1. Fetch raw Wikipedia "On This Day" events
     const wikiRes = await fetch(
@@ -278,7 +292,6 @@ async function handleWikipedia(request, env) {
         location: pick.pages?.[0]?.description || null,
         wiki_url: pick.pages?.[0]?.content_urls?.desktop?.page || null,
       };
-      wikiCache = { date: today, data: fallback };
       return json(fallback);
     }
 
@@ -308,8 +321,6 @@ async function handleWikipedia(request, env) {
     const raw = aiData.content?.[0]?.text || "";
     const cleaned = raw.replace(/```json|```/g, "").trim();
     const event = JSON.parse(cleaned);
-
-    wikiCache = { date: today, data: event };
     return json(event);
   } catch (err) {
     // Fallback: return a random pick so the widget never breaks
@@ -335,8 +346,6 @@ async function handleWikipedia(request, env) {
 }
 
 // --- Journal Prompt (Anthropic) ---
-let journalCache = { date: null, data: null };
-
 async function handleJournalPrompt(request, env) {
   try {
     const now = new Date();
@@ -344,11 +353,6 @@ async function handleJournalPrompt(request, env) {
     const dateLabel = now.toLocaleDateString("en-US", {
       weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
     });
-
-    // Return cached if already generated today
-    if (journalCache.date === today && journalCache.data) {
-      return json(journalCache.data);
-    }
 
     const anthropicKey = env.Claude;
 
@@ -365,12 +369,10 @@ async function handleJournalPrompt(request, env) {
 
     if (!anthropicKey) {
       // Fallback without AI
-      const fallback = {
+      return json({
         date: today,
         prompt: "What's one small thing you're looking forward to today?",
-      };
-      journalCache = { date: today, data: fallback };
-      return json(fallback);
+      });
     }
 
     const aiRes = await fetch("https://api.anthropic.com/v1/messages", {
@@ -410,14 +412,10 @@ Generate one prompt.${recentSection}`,
     const prompt = (aiData.content?.[0]?.text || "").trim();
 
     if (!prompt) {
-      const fallback = { date: today, prompt: "What's one small thing you're looking forward to today?" };
-      journalCache = { date: today, data: fallback };
-      return json(fallback);
+      return json({ date: today, prompt: "What's one small thing you're looking forward to today?" });
     }
 
-    const result = { date: today, prompt };
-    journalCache = { date: today, data: result };
-    return json(result);
+    return json({ date: today, prompt });
   } catch (err) {
     return json({
       date: new Date().toISOString().slice(0, 10),
@@ -427,26 +425,15 @@ Generate one prompt.${recentSection}`,
 }
 
 // --- YouTube RSS + Channel Lookup ---
-const ytRssCache = {}; // { channelId: { ts, videos } }
-const YT_RSS_TTL = 3 * 60 * 60 * 1000; // 3 hours
-
 async function handleYouTube(request, env, url) {
   try {
     const channelIds = url.searchParams.get("channels");
     if (!channelIds) return json({ error: "channels param required" }, 400);
 
     const ids = channelIds.split(",").filter(Boolean);
-    const now = Date.now();
     const results = {};
 
     await Promise.all(ids.map(async (id) => {
-      // Check cache
-      const cached = ytRssCache[id];
-      if (cached && (now - cached.ts) < YT_RSS_TTL) {
-        results[id] = cached.videos;
-        return;
-      }
-
       try {
         const res = await fetch(
           `https://www.youtube.com/feeds/videos.xml?channel_id=${id}`,
@@ -473,7 +460,6 @@ async function handleYouTube(request, env, url) {
           }
         }
 
-        ytRssCache[id] = { ts: now, videos };
         results[id] = videos;
       } catch {
         results[id] = [];
@@ -550,10 +536,7 @@ async function handleYouTubeChannel(request, env, url) {
   }
 }
 
-// Check which video IDs are currently live. Cached 5 minutes.
-let liveStatusCache = { ts: 0, key: "", data: null };
-const LIVE_STATUS_TTL = 5 * 60 * 1000;
-
+// Check which video IDs are currently live. Cached 5 min at the edge.
 async function handleYouTubeLiveStatus(request, env, url) {
   try {
     const apiKey = env.YOUTUBE_API_KEY;
@@ -563,11 +546,6 @@ async function handleYouTubeLiveStatus(request, env, url) {
     if (!idsParam) return json({ error: "ids param required" }, 400);
 
     const ids = idsParam.split(",").filter(Boolean).slice(0, 50);
-    const cacheKey = ids.slice().sort().join(",");
-    const now = Date.now();
-    if (liveStatusCache.key === cacheKey && (now - liveStatusCache.ts) < LIVE_STATUS_TTL) {
-      return json(liveStatusCache.data);
-    }
 
     const upstream = `https://www.googleapis.com/youtube/v3/videos?part=snippet,liveStreamingDetails&id=${ids.join(",")}&key=${apiKey}`;
     const res = await fetch(upstream, { headers: { "User-Agent": "MorningScroll/1.0" } });
@@ -584,9 +562,7 @@ async function handleYouTubeLiveStatus(request, env, url) {
       };
     }
 
-    const result = { status };
-    liveStatusCache = { ts: now, key: cacheKey, data: result };
-    return json(result);
+    return json({ status });
   } catch (err) {
     return json({ error: "Worker exception", detail: err.message }, 500);
   }
