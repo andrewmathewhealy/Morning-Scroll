@@ -1,8 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense, Component } from "react";
 import { createPortal } from "react-dom";
-import { SUBREDDIT_CATEGORIES, ALL_SUBREDDITS, FEED_MODES } from "./subreddits.js";
-import { useRedditFeed } from "./useRedditFeed.js";
-import { cleanRedditText } from "./redditApi.js";
 const GlobeCanvas = lazy(() => import("./Globe.jsx"));
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
@@ -15,6 +12,7 @@ import { useGyroscope } from "./hooks/useGyroscope.js";
 import { useCountUp } from "./hooks/useCountUp.js";
 import { useColorTemp } from "./hooks/useColorTemp.js";
 import { useAuth } from "./hooks/useAuth.js";
+import { useLiveTime, formatTimeAgo } from "./hooks/useLiveTime.js";
 
 // ── ERROR BOUNDARY ────────────────────────────────────────
 // Isolates render/runtime errors in a subtree so one broken widget
@@ -1404,19 +1402,6 @@ function HomeScreen({ onOpenWordle }) {
   );
 }
 
-// ── CATEGORY COLOR MAP ────────────────────────────────────
-const CAT_COLORS = {
-  Animals:        "#FF9F43",
-  Nature:         "#26de81",
-  Sports:         "#FF6B6B",
-  Music:          "#a55eea",
-  Food:           "#fd9644",
-  "Art & Design": "#45aaf2",
-  Science:        "#2bcbba",
-  Uplifting:      "#FFD166",
-  "Global/Wonder":"#219EBC",
-};
-
 // ── FEED SKELETON ─────────────────────────────────────────
 function FeedSkeleton() {
   return (
@@ -1483,7 +1468,7 @@ function VideoPlayer({ video, poster, autoplay = false, fullscreen = false, star
     const hlsUrl = video.hlsUrl;
 
     if (hlsUrl && window.Hls && window.Hls.isSupported()) {
-      // Use hls.js for Reddit DASH videos (merges video + audio streams)
+      // Use hls.js for DASH/HLS streams (merges video + audio streams)
       const hls = new window.Hls({ enableWorker: false, lowLatencyMode: false });
       hlsRef.current = hls;
       hls.loadSource(hlsUrl);
@@ -1662,718 +1647,32 @@ function VideoPlayer({ video, poster, autoplay = false, fullscreen = false, star
   );
 }
 
-// ── REDDIT HERO CARD ──────────────────────────────────────
-function RedditHeroCard({ post, onOpen, readerOpen = false }) {
-  const color = CAT_COLORS[post.category] ?? "#219EBC";
-  const hasImage = !!post.image;
-  const hasVideo = !!post.video;
-  const videoTimeRef = useRef(0);
-
-  const handleOpen = () => {
-    onOpen(post, hasVideo ? videoTimeRef.current : 0);
-  };
-
+// ── FEED SCREEN (placeholder while we build the curated source) ──
+function FeedScreen() {
   return (
-    <div className="feed-card" style={{ cursor: "pointer", border: `1.5px solid ${color}` }} onClick={handleOpen}>
-      {/* Video posts: inline autoplay preview */}
-      {hasVideo ? (
-        <div onClick={e => e.stopPropagation()}>
-          <ErrorBoundary label="VideoPlayer">
-            <VideoPlayer video={post.video} poster={post.image} autoplay onTimeUpdate={(t) => { videoTimeRef.current = t; }} paused={readerOpen} />
-          </ErrorBoundary>
-          {/* Tap-to-expand overlay on video */}
-          <div
-            onClick={(e) => { e.stopPropagation(); handleOpen(); }}
-            style={{
-              position: "absolute", top: 8, left: 8, zIndex: 5,
-              background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)",
-              borderRadius: 10, padding: "6px 10px",
-              display: "flex", alignItems: "center", gap: 5,
-              cursor: "pointer", color: "#fff", fontSize: 11, fontWeight: 600,
-              letterSpacing: 0.3,
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
-              <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
-            </svg>
-          </div>
-        </div>
-      ) : (
-        <div className="feed-card-image">
-          {hasImage
-            ? <img className="feed-image" src={post.image} alt={post.title} onError={e => { e.target.style.display = "none"; }} />
-            : <div className="feed-no-image"><Icon.Leaf size={56} /></div>
-          }
-          {/* Video badge (fallback for video posts without video URL) */}
-          {post.isVideo && !hasVideo && (
-            <div className="video-card-badge">
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="white"><polygon points="3,1 11,6 3,11"/></svg>
-              VIDEO
-            </div>
-          )}
-          {/* Overlay title on top of image */}
-          {hasImage && (
-            <div className="feed-card-overlay-body">
-              <div className="feed-card-overlay-source">
-                <div className="feed-source-dot" style={{ background: color }} />
-                <div className="feed-source-label" style={{ color: "rgba(234,244,251,0.8)" }}>r/{post.subreddit}</div>
-              </div>
-              <div className="feed-card-overlay-title">{post.title}</div>
-              <div className="feed-card-overlay-meta">
-                <span>↑ {post.scoreLabel}</span>
-                <span>💬 {post.commentLabel}</span>
-                <span>{post.ageLabel}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-      {/* Card body — always shown below video/image */}
-      <div className="feed-card-body" style={{ background: `${color}1A` }}>
-        <div className="feed-card-source" style={{ justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div className="feed-source-dot" style={{ background: color }} />
-            <div className="feed-source-label">r/{post.subreddit}</div>
-          </div>
-          <div className="feed-category-badge" style={{ background: `${color}20`, color }}>{post.category}</div>
-        </div>
-        <div className="feed-card-title">{post.title}</div>
-        <div className="feed-card-meta">
-          <span>↑ {post.scoreLabel}</span>
-          <span>💬 {post.commentLabel}</span>
-          <span>{post.ageLabel}</span>
-        </div>
+    <div className="community-bg">
+      <div className="community-header fade-up fade-up-1">
+        <div className="community-title">Your Feed</div>
+        <div className="community-subtitle">Something beautiful is on its way</div>
       </div>
-    </div>
-  );
-}
-
-// ── REDDIT SMALL CARD ─────────────────────────────────────
-function RedditSmallCard({ post, onOpen }) {
-  const color = CAT_COLORS[post.category] ?? "#219EBC";
-  return (
-    <div className="feed-card-small" style={{
-      cursor: "pointer",
-      background: `${color}1A`,
-      border: `1.5px solid ${color}`,
-    }} onClick={() => onOpen(post)}>
-      <div style={{ position: "relative", flexShrink: 0 }}>
-        {post.image
-          ? <img className="feed-small-img" src={post.image} alt={post.title} onError={e => { e.target.style.display = "none"; }} />
-          : <div className="feed-small-placeholder" style={{ background: `${color}30` }}>
-              <div style={{ width: 20, height: 20, borderRadius: "50%", background: color, opacity: 0.6 }} />
-            </div>
-        }
-        {post.isVideo && (
-          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.35)", borderRadius: 12 }}>
-            <svg width="14" height="14" viewBox="0 0 12 12" fill="white"><polygon points="3,1 11,6 3,11"/></svg>
-          </div>
-        )}
-      </div>
-      <div style={{ padding: "12px 14px 12px 0", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-        <div className="feed-small-title">{post.title}</div>
-        <div className="feed-small-meta">↑ {post.scoreLabel} · {post.ageLabel}</div>
-      </div>
-    </div>
-  );
-}
-
-// ── UNIFIED FEED ITEM ─────────────────────────────────────
-function FeedItem({ item, hero = false, expanded = false, onOpen, seen = false, readerOpen = false }) {
-  const forceHero = hero || expanded || item.isVideo;
-  const card = forceHero
-    ? <RedditHeroCard post={item} onOpen={onOpen} readerOpen={readerOpen} />
-    : <RedditSmallCard post={item} onOpen={onOpen} />;
-
-  if (!seen) return card;
-
-  // Seen posts: slightly dimmed with a subtle "seen" indicator
-  return (
-    <div style={{ position: "relative", opacity: 0.55, transition: "opacity 0.2s" }}
-      onMouseEnter={e => e.currentTarget.style.opacity = "1"}
-      onMouseLeave={e => e.currentTarget.style.opacity = "0.55"}
-    >
-      {card}
       <div style={{
-        position: "absolute", top: 8, right: 28,
-        background: "rgba(2,48,71,0.55)", backdropFilter: "blur(4px)",
-        borderRadius: 10, padding: "2px 8px",
-        fontSize: 9, fontWeight: 700, color: "rgba(255,255,255,0.7)",
-        letterSpacing: "0.5px", textTransform: "uppercase", pointerEvents: "none",
-      }}>seen</div>
-    </div>
-  );
-}
-
-// ── IN-APP READER SHEET ───────────────────────────────────
-function ReaderSheet({ item, onClose, allItems = [], onNavigate, videoStartTime = 0 }) {
-  const [closing, setClosing] = useState(false);
-  const [comments, setComments] = useState([]);
-  const [commentsLoading, setCommentsLoading] = useState(false);
-  const [commentsError, setCommentsError] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-
-  // Swipe down to dismiss
-  const swipeStartY = useRef(0);
-  const swipeStartX = useRef(0);
-  const sheetRef = useRef(null);
-  const [dragY, setDragY] = useState(0);
-  const [swipeDir, setSwipeDir] = useState(null); // 'v' | 'h' | null
-
-  const color = CAT_COLORS[item.category] ?? "#219EBC";
-
-  const currentIndex = allItems.findIndex(i => i.id === item.id);
-  const hasPrev = currentIndex > 0;
-  const hasNext = currentIndex < allItems.length - 1;
-
-  // Fetch Reddit comments only when details opened
-  useEffect(() => {
-    if (!detailsOpen) return;
-    if (comments.length > 0 || commentsLoading) return;
-    setCommentsLoading(true);
-    setCommentsError(false);
-    const url = `https://www.reddit.com/r/${item.subreddit}/comments/${item.id}.json?limit=15&sort=top&raw_json=1`;
-    fetch(url, { headers: { "Accept": "application/json" } })
-      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
-      .then(data => {
-        const raw = data[1]?.data?.children ?? [];
-        const parsed = raw
-          .filter(c => c.kind === "t1" && c.data?.body && c.data.body !== "[deleted]" && c.data.body !== "[removed]")
-          .slice(0, 12)
-          .map(c => ({
-            author: c.data.author,
-            body: cleanRedditText(c.data.body).slice(0, 500),
-            score: c.data.score,
-            isOp: c.data.author === item.author,
-          }))
-          .filter(c => c.body.length > 0);
-        setComments(parsed);
-      })
-      .catch(() => { setComments([]); setCommentsError(true); })
-      .finally(() => setCommentsLoading(false));
-  }, [item.id, detailsOpen]);
-
-  const handleClose = () => {
-    setClosing(true);
-    setTimeout(onClose, 240);
-  };
-
-  // Touch handlers for swipe down + swipe left/right
-  const onTouchStart = (e) => {
-    swipeStartY.current = e.touches[0].clientY;
-    swipeStartX.current = e.touches[0].clientX;
-    setSwipeDir(null);
-  };
-
-  const onTouchMove = (e) => {
-    const dy = e.touches[0].clientY - swipeStartY.current;
-    const dx = e.touches[0].clientX - swipeStartX.current;
-
-    // Lock direction on first significant move
-    if (!swipeDir) {
-      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) setSwipeDir('v');
-      else if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 8) setSwipeDir('h');
-      return;
-    }
-
-    if (swipeDir === 'v' && dy > 0) {
-      e.preventDefault();
-      setDragY(dy);
-    }
-  };
-
-  const onTouchEnd = (e) => {
-    const dy = e.changedTouches[0].clientY - swipeStartY.current;
-    const dx = e.changedTouches[0].clientX - swipeStartX.current;
-
-    if (swipeDir === 'v') {
-      if (dy > 80) handleClose();
-      else if (dy < -60 && hasNext) onNavigate(allItems[currentIndex + 1]);
-    } else if (swipeDir === 'h') {
-      if (dx < -60 && hasNext) onNavigate(allItems[currentIndex + 1]);
-      else if (dx > 60 && hasPrev) onNavigate(allItems[currentIndex - 1]);
-    }
-    setDragY(0);
-    setSwipeDir(null);
-  };
-
-  const sheetStyle = dragY > 0 ? {
-    transform: `translateY(${dragY}px)`,
-    transition: 'none',
-    opacity: Math.max(0.4, 1 - dragY / 400),
-  } : {};
-
-  const hasMedia = !!(item.video || item.image);
-
-  return (
-    <div
-      ref={sheetRef}
-      className={`reader-sheet${closing ? " closing" : ""}`}
-      style={{ ...sheetStyle, background: hasMedia ? "#0a1a24" : undefined }}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-    >
-      {/* Top bar — floats over media when media exists, solid otherwise */}
-      {!hasMedia && (
-        <div className="reader-topbar">
-          <div className="reader-source-pill" style={{ background: `${color}18`, color }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
-            <span>{`r/${item.subreddit}`}</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {hasPrev && (
-              <button onClick={() => onNavigate(allItems[currentIndex - 1])} style={{ background: "none", border: "none", color: "#8a9ab5", fontSize: 18, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}>‹</button>
-            )}
-            {hasNext && (
-              <button onClick={() => onNavigate(allItems[currentIndex + 1])} style={{ background: "none", border: "none", color: "#8a9ab5", fontSize: 18, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}>›</button>
-            )}
-            <button className="reader-close" onClick={handleClose}>Done</button>
-          </div>
+        margin: '40px 24px', padding: '36px 24px',
+        background: '#FDF2E8', borderRadius: 24,
+        border: '1.5px solid rgba(12,26,53,0.08)',
+        boxShadow: '0 8px 32px rgba(0,20,60,0.18), 0 1px 3px rgba(8,20,50,0.06)',
+        textAlign: 'center',
+      }}>
+        <div style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: 1.4,
+          textTransform: 'uppercase', color: '#D4940A', marginBottom: 10,
+        }}>Coming soon</div>
+        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 600, color: '#023047', marginBottom: 8, lineHeight: 1.3 }}>
+          A new kind of morning feed
         </div>
-      )}
-
-      <div className="reader-scroll" style={{ position: "relative" }}>
-        {/* Floating overlay topbar for media posts */}
-        {hasMedia && (
-          <div className="reader-topbar-overlay">
-            <div className="reader-source-pill" style={{ background: `rgba(255,255,255,0.15)`, color: "#fff" }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
-              <span>{`r/${item.subreddit}`}</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {hasPrev && (
-                <button onClick={() => onNavigate(allItems[currentIndex - 1])} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.7)", fontSize: 18, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}>‹</button>
-              )}
-              {hasNext && (
-                <button onClick={() => onNavigate(allItems[currentIndex + 1])} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.7)", fontSize: 18, cursor: "pointer", padding: "0 4px", lineHeight: 1 }}>›</button>
-              )}
-              <button className="reader-close" onClick={handleClose}>Done</button>
-            </div>
-          </div>
-        )}
-
-        {/* Hero: video player or image */}
-        {item.video
-          ? <ErrorBoundary label="VideoPlayer fullscreen"><VideoPlayer video={item.video} poster={item.image} autoplay fullscreen startTime={videoStartTime} /></ErrorBoundary>
-          : item.image && (
-              <img
-                className="reader-hero-img"
-                src={item.image}
-                alt={item.title}
-                onError={e => { e.target.style.display = "none"; }}
-              />
-            )
-        }
-
-        {/* Content area — warm background sits below full-bleed media */}
-        <div style={{ background: "#f7f1e8", borderRadius: hasMedia ? "20px 20px 0 0" : 0, marginTop: hasMedia ? -16 : 0, position: "relative", zIndex: 2, minHeight: 300 }}>
-        {/* Scroll handle hint */}
-        {hasMedia && (
-          <div style={{ display: "flex", justifyContent: "center", paddingTop: 10, paddingBottom: 2 }}>
-            <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(139,90,43,0.15)" }} />
-          </div>
-        )}
-        {/* Body */}
-        <div className="reader-body">
-          <div className="reader-meta">
-            <span className="reader-meta-tag">{item.ageLabel}</span>
-            {item.author && <>
-              <div className="reader-meta-dot" />
-              <span className="reader-meta-tag">u/{item.author}</span>
-            </>}
-          </div>
-
-          <div className="reader-title">{item.title}</div>
-
-          {/* Self text (Reddit text posts) */}
-          {item.selfText && (
-            <div className="reader-summary">{item.selfText}</div>
-          )}
-
-          {/* Collapsed stats row — tap to expand */}
-          {(
-            <div
-              className="reader-stats-collapsed"
-              onClick={() => setDetailsOpen(o => !o)}
-              style={{ cursor: "pointer" }}
-            >
-              <span className="reader-stats-inline">↑ {item.scoreLabel} · 💬 {item.commentLabel} · {item.category}</span>
-              <span className="reader-stats-chevron" style={{ transform: detailsOpen ? "rotate(180deg)" : "rotate(0deg)" }}>⌄</span>
-            </div>
-          )}
-        </div>
-
-        {/* Expanded details: full stats + comments */}
-        {detailsOpen && (
-          <>
-            <div className="reader-stats">
-              <div className="reader-stat">
-                <span className="reader-stat-val">↑ <CountUp value={item.scoreLabel} /></span>
-                <span className="reader-stat-label">Upvotes</span>
-              </div>
-              <div className="reader-stat">
-                <span className="reader-stat-val"><CountUp value={item.commentLabel} /></span>
-                <span className="reader-stat-label">Comments</span>
-              </div>
-              <div className="reader-stat">
-                <span className="reader-stat-val" style={{ fontSize: 13 }}>{item.category}</span>
-                <span className="reader-stat-label">Category</span>
-              </div>
-            </div>
-
-            <div className="reader-section-label">Top Comments</div>
-            {commentsLoading && (
-              <div className="reader-loading">
-                <span className="reader-loading-text">Loading comments…</span>
-              </div>
-            )}
-            {!commentsLoading && commentsError && (
-              <div style={{ padding: "12px 22px 16px", fontSize: 13, color: "#8a9ab5", lineHeight: 1.5 }}>
-                Couldn't load comments — Reddit may be rate limiting.<br/>
-                <button
-                  onClick={() => window.open(item.permalink, "_blank")}
-                  style={{ marginTop: 8, background: "none", border: "none", color, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit" }}
-                >
-                  Read on Reddit →
-                </button>
-              </div>
-            )}
-            {!commentsLoading && !commentsError && comments.length === 0 && (
-              <div style={{ padding: "12px 22px 16px", fontSize: 13, color: "#8a9ab5" }}>No comments yet.</div>
-            )}
-            {comments.map((c, i) => {
-              const initials = c.author.slice(0, 2).toUpperCase();
-              return (
-                <div className="comment" key={i}>
-                  <div className={`comment-avatar${c.isOp ? " op-avatar" : ""}`}>{initials}</div>
-                  <div className="comment-content">
-                    <div className="comment-author">
-                      u/{c.author}
-                      <span className="comment-score">↑ {c.score}</span>
-                      {c.isOp && <span style={{ fontSize: 9, background: color, color: "#fff", padding: "1px 6px", borderRadius: 4, letterSpacing: 0.5 }}>OP</span>}
-                    </div>
-                    <div className={`comment-body${c.isOp ? " op" : ""}`}>{c.body}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </>
-        )}
-
-        {/* Open in browser button */}
-        {item.permalink !== "#" && item.url !== "#" && (
-          <button className="reader-open-web" onClick={() => window.open(item.permalink ?? item.url, "_blank")}>
-            <span>↗</span> Open in browser
-          </button>
-        )}
+        <div style={{ fontSize: 13, color: 'rgba(2,48,71,0.6)', lineHeight: 1.6 }}>
+          Curated nature, animals, travel, and art from museums, photographers, and open collections — without the noise.
         </div>
       </div>
-    </div>
-  );
-}
-
-// ── FEED SCREEN ───────────────────────────────────────────
-function FeedScreen({ enabledSubs, mutedInMode = {}, alwaysBlock = [] }) {
-  const feedUser = useAuth();
-  const [readerItem, setReaderItem] = useState(null);
-  const [readerClosing, setReaderClosing] = useState(false);
-
-  // ── Seen posts ────────────────────────────────────────
-  const [seenIds, setSeenIds] = useState(() => {
-    try {
-      // Version key — bumping this clears all stale seen history from old builds
-      const SEEN_VERSION = "v3"; // bumped: fixed article ID generation
-      if (localStorage.getItem("ms_seen_version") !== SEEN_VERSION) {
-        localStorage.removeItem("ms_seen_posts");
-        localStorage.setItem("ms_seen_version", SEEN_VERSION);
-        return new Set();
-      }
-      const stored = JSON.parse(localStorage.getItem("ms_seen_posts") ?? "[]");
-      return new Set(stored);
-    }
-    catch { return new Set(); }
-  });
-
-  // Snapshot of seen IDs at mount time — used to push previously-seen posts
-  // to the bottom of the feed without causing items to jump mid-session.
-  const previouslySeenIds = useRef(seenIds);
-
-  const markSeen = (id) => {
-    setSeenIds(prev => {
-      const next = new Set(prev);
-      next.add(id);
-      try {
-        const arr = Array.from(next).slice(-500); // cap at 500 seen posts
-        localStorage.setItem("ms_seen_posts", JSON.stringify(arr));
-        return new Set(arr);
-      } catch { return next; }
-    });
-  };
-
-  const [videoStartTime, setVideoStartTime] = useState(0);
-  const openReader = (item, startTime = 0) => { markSeen(item.id); setVideoStartTime(startTime); setReaderItem(item); };
-  const closeReader = () => { setReaderItem(null); setVideoStartTime(0); };
-  const [activeMode, setActiveMode] = useState("my-morning");
-  const [retryKey, setRetryKey] = useState(0);
-  const mode = FEED_MODES.find(m => m.id === activeMode) ?? FEED_MODES[0];
-  const [expanded, setExpanded] = useState(true);
-
-  // Pull-to-refresh
-  const pullStartY = useRef(0);
-  const [pullDistance, setPullDistance] = useState(0);
-  const [isPulling, setIsPulling] = useState(false);
-  const PULL_THRESHOLD = 72;
-
-  const onTouchStart = (e) => {
-    if (feedScrollRef.current?.scrollTop === 0) {
-      pullStartY.current = e.touches[0].clientY;
-      setIsPulling(true);
-    }
-  };
-  const onTouchMove = (e) => {
-    if (!isPulling) return;
-    const dist = Math.max(0, Math.min(e.touches[0].clientY - pullStartY.current, 100));
-    setPullDistance(dist);
-  };
-  const onTouchEnd = () => {
-    if (pullDistance >= PULL_THRESHOLD) {
-      setRetryKey(k => k + 1);
-    }
-    setPullDistance(0);
-    setIsPulling(false);
-  };
-
-  const enabledSubSet = useMemo(() => new Set(enabledSubs.map(s => s.toLowerCase())), [enabledSubs]);
-
-  // Subreddits for the current mode — apply per-mode mutes + always block
-  const targetSubs = useMemo(() => {
-    const modeMuted = (mutedInMode[mode.id] ?? []).map(s => s.toLowerCase());
-    const blocked = alwaysBlock.map(s => s.toLowerCase());
-    const filter = s => !modeMuted.includes(s.toLowerCase()) && !blocked.includes(s.toLowerCase());
-
-    if (mode.id === "my-morning") return enabledSubs.filter(filter).slice(0, 20);
-    if (mode.id === "drift") return ALL_SUBREDDITS.filter(filter).slice(0, 20);
-    if (!mode.categories) return [];
-    return mode.categories.flatMap(cat => SUBREDDIT_CATEGORIES[cat] ?? []).filter(filter).slice(0, 20);
-  }, [mode, enabledSubs, mutedInMode, alwaysBlock]);
-
-  const { posts: rawPosts, loading: postsLoading } = useRedditFeed(targetSubs, 8, "top&t=day", retryKey);
-
-  const loading = postsLoading;
-
-  // Scroll position memory per tab
-  const feedScrollRef = useRef(null);
-  const scrollPositions = useRef({});
-
-  const saveScrollPosition = () => {
-    if (feedScrollRef.current) {
-      scrollPositions.current[activeMode] = feedScrollRef.current.scrollTop;
-    }
-  };
-
-  const restoreScrollPosition = (modeId) => {
-    const saved = scrollPositions.current[modeId] ?? 0;
-    requestAnimationFrame(() => {
-      if (feedScrollRef.current) feedScrollRef.current.scrollTop = saved;
-    });
-  };
-
-  // Reset visible count when mode changes, save/restore scroll
-  const [visibleCount, setVisibleCount] = useState(15);
-  useEffect(() => {
-    setVisibleCount(15);
-    restoreScrollPosition(activeMode);
-  }, [activeMode]); // eslint-disable-line
-
-  const feedItems = useMemo(() => {
-    // For my-morning, respect the user's enabled subs. For all other modes, show everything fetched.
-    const filteredPosts = mode.id === "my-morning"
-      ? rawPosts.filter(p => enabledSubSet.has(p.subreddit.toLowerCase()))
-      : rawPosts;
-
-    // Push posts that were already seen (from a previous session) to the bottom,
-    // preserving relative order within each group (unseen first, then seen).
-    const prevSeen = previouslySeenIds.current;
-    if (prevSeen.size > 0) {
-      const unseen = filteredPosts.filter(item => !prevSeen.has(item.id));
-      const seen = filteredPosts.filter(item => prevSeen.has(item.id));
-      return [...unseen, ...seen];
-    }
-    return filteredPosts;
-  }, [rawPosts, enabledSubSet, mode]);
-
-  const FEED_CAP = 50;
-  const hero = feedItems[0] ?? null;
-  const visibleItems = feedItems.slice(1, visibleCount);
-  const hasMore = visibleCount < Math.min(feedItems.length, FEED_CAP);
-  const loadMore = () => setVisibleCount(c => Math.min(c + 10, FEED_CAP));
-
-  // Empty state messages per tab
-  const emptyMessage = `No ${mode.label} content available.\nTap Settings to adjust your sources.`;
-
-  return (
-    <div className="feed-bg">
-      <div className="feed-header fade-up fade-up-1">
-        <div>
-          <div className="feed-title">Your Feed</div>
-          <div className="feed-subtitle">{mode.id === "my-morning" ? "your curated morning" : mode.id === "drift" ? "just scroll · something for everyone" : mode.id === "gentle" ? "calm · nature · mindfulness" : mode.id === "plugged-in" ? "science · world · wonder" : "art · music · food · travel"}</div>
-        </div>
-        {/* Compact / Expanded view toggle */}
-        <button
-          onClick={() => setExpanded(e => !e)}
-          title={expanded ? "Compact view" : "Expanded view"}
-          style={{
-            background: expanded ? "#023047" : "rgba(255,255,255,0.7)",
-            border: expanded ? "none" : "1px solid rgba(2,48,71,0.15)",
-            borderRadius: 12, padding: "8px 10px",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", transition: "all 0.2s",
-            boxShadow: expanded ? "0 2px 8px rgba(2,48,71,0.2)" : "none",
-            flexShrink: 0,
-          }}
-        >
-          {expanded ? (
-            // Expanded icon: two wide rows
-            <svg width="18" height="16" viewBox="0 0 18 16" fill="none">
-              <rect x="0" y="0" width="18" height="6" rx="2" fill="#8ECAE6"/>
-              <rect x="0" y="9" width="18" height="6" rx="2" fill="#8ECAE6" opacity="0.6"/>
-            </svg>
-          ) : (
-            // Compact icon: three narrow rows with a small thumb
-            <svg width="18" height="16" viewBox="0 0 18 16" fill="none">
-              <rect x="0" y="0.5" width="10" height="3.5" rx="1.5" fill="#023047"/>
-              <rect x="0" y="6" width="14" height="3.5" rx="1.5" fill="#023047" opacity="0.5"/>
-              <rect x="0" y="11.5" width="12" height="3.5" rx="1.5" fill="#023047" opacity="0.3"/>
-              <rect x="12.5" y="0" width="5.5" height="8" rx="1.5" fill="#023047" opacity="0.2"/>
-            </svg>
-          )}
-        </button>
-      </div>
-
-      <div className="filter-scroll fade-up fade-up-2">
-        {FEED_MODES.map(m => {
-          const isActive = activeMode === m.id;
-          return (
-            <div
-              key={m.id}
-              className="mode-pill tappable"
-              onClick={() => setActiveMode(m.id)}
-              style={{
-                fontFamily: m.font,
-                fontWeight: m.fontWeight,
-                fontSize: m.fontSize,
-                letterSpacing: m.letterSpacing,
-                fontStyle: m.fontStyle,
-                textTransform: m.textTransform ?? "none",
-                background: m.bgActive,
-                color: m.colorActive,
-                borderColor: m.bgActive,
-                position: "relative",
-              }}
-            >
-              {m.label}
-              {isActive && (
-                <div style={{
-                  position: "absolute", bottom: -6, left: "50%", transform: "translateX(-50%)",
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
-                }}>
-                  <div style={{
-                    width: 16, height: 2, borderRadius: 1,
-                    background: m.colorActive, opacity: 0.7,
-                  }} />
-                  <div style={{
-                    width: 4, height: 4, borderRadius: "50%",
-                    background: "#FDF2E8",
-                  }} />
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Scrollable content — header + tabs stay pinned above */}
-      <div className="feed-scroll-area" ref={feedScrollRef} onScroll={saveScrollPosition}
-        onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
-
-        {pullDistance > 0 && (
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: pullDistance, overflow: "hidden" }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: "50%",
-              border: "2px solid rgba(255,255,255,0.3)",
-              borderTop: `2px solid ${pullDistance >= PULL_THRESHOLD ? "#FFD166" : "rgba(255,255,255,0.8)"}`,
-              transform: `rotate(${pullDistance * 3.6}deg)`,
-            }} />
-          </div>
-        )}
-
-      {loading && <FeedSkeleton />}
-
-      {!loading && mode.id === "sports" && <ScoresSection />}
-
-      {!loading && feedUser && <YouTubeFeedSection user={feedUser} />}
-
-      {!loading && feedItems.length === 0 && (
-        <div className="feed-empty" style={{ whiteSpace: "pre-line" }}>{emptyMessage}</div>
-      )}
-
-      {!loading && hero && (
-        <>
-          <div className="feed-card-enter" style={{ animationDelay: '0ms' }}><FeedItem item={hero} hero expanded={expanded} onOpen={openReader} seen={seenIds.has(hero.id)} readerOpen={!!readerItem} /></div>
-          {visibleItems.map((item, i) => (
-            <div key={item.id} className="feed-card-enter" style={{ animationDelay: `${Math.min(i * 35 + 40, 280)}ms` }}>
-              <FeedItem item={item} expanded={expanded} onOpen={openReader} seen={seenIds.has(item.id)} readerOpen={!!readerItem} />
-            </div>
-          ))}
-          {hasMore ? (
-            <div
-              className="done-btn fade-up fade-up-6"
-              onClick={loadMore}
-              style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(8px)" }}
-            >
-              <div className="done-btn-label" style={{ color: "#023047" }}>Load more</div>
-              <div className="done-btn-sub">{Math.min(feedItems.length, FEED_CAP) - visibleCount} more posts waiting</div>
-            </div>
-          ) : (
-            <div className="done-btn fade-up fade-up-6" style={{ gap: 6 }}>
-              <div style={{ fontSize: 28, lineHeight: 1 }}>✅</div>
-              <div className="done-btn-label">You're all caught up</div>
-              <div className="done-btn-sub">
-                {seenIds.size > 0
-                  ? `You've read ${seenIds.size} post${seenIds.size === 1 ? "" : "s"} today · Check back later`
-                  : "Nothing new right now · Check back later"}
-              </div>
-              <div
-                onClick={() => {
-                  try { localStorage.removeItem("ms_seen_posts"); } catch {}
-                  setSeenIds(new Set());
-                  previouslySeenIds.current = new Set();
-                }}
-                style={{ marginTop: 4, fontSize: 11, color: "rgba(142,202,230,0.8)", cursor: "pointer", textDecoration: "underline" }}
-              >
-                Clear seen history
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      </div>
-
-      {/* In-app reader sheet */}
-      {readerItem && (
-        <ErrorBoundary label="ReaderSheet" fallback={null}>
-          <ReaderSheet
-            item={readerItem}
-            onClose={closeReader}
-            allItems={feedItems}
-            onNavigate={(item) => { markSeen(item.id); setVideoStartTime(0); setReaderItem(item); }}
-            videoStartTime={videoStartTime}
-          />
-        </ErrorBoundary>
-      )}
     </div>
   );
 }
@@ -3251,12 +2550,10 @@ function useYouTubeReadState(user) {
 }
 
 function YouTubeCard({ channel, video, isNew, onTap }) {
-  const ago = video.published ? (() => {
-    const diff = Math.floor((Date.now() - new Date(video.published).getTime()) / 1000);
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
-  })() : "";
+  useLiveTime();
+  const ago = video.published
+    ? formatTimeAgo(Math.floor(new Date(video.published).getTime() / 1000))
+    : "";
 
   return (
     <div className="yt-card" onClick={onTap}>
@@ -3487,17 +2784,10 @@ function Accordion({ title, count, total, accentColor, children, defaultOpen = f
   );
 }
 
-function SettingsScreen({ enabledSubs, onToggleSub, mutedInMode, onToggleMutedInMode, alwaysBlock, onToggleAlwaysBlock }) {
+function SettingsScreen() {
   const [toggles, setToggles] = useState({ slowScroll: false, notification: true, sleepData: false });
   const toggle = k => setToggles(t => ({ ...t, [k]: !t[k] }));
   const ytUser = useAuth();
-
-  const CAT_ACCENT = {
-    Animals: "#FF9F43", Nature: "#26de81", Sports: "#FF6B6B",
-    Music: "#a55eea", Food: "#fd9644", "Art & Design": "#45aaf2",
-    Science: "#2bcbba", Uplifting: "#FFD166", "Global/Wonder": "#219EBC",
-    Zen: "#a0b8d0", Travel: "#45aaf2",
-  };
 
   return (
     <div className="profile-bg">
@@ -3511,92 +2801,6 @@ function SettingsScreen({ enabledSubs, onToggleSub, mutedInMode, onToggleMutedIn
         </div>
       </div>
 
-      {/* ── SECTION 1: MY MORNING ── */}
-      <span className="section-label fade-up fade-up-2">
-        My Morning <span style={{ color: "rgba(253,242,232,0.5)", fontWeight: 400, letterSpacing: 0 }}>· your custom feed</span>
-      </span>
-
-      {/* Subreddits for My Morning */}
-      {Object.entries(SUBREDDIT_CATEGORIES).map(([category, subs]) => {
-        const enabledInCat = subs.filter(s => enabledSubs.includes(s)).length;
-        return (
-          <Accordion key={category} title={`r/${category.toLowerCase()}`} count={enabledInCat} total={subs.length} accentColor={CAT_ACCENT[category]}>
-            {subs.map(sub => (
-              <div key={sub} className={`sub-chip ${enabledSubs.includes(sub) ? "on" : "off"}`}
-                onClick={() => onToggleSub(sub)}>
-                r/{sub}
-              </div>
-            ))}
-          </Accordion>
-        );
-      })}
-
-      {/* ── SECTION 2: FEED MODES ── */}
-      <span className="section-label fade-up fade-up-2" style={{ marginTop: 8 }}>
-        Feed Modes <span style={{ color: "rgba(253,242,232,0.5)", fontWeight: 400, letterSpacing: 0 }}>· mute from presets</span>
-      </span>
-      <div style={{ padding: "0 20px 4px", fontSize: 11, color: "#8a9ab5", lineHeight: 1.5 }}>
-        Tap any source to mute it from that mode. Muted sources move to the bottom.
-      </div>
-
-      {FEED_MODES.filter(m => m.id !== "my-morning" && m.id !== "drift" && m.categories).map(m => {
-        const modeSubs = m.categories.flatMap(cat => SUBREDDIT_CATEGORIES[cat] ?? []);
-        const muted = mutedInMode[m.id] ?? [];
-        const activeCount = modeSubs.length - muted.length;
-        const activeSubs = modeSubs.filter(s => !muted.includes(s));
-        const mutedSubs = modeSubs.filter(s => muted.includes(s));
-        return (
-          <Accordion key={m.id} title={m.label} count={activeCount} total={modeSubs.length}
-            accentColor={m.bgActive}>
-            {/* Active subs first */}
-            {activeSubs.map(sub => (
-              <div key={sub} className="sub-chip on"
-                style={{ background: m.bgActive, borderColor: m.bgActive, color: m.colorActive }}
-                onClick={() => onToggleMutedInMode(m.id, sub)}>
-                r/{sub}
-              </div>
-            ))}
-            {/* Muted subs at bottom, greyed */}
-            {mutedSubs.map(sub => (
-              <div key={sub} className="sub-chip off"
-                style={{ opacity: 0.45, textDecoration: "line-through" }}
-                onClick={() => onToggleMutedInMode(m.id, sub)}>
-                r/{sub}
-              </div>
-            ))}
-          </Accordion>
-        );
-      })}
-
-      {/* ── SECTION 3: ALWAYS BLOCK ── */}
-      <span className="section-label fade-up fade-up-3" style={{ marginTop: 8 }}>
-        Always Block <span style={{ color: "rgba(253,242,232,0.5)", fontWeight: 400, letterSpacing: 0 }}>· excluded everywhere</span>
-      </span>
-      <div style={{ padding: "0 20px 4px", fontSize: 11, color: "#8a9ab5", lineHeight: 1.5 }}>
-        Toggle off any source to block it from every feed mode.
-      </div>
-
-      {Object.entries(SUBREDDIT_CATEGORIES).map(([category, subs]) => (
-        <Accordion key={`block-${category}`} title={`r/${category.toLowerCase()}`}
-          count={subs.filter(s => !alwaysBlock.includes(s)).length}
-          total={subs.length} accentColor={CAT_ACCENT[category]}>
-          {subs.map(sub => {
-            const blocked = alwaysBlock.includes(sub);
-            return (
-              <div key={sub}
-                className={`sub-chip ${blocked ? "off" : "on"}`}
-                style={blocked
-                  ? { opacity: 0.45, textDecoration: "line-through" }
-                  : { background: "#023047", borderColor: "#023047", color: "#8ECAE6" }}
-                onClick={() => onToggleAlwaysBlock(sub)}>
-                r/{sub}
-              </div>
-            );
-          })}
-        </Accordion>
-      ))}
-
-      {/* ── OTHER SETTINGS ── */}
       <span className="section-label fade-up fade-up-4">Feed Settings</span>
       {[
         { key: "slowScroll", Ico: Icon.Turtle, label: "Slow scroll mode", value: "15 cards per morning" },
@@ -3699,49 +2903,6 @@ export default function MorningScrollApp() {
 
   // Living sunrise is pure CSS — no JS state needed (see .phone animation)
 
-  // All subs enabled by default
-  const [enabledSubs, setEnabledSubs] = useState(ALL_SUBREDDITS);
-
-  // Per-mode muted subs: { gentle: ['Meditation'], curious: [] ... }
-  const [mutedInMode, setMutedInMode] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ms_muted_in_mode') ?? '{}'); }
-    catch { return {}; }
-  });
-
-  // Always block — sources/subs excluded from every mode
-  const [alwaysBlock, setAlwaysBlock] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ms_always_block') ?? '[]'); }
-    catch { return []; }
-  });
-
-  const toggleMutedInMode = (modeId, sub) => {
-    setMutedInMode(prev => {
-      const current = prev[modeId] ?? [];
-      const next = current.includes(sub)
-        ? current.filter(s => s !== sub)
-        : [...current, sub];
-      const updated = { ...prev, [modeId]: next };
-      try { localStorage.setItem('ms_muted_in_mode', JSON.stringify(updated)); } catch {}
-      return updated;
-    });
-  };
-
-  const toggleAlwaysBlock = (source) => {
-    setAlwaysBlock(prev => {
-      const next = prev.includes(source)
-        ? prev.filter(s => s !== source)
-        : [...prev, source];
-      try { localStorage.setItem('ms_always_block', JSON.stringify(next)); } catch {}
-      return next;
-    });
-  };
-
-  const toggleSub = (sub) => {
-    setEnabledSubs(prev =>
-      prev.includes(sub) ? prev.filter(s => s !== sub) : [...prev, sub]
-    );
-  };
-
   useEffect(() => { if (screenRef.current) screenRef.current.scrollTop = 0; }, [tab]);
 
   const closeWordle = () => {
@@ -3752,10 +2913,10 @@ export default function MorningScrollApp() {
   const Screen = () => {
     switch (tab) {
       case "home":     return <HomeScreen onOpenWordle={() => setWordleOpen(true)} />;
-      case "feed":     return <FeedScreen enabledSubs={enabledSubs} mutedInMode={mutedInMode} alwaysBlock={alwaysBlock} />;
+      case "feed":     return <FeedScreen />;
       case "world":    return <WorldScreen />;
       case "news":     return <NewsScreen />;
-      case "settings": return <SettingsScreen enabledSubs={enabledSubs} onToggleSub={toggleSub} mutedInMode={mutedInMode} onToggleMutedInMode={toggleMutedInMode} alwaysBlock={alwaysBlock} onToggleAlwaysBlock={toggleAlwaysBlock} />;
+      case "settings": return <SettingsScreen />;
       default:         return <HomeScreen onOpenWordle={() => setWordleOpen(true)} />;
     }
   };
