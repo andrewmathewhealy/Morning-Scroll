@@ -2355,7 +2355,7 @@ function CosmicBriefCard() {
           {cosmic_brief?.headline}
         </div>
         {cosmic_brief?.article && (
-          <div className="art-desc" style={{ marginTop: 10, lineHeight: 1.6 }}>
+          <div className="art-desc" style={{ marginTop: 10, fontSize: 14, lineHeight: 1.6, color: "#0C1A35" }}>
             {cosmic_brief.article}
           </div>
         )}
