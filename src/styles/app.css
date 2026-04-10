@@ -861,3 +861,86 @@
   }
   .reader-open-web:active { opacity: 0.8; }
 
+/* ── VIDEO FEED ─────────────────────────────────────────── */
+
+/* Category tabs */
+.vfeed-tabs {
+  display: flex; gap: 8px; overflow-x: auto;
+  padding: 0 20px 14px;
+  scrollbar-width: none;
+}
+.vfeed-tabs::-webkit-scrollbar { display: none; }
+
+.vfeed-tab {
+  flex: 0 0 auto;
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(12,26,53,0.10);
+  background: #FDF2E8;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 12px; font-weight: 600;
+  color: rgba(2,48,71,0.55);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.vfeed-tab:active { transform: scale(0.95); }
+.vfeed-tab-active {
+  background: #023047; color: #FDF2E8;
+  border-color: #023047;
+}
+
+/* Vertical video list */
+.vfeed-list { padding: 0 6px 20px; }
+
+.vfeed-card-v {
+  border-radius: 12px;
+  background: #FDF2E8;
+  border: 1.5px solid rgba(12,26,53,0.08);
+  box-shadow: 0 4px 16px rgba(0,20,60,0.10), 0 1px 3px rgba(8,20,50,0.04);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+  margin-bottom: 14px;
+}
+.vfeed-card-v:active { transform: scale(0.98); }
+
+.vfeed-thumb-wrap {
+  position: relative; width: 100%; aspect-ratio: 9/14;
+  background: rgba(2,48,71,0.06); overflow: hidden;
+}
+.vfeed-thumb {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.vfeed-iframe {
+  width: 100%; height: 100%; border: none; display: block;
+}
+.vfeed-yt-container {
+  width: 100%; height: 100%; position: absolute; inset: 0;
+}
+.vfeed-yt-container iframe {
+  width: 100% !important; height: 100% !important; border: none;
+}
+.vfeed-play {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.25);
+  transition: background 0.2s;
+}
+.vfeed-card:hover .vfeed-play { background: rgba(0,0,0,0.35); }
+
+.vfeed-info { padding: 10px 12px 12px; }
+.vfeed-title {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 13px; font-weight: 600; color: #023047;
+  line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.vfeed-meta {
+  display: flex; align-items: center; gap: 5px;
+  margin-top: 5px; font-size: 11px; color: rgba(2,48,71,0.5);
+}
+.vfeed-channel { font-weight: 600; }
+.vfeed-dot { opacity: 0.4; }
+

@@ -1648,30 +1648,217 @@ function VideoPlayer({ video, poster, autoplay = false, fullscreen = false, star
 }
 
 // ── FEED SCREEN (placeholder while we build the curated source) ──
+// ── VIDEO FEED ───────────────────────────────────────────
+function useVideoFeed() {
+  const [state, setState] = useState({ loading: true, feed: null, error: null });
+  useEffect(() => {
+    const cacheKey = "videos_feed_v1";
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        // Use cache if less than 1 hour old
+        if (parsed.cached_at && Date.now() - new Date(parsed.cached_at).getTime() < 3600000) {
+          setState({ loading: false, feed: parsed, error: null });
+          return;
+        }
+      } catch {}
+    }
+    fetch(`${WORKER_URL}/api/videos`)
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(feed => {
+        localStorage.setItem(cacheKey, JSON.stringify(feed));
+        setState({ loading: false, feed, error: null });
+      })
+      .catch(err => setState({ loading: false, feed: null, error: err.message }));
+  }, []);
+  return state;
+}
+
+const FEED_TABS = ["animals", "nature", "sports", "travel + food", "art", "news"];
+const FEED_TAB_LABELS = {
+  animals: "Animals",
+  nature: "Nature",
+  sports: "Sports",
+  "travel + food": "Travel + Food",
+  art: "Art",
+  news: "News",
+};
+
+// Load YouTube IFrame API once globally
+let ytApiReady = false;
+let ytApiCallbacks = [];
+function ensureYTApi() {
+  if (ytApiReady) return Promise.resolve();
+  if (window.YT && window.YT.Player) { ytApiReady = true; return Promise.resolve(); }
+  return new Promise(resolve => {
+    ytApiCallbacks.push(resolve);
+    if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(tag);
+      window.onYouTubeIframeAPIReady = () => {
+        ytApiReady = true;
+        ytApiCallbacks.forEach(cb => cb());
+        ytApiCallbacks = [];
+      };
+    }
+  });
+}
+
+function VideoCard({ video, isVisible, unlocked, onUnlock }) {
+  const containerRef = useRef(null);
+  const playerRef = useRef(null);
+  const [ready, setReady] = useState(false);
+  const [created, setCreated] = useState(false);
+
+  // Create player once when unlocked — never destroy it, just play/pause
+  useEffect(() => {
+    if (!unlocked || created) return;
+    let cancelled = false;
+
+    ensureYTApi().then(() => {
+      if (cancelled || !containerRef.current) return;
+      const el = document.createElement("div");
+      containerRef.current.appendChild(el);
+      playerRef.current = new window.YT.Player(el, {
+        videoId: video.video_id,
+        playerVars: {
+          autoplay: isVisible ? 1 : 0,
+          mute: 0,
+          playsinline: 1,
+          rel: 0,
+          modestbranding: 1,
+          controls: 1,
+        },
+        events: {
+          onReady: () => {
+            if (cancelled) return;
+            setReady(true);
+            if (!isVisible) {
+              try { playerRef.current.pauseVideo(); } catch {}
+            }
+          },
+        },
+      });
+      setCreated(true);
+    });
+
+    return () => { cancelled = true; };
+  }, [unlocked]);
+
+  // Play/pause based on visibility — player stays alive
+  useEffect(() => {
+    if (!ready || !playerRef.current) return;
+    try {
+      if (isVisible) {
+        playerRef.current.playVideo();
+      } else {
+        playerRef.current.pauseVideo();
+      }
+    } catch {}
+  }, [isVisible, ready]);
+
+  return (
+    <div className="vfeed-card-v" onClick={() => !unlocked && onUnlock()}>
+      <div className="vfeed-thumb-wrap">
+        <img className="vfeed-thumb" src={video.thumbnail} alt="" />
+        {!unlocked && <div className="vfeed-play"><Icon.Play size={28} color="#fff" /></div>}
+        {unlocked && <div ref={containerRef} className="vfeed-yt-container" />}
+      </div>
+      <div className="vfeed-info">
+        <div className="vfeed-title">{video.title}</div>
+        <div className="vfeed-meta">
+          <span className="vfeed-channel">{video.channel}</span>
+          <span className="vfeed-dot">·</span>
+          <span className="vfeed-time">{formatTimeAgo(new Date(video.published_at))}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Tracks which video card is mostly visible in the scroll area
+function useVisibleIndex(listRef, count) {
+  const [visibleIndex, setVisibleIndex] = useState(0);
+  useEffect(() => {
+    const container = listRef.current;
+    if (!container || count === 0) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+            const idx = Number(entry.target.dataset.idx);
+            if (!isNaN(idx)) setVisibleIndex(idx);
+          }
+        }
+      },
+      { root: null, threshold: 0.5 }
+    );
+    const cards = container.querySelectorAll("[data-idx]");
+    cards.forEach(card => observer.observe(card));
+    return () => observer.disconnect();
+  }, [listRef, count]);
+  return visibleIndex;
+}
+
 function FeedScreen() {
+  const { loading, feed, error } = useVideoFeed();
+  const [activeTab, setActiveTab] = useState("animals");
+  const [unlocked, setUnlocked] = useState(false);
+  const listRef = useRef(null);
+
+  const videos = feed?.[activeTab] || [];
+  const visibleIndex = useVisibleIndex(listRef, videos.length);
+
   return (
     <div className="community-bg">
       <div className="community-header fade-up fade-up-1">
         <div className="community-title">Your Feed</div>
-        <div className="community-subtitle">Something beautiful is on its way</div>
+        <div className="community-subtitle">Curated videos from around the internet</div>
       </div>
-      <div style={{
-        margin: '40px 24px', padding: '36px 24px',
-        background: '#FDF2E8', borderRadius: 24,
-        border: '1.5px solid rgba(12,26,53,0.08)',
-        boxShadow: '0 8px 32px rgba(0,20,60,0.18), 0 1px 3px rgba(8,20,50,0.06)',
-        textAlign: 'center',
-      }}>
-        <div style={{
-          fontSize: 9, fontWeight: 700, letterSpacing: 1.4,
-          textTransform: 'uppercase', color: '#D4940A', marginBottom: 10,
-        }}>Coming soon</div>
-        <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 600, color: '#023047', marginBottom: 8, lineHeight: 1.3 }}>
-          A new kind of morning feed
-        </div>
-        <div style={{ fontSize: 13, color: 'rgba(2,48,71,0.6)', lineHeight: 1.6 }}>
-          Curated nature, animals, travel, and art from museums, photographers, and open collections — without the noise.
-        </div>
+
+      {/* Category tabs */}
+      <div className="vfeed-tabs">
+        {FEED_TABS.map(tab => (
+          <button
+            key={tab}
+            className={`vfeed-tab${activeTab === tab ? " vfeed-tab-active" : ""}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {FEED_TAB_LABELS[tab]}
+          </button>
+        ))}
+      </div>
+
+      {/* Vertical video list */}
+      <div className="vfeed-list" ref={listRef}>
+        {loading && (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="widget-shimmer" style={{
+              height: 200, borderRadius: 16, marginBottom: 12,
+              background: "rgba(2,48,71,0.06)",
+            }} />
+          ))
+        )}
+
+        {error && (
+          <div style={{ padding: "20px 0", fontSize: 13, color: "rgba(2,48,71,0.5)", textAlign: "center" }}>
+            Unable to load videos right now.
+          </div>
+        )}
+
+        {!loading && !error && videos.length === 0 && (
+          <div style={{ padding: "40px 0", fontSize: 13, color: "rgba(2,48,71,0.45)", textAlign: "center" }}>
+            No videos yet for {FEED_TAB_LABELS[activeTab]}.
+          </div>
+        )}
+
+        {videos.map((v, i) => (
+          <div key={v.video_id} data-idx={i}>
+            <VideoCard video={v} isVisible={i === visibleIndex} unlocked={unlocked} onUnlock={() => setUnlocked(true)} />
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -2946,7 +3133,7 @@ export default function MorningScrollApp() {
           </div>
 
           {/* Main Screen */}
-          <div className="screen rubber-scroll" ref={screenRef} style={tab === "feed" ? { overflowY: "hidden" } : {}}>
+          <div className="screen rubber-scroll" ref={screenRef}>
             <Screen />
           </div>
 

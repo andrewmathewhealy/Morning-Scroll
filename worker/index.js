@@ -135,9 +135,15 @@ export default {
     if (path === "/youtube")            return withEdgeCache(request, ctx, () => handleYouTube(request, env, url),          10800);          // 3 hours
     if (path === "/youtube/channel")    return withEdgeCache(request, ctx, () => handleYouTubeChannel(request, env, url),   86400);          // 1 day
     if (path === "/youtube/live-status")return withEdgeCache(request, ctx, () => handleYouTubeLiveStatus(request, env, url),300);            // 5 min
+    if (path === "/api/videos")         return handleVideosFeed(request, env);
     if (path === "/api/daily")          return handleDaily(request, env, ctx); // has its own cache logic
 
     return json({ error: "Not found" }, 404);
+  },
+
+  // Cron trigger — refreshes the video feed cache daily at 6am UTC
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(refreshVideosFeed(env));
   },
 };
 
@@ -686,6 +692,131 @@ async function handleDaily(request, env, ctx) {
     return fresh;
   } catch (err) {
     return json({ error: "Worker exception", detail: err.message }, 500);
+  }
+}
+
+// ── YOUTUBE VIDEO FEED ───────────────────────────────────
+// Curated channels per category. Add more channels/categories here.
+const VIDEO_CHANNELS = {
+  animals: [
+    { channelId: "UCINb0wqPz-A0dV9nARjJlOQ", name: "The Dodo" },
+  ],
+};
+
+const VIDEOS_CACHE_KEY = "videos_feed";
+const VIDEOS_CACHE_TTL = 86400; // 24 hours in seconds
+
+// Fetch videos for a single channel. Returns an array of video objects.
+// If no videos in the last 24h, falls back to the 3 most recent uploads.
+async function fetchChannelVideos(channelId, channelName, apiKey) {
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  const url = new URL("https://www.googleapis.com/youtube/v3/search");
+  url.searchParams.set("part", "snippet");
+  url.searchParams.set("channelId", channelId);
+  url.searchParams.set("maxResults", "10");
+  url.searchParams.set("order", "date");
+  url.searchParams.set("type", "video");
+  url.searchParams.set("publishedAfter", twentyFourHoursAgo);
+  url.searchParams.set("key", apiKey);
+
+  const res = await fetch(url.toString());
+  if (!res.ok) {
+    console.error(`YouTube API error for ${channelName}: ${res.status}`);
+    return [];
+  }
+
+  let data = await res.json();
+  let items = data.items || [];
+
+  // Fallback: if no videos in last 24h, fetch the 3 most recent (no date filter)
+  if (items.length === 0) {
+    const fallbackUrl = new URL("https://www.googleapis.com/youtube/v3/search");
+    fallbackUrl.searchParams.set("part", "snippet");
+    fallbackUrl.searchParams.set("channelId", channelId);
+    fallbackUrl.searchParams.set("maxResults", "3");
+    fallbackUrl.searchParams.set("order", "date");
+    fallbackUrl.searchParams.set("type", "video");
+    fallbackUrl.searchParams.set("key", apiKey);
+
+    const fallbackRes = await fetch(fallbackUrl.toString());
+    if (fallbackRes.ok) {
+      data = await fallbackRes.json();
+      items = data.items || [];
+    }
+  }
+
+  return items.map(item => ({
+    video_id: item.id.videoId,
+    title: item.snippet.title,
+    thumbnail: `https://i.ytimg.com/vi/${item.id.videoId}/maxresdefault.jpg`,
+    channel: item.snippet.channelTitle,
+    published_at: item.snippet.publishedAt,
+    embed_url: `https://www.youtube.com/embed/${item.id.videoId}?playsinline=1&rel=0`,
+  }));
+}
+
+// Fetch recent videos from the YouTube Data API for all curated channels.
+// Channels are fetched in parallel (Promise.all) for speed.
+async function fetchVideosFeed(env) {
+  const apiKey = env.YOUTUBE_API_KEY;
+  if (!apiKey) throw new Error("YOUTUBE_API_KEY not configured");
+
+  const feed = {};
+
+  for (const [category, channels] of Object.entries(VIDEO_CHANNELS)) {
+    // Fetch all channels in this category in parallel
+    const results = await Promise.all(
+      channels.map(ch => fetchChannelVideos(ch.channelId, ch.name, apiKey))
+    );
+
+    const categoryVideos = results.flat();
+    // Sort newest first
+    categoryVideos.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+    feed[category] = categoryVideos;
+  }
+
+  return { ...feed, cached_at: new Date().toISOString() };
+}
+
+// Called by cron trigger — fetches fresh data and writes to KV
+async function refreshVideosFeed(env) {
+  try {
+    const feed = await fetchVideosFeed(env);
+    await env.FEED_CACHE.put(VIDEOS_CACHE_KEY, JSON.stringify(feed), {
+      expirationTtl: VIDEOS_CACHE_TTL,
+    });
+    console.log("Video feed cache refreshed at", feed.cached_at);
+  } catch (err) {
+    console.error("Failed to refresh video feed:", err.message);
+  }
+}
+
+// Serves /api/videos — reads from KV, falls back to live fetch if cache is empty
+async function handleVideosFeed(request, env) {
+  try {
+    // Try KV cache first
+    const cached = await env.FEED_CACHE.get(VIDEOS_CACHE_KEY);
+    if (cached) {
+      return new Response(cached, {
+        status: 200,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json", "X-Cache": "HIT" },
+      });
+    }
+
+    // Cache miss (first deploy, or KV expired) — fetch live and populate cache
+    const feed = await fetchVideosFeed(env);
+    const body = JSON.stringify(feed);
+
+    // Store in KV for next request (non-blocking)
+    env.FEED_CACHE.put(VIDEOS_CACHE_KEY, body, { expirationTtl: VIDEOS_CACHE_TTL });
+
+    return new Response(body, {
+      status: 200,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json", "X-Cache": "MISS" },
+    });
+  } catch (err) {
+    return json({ error: "Failed to fetch video feed", detail: err.message }, 500);
   }
 }
 
