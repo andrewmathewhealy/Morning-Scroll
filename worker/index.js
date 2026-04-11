@@ -119,23 +119,22 @@ async function fetchAPTopHeadline() {
   }
 }
 
-const JOURNAL_PROMPT_INSTRUCTIONS = `You generate a single daily journal prompt for a morning app.
+const JOURNAL_PROMPT_INSTRUCTIONS = `Generate one morning journal prompt. One sentence, no explanation.
 
-The prompt should be light, playful, and imaginative. It requires no spiritual knowledge, no self-improvement mindset, and no deep reflection. It should be genuinely answerable in one or two sentences.
+The question should be light, playful, and genuinely fun to answer — but it should quietly move the reader's attention away from what they have, what they need to do, and who they think they are, and toward what they notice, what they imagine, and what they already are. It should feel like a question a slightly unusual friend texts you at 7am.
 
-Formats to rotate between freely:
-- A preference between two random things
-- A hypothetical scenario with no real stakes
-- A memory prompt
-- A completely random question about life, food, travel, animals, music, movies, or anything ordinary
+The question should be immediately understood — no setup, no scenario the reader has to construct before they can start answering. The reward is in the answering, not in figuring out what's being asked. The best prompts either give the reader a pleasant glimpse of themselves they don't normally get, or briefly transport them somewhere their daily routine doesn't take them.
+
+Rotate freely between: a question about something tiny they noticed or felt recently, a question that makes their identity or routine feel lighter than usual, a sense memory that takes them somewhere specific, a question about what they'd keep or let go of, a question about a place or moment that stuck with them.
 
 Rules:
 - No politics, no news, no self-improvement language
 - No prompts about death, loss, or hardship
-- Should feel like a question a friend texts you randomly
-- One sentence only. No explanation, no context.
-
-Generate one prompt.`;
+- No spiritual vocabulary — no "gratitude," "mindfulness," "presence," "inner self"
+- No puzzles — nothing that requires building a scenario before answering
+- One sentence only
+- Should be answerable in one or two sentences
+- Should make the reader smile slightly before they answer`;
 
 // ── EDGE CACHE HELPER ──────────────────────────────────────
 // Wrap a handler with Cloudflare's persistent edge cache (caches.default).
