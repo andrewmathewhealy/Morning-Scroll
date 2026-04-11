@@ -290,9 +290,9 @@ export default function GlobeCanvas({ style, fullscreen = false }) {
           float glow = pow(rim, 3.0);
           // Fade out the very edge to kill the hard aliased line
           float edgeFade = smoothstep(1.0, 0.92, rim);
-          vec3 col = mix(vec3(0.06, 0.22, 0.75), vec3(0.3, 0.65, 1.0), glow);
-          float alpha = glow * 0.55 * edgeFade;
-          gl_FragColor = vec4(col * 1.4, alpha);
+          vec3 col = mix(vec3(0.01, 0.19, 0.28), vec3(0.14, 0.4, 0.55), glow);
+          float alpha = glow * 0.45 * edgeFade;
+          gl_FragColor = vec4(col * 1.2, alpha);
         }`,
       transparent: true, depthWrite: false, side: THREE.FrontSide, blending: THREE.AdditiveBlending
     });

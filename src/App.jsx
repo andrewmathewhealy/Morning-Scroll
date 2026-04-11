@@ -2180,40 +2180,48 @@ function LiveStreamPlayer({ stream, onClose }) {
     <div
       style={{
         position: "fixed", inset: 0, zIndex: 9999,
-        background: "#000",
-        display: "flex", alignItems: "center", justifyContent: "center",
+        background: "#023047",
+        display: "flex", flexDirection: "column",
         animation: "globeOverlayIn 0.3s ease-out both",
       }}
     >
-      {/* Video — fills viewport while preserving 16:9 (letterboxes naturally) */}
-      <iframe
-        src={`https://www.youtube.com/embed/${stream.videoId}?autoplay=1&mute=1&playsinline=1`}
-        title={stream.title}
-        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        style={{
-          width: "min(100vw, calc(100vh * 16 / 9))",
-          height: "min(100vh, calc(100vw * 9 / 16))",
-          border: 0, background: "#000",
-        }}
-      />
+      {/* Video — fills top portion */}
+      <div style={{ position: "relative", width: "100%", flex: "0 0 55vh" }}>
+        <iframe
+          src={`https://www.youtube.com/embed/${stream.videoId}?autoplay=1&mute=1&playsinline=1`}
+          title={stream.title}
+          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          style={{
+            width: "100%", height: "100%",
+            border: 0, background: "#000",
+          }}
+        />
+      </div>
 
-      {/* Title overlay — top-left */}
+      {/* Stream info — below video */}
       <div style={{
-        position: "absolute", top: 0, left: 0, right: 0,
-        padding: "16px 20px 28px",
-        background: "linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)",
-        color: "#FDF2E8", pointerEvents: "none",
+        flex: 1, padding: "24px 22px",
+        display: "flex", flexDirection: "column", gap: 8,
       }}>
-        <div style={{ fontSize: 16, fontWeight: 700 }}>{stream.title}</div>
-        <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>{stream.location} · LIVE</div>
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 5, alignSelf: "flex-start",
+          background: "rgba(253,242,232,0.1)", backdropFilter: "blur(8px)",
+          padding: "3px 10px", borderRadius: 6,
+          fontSize: 9, fontWeight: 700, letterSpacing: 0.8, color: "#FDF2E8",
+        }}>
+          <span className="live-badge-dot" />
+          LIVE
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: "#FDF2E8", lineHeight: 1.2 }}>{stream.title}</div>
+        <div style={{ fontSize: 13, color: "rgba(253,242,232,0.6)" }}>{stream.location}</div>
       </div>
 
       {/* Close button — top-right floating */}
       <button onClick={onClose} style={{
         position: "absolute", top: 14, right: 14, zIndex: 2,
-        background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)",
-        border: "1px solid rgba(255,255,255,0.15)",
+        background: "rgba(2,48,71,0.7)", backdropFilter: "blur(8px)",
+        border: "1.5px solid rgba(253,242,232,0.15)",
         color: "#FDF2E8", fontSize: 12, fontWeight: 600, padding: "8px 16px",
         borderRadius: 12, cursor: "pointer",
       }}>Close</button>
@@ -2226,10 +2234,10 @@ function LiveStreamCard({ stream, onOpen }) {
     <div
       onClick={() => onOpen(stream)}
       style={{
-        position: "relative", flex: "0 0 220px", borderRadius: 16, overflow: "hidden", cursor: "pointer",
+        position: "relative", flex: "0 0 220px", borderRadius: 20, overflow: "hidden", cursor: "pointer",
         aspectRatio: "16/9", background: "#0a1a24",
-        border: "1px solid rgba(255,255,255,0.08)",
-        boxShadow: "0 4px 16px rgba(0,20,60,0.25)",
+        border: "1.5px solid rgba(253,242,232,0.15)",
+        boxShadow: "0 8px 32px rgba(0,20,60,0.25), 0 1px 3px rgba(8,20,50,0.06)",
         scrollSnapAlign: "start",
       }}
     >
@@ -2242,21 +2250,22 @@ function LiveStreamCard({ stream, onOpen }) {
       />
       <div style={{
         position: "absolute", inset: 0,
-        background: "linear-gradient(to top, rgba(2,3,8,0.85) 0%, rgba(2,3,8,0.1) 50%, transparent 100%)",
+        background: "linear-gradient(to top, rgba(2,48,71,0.9) 0%, rgba(2,48,71,0.3) 45%, transparent 100%)",
       }} />
-      <div className="live-badge" style={{
+      <div style={{
         position: "absolute", top: 8, left: 8,
-        display: "flex", alignItems: "center", gap: 5,
-        background: "rgba(220,40,40,0.95)", color: "#fff",
-        fontSize: 9, fontWeight: 800, letterSpacing: 0.8,
-        padding: "3px 8px", borderRadius: 6,
+        display: "flex", alignItems: "center", gap: 4,
+        background: "rgba(2,48,71,0.65)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+        color: "#FDF2E8",
+        fontSize: 8, fontWeight: 700, letterSpacing: 0.8,
+        padding: "2px 7px", borderRadius: 4,
       }}>
         <span className="live-badge-dot" />
         LIVE
       </div>
       <div style={{ position: "absolute", left: 12, right: 12, bottom: 10, color: "#FDF2E8" }}>
         <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.25 }}>{stream.title}</div>
-        <div style={{ fontSize: 10, opacity: 0.75, marginTop: 2 }}>{stream.location}</div>
+        <div style={{ fontSize: 10, opacity: 0.7, marginTop: 2 }}>{stream.location}</div>
       </div>
     </div>
   );
@@ -2416,17 +2425,16 @@ function WorldScreen() {
           </div>
         )}
         {liveCategories && Object.entries(liveCategories).map(([cat, streams]) => (
-          <div key={cat} style={{ marginBottom: 18 }}>
-            <div style={{ padding: "0 20px", marginBottom: 10 }}>
+          <div key={cat} style={{ marginBottom: 14 }}>
+            <div style={{ padding: "0 22px", marginBottom: 8 }}>
               <div style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                padding: "6px 12px 6px 10px",
-                borderRadius: 999,
-                background: "#FDF2E8",
-                border: "1.5px solid rgba(12,26,53,0.08)",
+                display: "inline-flex", alignItems: "center", gap: 6,
+                background: "rgba(2,48,71,0.7)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+                padding: "5px 12px 5px 10px", borderRadius: 999,
+                border: "1px solid rgba(253,242,232,0.1)",
               }}>
-                <span style={{ width: 8, height: 8, borderRadius: 2, background: LIVE_CAT_COLORS[cat] }} />
-                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: "#023047" }}>{cat}</span>
+                <span style={{ width: 6, height: 6, borderRadius: 2, background: LIVE_CAT_COLORS[cat] }} />
+                <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", color: "#FDF2E8" }}>{cat}</span>
               </div>
             </div>
             <div style={{
