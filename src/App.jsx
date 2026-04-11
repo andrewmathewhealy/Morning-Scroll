@@ -1363,23 +1363,6 @@ function HomeScreen({ onOpenWordle }) {
       </div>
 
       <div className="section-pad spring-in spring-in-6 depth-mid">
-        <div className="calendar-widget widget-shimmer">
-          <div className="cal-header">Today's Schedule</div>
-          {[
-            { time: "9am", title: "Team standup", color: "#219EBC" },
-            { time: "12pm", title: "Lunch with Sarah", color: "#FFD166" },
-            { time: "3pm", title: "Design review", color: "#FFBC42" },
-          ].map((e, i) => (
-            <div className="cal-event" key={i}>
-              <div className="cal-dot" style={{ background: e.color }} />
-              <div className="cal-time">{e.time}</div>
-              <div className="cal-title">{e.title}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="section-pad spring-in spring-in-7 depth-mid">
         <div className="wordle-card" onClick={onOpenWordle}>
           <div className="wc-left">
             <div className="wc-label">Daily · Word Game</div>
@@ -3003,7 +2986,6 @@ function SettingsScreen() {
 
       <span className="section-label fade-up fade-up-4">Widgets</span>
       {[
-        { Ico: Icon.Calendar, label: "Calendar", value: "Showing today's events" },
         { Ico: Icon.Image, label: "Photo Memory", value: "On this day · 2 years back" },
         { Ico: Icon.Moon, label: "Moon Phase", value: "Visible on Home tab" },
       ].map((s, i) => (
