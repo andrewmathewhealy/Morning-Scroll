@@ -22,13 +22,7 @@ export const Icon = {
       <polyline points="21 15 16 10 5 21"/>
     </svg>
   ),
-  Leaf: ({ size = 48, color = "rgba(142,202,230,0.25)" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 8C8 10 5.9 16.17 3.82 19.34L4.5 20l.68-.68C6.5 18 9.27 16.2 12 15c3-1.36 6-3 8-7-1 0-2.07.1-3 0z"/>
-      <path d="M3.82 19.36C2.68 21.06 2 22 2 22"/>
-    </svg>
-  ),
-  Feather: ({ size = 22, color = "#D4940A" }) => (
+Feather: ({ size = 22, color = "#D4940A" }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/>
     </svg>
@@ -48,17 +42,7 @@ export const Icon = {
       <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
     </svg>
   ),
-  Plus: ({ size = 22, color = "#0C1A35" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-    </svg>
-  ),
-  ChevronLeft: ({ size = 22, color = "#0C1A35" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="15 18 9 12 15 6"/>
-    </svg>
-  ),
-  Basketball: ({ size = 22, color = "rgba(234,244,251,0.7)" }) => (
+Basketball: ({ size = 22, color = "rgba(234,244,251,0.7)" }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10"/>
       <path d="M4.93 4.93C6.27 8.27 6.27 15.73 4.93 19.07"/>
@@ -66,17 +50,7 @@ export const Icon = {
       <line x1="2" y1="12" x2="22" y2="12"/>
     </svg>
   ),
-  Stars: ({ size = 22, color = "rgba(234,244,251,0.7)" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-    </svg>
-  ),
-  Heart: ({ size = 22, color = "rgba(234,244,251,0.7)" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-    </svg>
-  ),
-  Home: ({ size = 22, color = "rgba(2,48,71,0.4)" }) => (
+Home: ({ size = 22, color = "rgba(2,48,71,0.4)" }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 10.5 L12 3 L21 10.5 L21 20 Q21 21 20 21 L4 21 Q3 21 3 20 Z"/>
       <path d="M8.5 10 L12 6.5 L15.5 10"/>

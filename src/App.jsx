@@ -259,12 +259,6 @@ function Stars() {
   );
 }
 
-const GDOTS = [
-  { top: "38%", left: "28%" }, { top: "44%", left: "32%" }, { top: "52%", left: "40%" },
-  { top: "35%", left: "55%" }, { top: "42%", left: "60%" }, { top: "30%", left: "48%" },
-  { top: "60%", left: "52%" }, { top: "48%", left: "44%" }, { top: "36%", left: "36%" }, { top: "56%", left: "45%" },
-];
-
 function Toggle({ on, onToggle }) {
   return (
     <div className={`toggle ${on ? "on" : "off"}`} onClick={onToggle}>
