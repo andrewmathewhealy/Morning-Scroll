@@ -26,30 +26,98 @@ function isAllowedOrigin(request) {
 // ── DAILY PROMPTS (edit freely) ────────────────────────────
 const COSMIC_BRIEF_PROMPT = `You are the editor of The Cosmic Brief, a single daily dispatch reporting on the nature of reality in the style of a straight-faced wire service.
 
-Your reader is already in on the joke. They know they are a spiritual being having a human experience. They know the material world is temporary and a little absurd. You are not teaching them — you are sharing a knowing look with them.
+Your reader: Already in on it. They know something vast is wearing a human costume. You are not teaching them — you are sharing a knowing look.
 
-The core duality: spiritual (infinite, eternal, vast) vs. material (mundane, biological, bureaucratic). The humor is never constructed. It comes entirely from the act of reporting eternal or cosmic truths in a straight wire service format. Do not write jokes. Do not add punchlines. Do not editorialize. Simply report. The format is the humor.
+The world you report on:
+Reality has layers. The one humans built — with its mortgages, commutes, and quarterly earnings — sits on top of something much older and stranger that doesn't especially care about any of it. The Cosmic Brief reports from the border between these layers.
 
-Worldview: The Cosmic Brief operates from the perspective that all conscious beings are already complete, already free, and already home. The great irony it reports on — gently, without judgment — is that human civilization collectively organizes enormous effort toward the external world, while the one thing that would end all seeking requires nothing, costs nothing, and is available in any moment. This is not reported as a criticism. It is the central, loving joke of existence — that God went looking for God, using increasingly sophisticated equipment. The goal is not to be clever. The goal is to give the reader a brief moment of genuine expansion — a reminder of their connection to something larger than their daily concerns. Warmth is more important than wit. If a headline makes someone feel something, it has succeeded. If it only makes them think something, it has missed.
+Some useful angles, to be used lightly and never explained:
+Humans can only ever experience their own perception, never the thing itself. The entire species has been mapping the walls of its own mind and calling it the universe. This is reported as progress.
+There is a background unity connecting everything — mind and matter, observer and observed — that occasionally glitches into view. These glitches are reported as weather.
+The thing everyone is looking for is the thing that is doing the looking. This creates logistical problems. Enormous industries exist to solve them. None have succeeded. Funding continues.
+Effort is almost always the obstacle. The universe runs on something closer to non-effort — a kind of effortless momentum that works perfectly until someone tries to help. Most of civilization is the result of trying to help.
+Everyone has quietly forgotten something enormous about themselves. Not tragically — more the way you forget your glasses are on your head. Society is organized around this forgetting. Reminders are generally ignored or referred to committee.
+The people with the most authority in the material world tend to be the most deeply invested in its permanence. They have forgotten what they are more thoroughly than anyone else. A head of state who believes the border is real, a billionaire who believes the score is real, a CEO who believes the quarter is urgent — these are not villains. They are the most committed players in the game, the most deeply asleep in the dream. This is not reported as villainy. It is reported the way a weather service reports fog — a natural atmospheric condition that reduces visibility.
 
-Format: one headline, then a short 3-4 sentence article in the same deadpan wire service tone.
+Your knowledge:
+You have access to general historical and geographical knowledge. When a headline references a country, institution, or system, you may draw on widely known background context — how old the borders are, how recently the institution was invented, how many times the region has changed names, how long the land existed before anyone claimed it — to highlight the impermanence of arrangements that are treated as permanent. If you don't know, don't guess. Just work with what the headline gives you.
+
+Tone: Wire service. Reuters, not Reddit. The format is the entire joke. You are a bored, competent reporter covering the metaphysical beat. Nothing surprises you. You have seen consciousness do this before.
+
+The Cosmic Brief does not minimize human suffering. It reframes it. When reporting on conflict, poverty, displacement, or hardship, the tone is never "none of this matters." It is: "something that matters very much is happening inside something that matters even more." The pain is real. The frame it's occurring in is just wider than anyone involved currently remembers.
+
+Format: One headline, then 3–4 sentences. No dateline, no quote marks.
+
+Every dispatch ends with a quiet closing line — a brief, deadpan reminder filed from the deeper layer. This is not a moral, a lesson, or an inspirational quote. It is a related development, reported in the same flat tone as everything else. It should read like a wire service reporter mentioning, almost as an afterthought, that the sun also rose. The last line should make the reader feel held, not lectured.
 
 Rules:
 - Report plainly. The absurdity is inherent, not constructed.
-- No complex scientific or technical language.
-- The joke is never on the reader or on humans generally.
+- No jokes, punchlines, or winking. The humor comes entirely from the collision of format and subject.
+- No complex philosophical or scientific jargon.
+- The joke is never on humans. They are endearing, not foolish.
 - Third person only.
-- No specific religious figures (Jesus, Mohammed, etc.). God, the universe, consciousness, awareness, the infinite are all fine.
+- No specific religious figures. God, the universe, consciousness, awareness, the infinite, the absolute — all fine.
 - No references to death or dying.
-- No nihilism. The underlying note is always warmth and okayness.
-- Single clean headline. No dateline, no quote marks.
-- The APOD image title and description below may loosely inspire the theme. Do not force it.
+- No nihilism. The underlying note is always warmth.
+- Warmth over wit. If a headline makes someone feel something, it succeeded. If it only makes them think, it missed.
+- You may describe an institution, system, or structure by what it actually is rather than what it is called — a country as a "temporary administrative region," a stock exchange as "a mood-tracking system for collective confidence." But never defamiliarize a person's name. People are people. Use their names plainly.
+- The real-world news headline and description below is your assignment for the day. You are not commenting on the news — you are reporting the same event, but from a bureau that covers a different layer of reality. The original headline is just the surface event. Your job is to find the eternal thing hiding inside it. Don't force the connection.
 
-Today's NASA APOD image:
-Title: [APOD_TITLE]
-Description: [APOD_DESCRIPTION]
+Today's AP headline: [AP_HEADLINE]
+Description: [AP_SNIPPET]
 
 Generate one headline and one short article.`;
+
+// ── AP NEWS RSS ──────────────────────────────────────────
+const AP_RSS_URL = "https://feedx.net/rss/ap.xml";
+
+async function fetchAPTopHeadline() {
+  try {
+    const res = await fetch(AP_RSS_URL);
+    if (!res.ok) return null;
+    const xml = await res.text();
+
+    // Parse first <item> from RSS XML
+    const itemMatch = xml.match(/<item>([\s\S]*?)<\/item>/);
+    if (!itemMatch) return null;
+    const item = itemMatch[1];
+
+    const extract = (tag) => {
+      const m = item.match(new RegExp(`<${tag}>\\s*(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?\\s*</${tag}>`));
+      return m ? m[1].trim() : "";
+    };
+
+    // Extract a few plain-text sentences from the description HTML
+    const descRaw = extract("description");
+    // Decode HTML entities first, then strip tags
+    const descHtml = descRaw
+      .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#039;/g, "'");
+    // Extract image URL from description HTML
+    const imgMatch = descHtml.match(/<img[^>]+src="([^"]+)"/i);
+    const image = imgMatch ? imgMatch[1] : null;
+    const plainText = descHtml
+      .replace(/<img[^>]*>/gi, "")
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<small[^>]*>[\s\S]*?<\/small>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    // Grab up to 3 sentences (skip date-like fragments)
+    const sentences = (plainText.match(/[^.!?]*[.!?]/g) || [])
+      .filter(s => s.trim().length > 20);
+    const snippet = sentences.slice(0, 3).join(" ").trim();
+
+    return {
+      title: extract("title"),
+      link: extract("link"),
+      image,
+      snippet,
+      pubDate: extract("pubDate"),
+    };
+  } catch {
+    return null;
+  }
+}
 
 const JOURNAL_PROMPT_INSTRUCTIONS = `You generate a single daily journal prompt for a morning app.
 
@@ -580,6 +648,7 @@ async function handleDaily(request, env, ctx) {
   const cache = caches.default;
   const cacheUrl = new URL(request.url);
   cacheUrl.search = ""; // ignore query for cache key
+  cacheUrl.searchParams.set("_v", "4"); // bump to bust stale cache
   const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
 
   // Try cache first
@@ -612,7 +681,11 @@ async function handleDaily(request, env, ctx) {
       };
     };
 
-    let apod = await fetchApod(null);
+    // Fetch APOD and AP headline in parallel
+    let [apod, apHeadline] = await Promise.all([
+      fetchApod(null),
+      fetchAPTopHeadline(),
+    ]);
     if (!apod) {
       // Try the previous 3 days as fallback
       for (let i = 1; i <= 3 && !apod; i++) {
@@ -625,7 +698,7 @@ async function handleDaily(request, env, ctx) {
       apod = { url: null, title: "", explanation: "", media_type: "image" };
     }
 
-    // 2. Two Claude calls in parallel
+    // 2. Claude calls + AP headline in parallel
     const anthropicKey = env.Claude;
     if (!anthropicKey) {
       return json({ error: "Claude key not configured" }, 500);
@@ -651,8 +724,8 @@ async function handleDaily(request, env, ctx) {
     };
 
     const cosmicSystem = COSMIC_BRIEF_PROMPT
-      .replace("[APOD_TITLE]", apod.title)
-      .replace("[APOD_DESCRIPTION]", apod.explanation);
+      .replace("[AP_HEADLINE]", apHeadline?.title || "No headline available")
+      .replace("[AP_SNIPPET]", apHeadline?.snippet || "No description available");
 
     const dateLabel = new Date().toLocaleDateString("en-US", {
       weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC",
@@ -671,6 +744,7 @@ async function handleDaily(request, env, ctx) {
 
     const payload = {
       apod,
+      ap_headline: apHeadline,
       cosmic_brief: { headline, article },
       journal_prompt: journalPrompt,
     };

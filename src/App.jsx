@@ -2493,39 +2493,35 @@ function CosmicBriefCard() {
     </div>
   );
 
-  const { apod, cosmic_brief } = data;
-  const isVideo = apod?.url && (apod.url.includes("youtube") || apod.url.includes("vimeo"));
+  const { ap_headline, cosmic_brief } = data;
 
   return (
     <div className="art-card">
-      <div className="art-image" style={{ background: "#0a1a24" }}>
-        {apod?.url && !isVideo && <img src={apod.url} alt={apod.title} />}
-        {isVideo && (
-          <iframe
-            src={apod.url}
-            title={apod.title}
-            allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            style={{ width: "100%", aspectRatio: "16/9", border: 0 }}
-          />
-        )}
-      </div>
+      {ap_headline?.image && (
+        <div className="art-image" style={{ background: "#0a1a24" }}>
+          <img src={ap_headline.image} alt={ap_headline.title} />
+        </div>
+      )}
       <div className="art-info">
-        <div style={{
-          fontSize: 9, fontWeight: 700, letterSpacing: 1.4,
-          textTransform: "uppercase", color: "#D4940A", marginBottom: 8,
-        }}>The Cosmic Brief</div>
+        {ap_headline?.title && (
+          <div className="cosmic-ap-headline">
+            <div className="cosmic-ap-label"><span className="cosmic-ap-label-ap">AP</span> News</div>
+            <a
+              href={ap_headline.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cosmic-ap-title"
+            >{ap_headline.title}</a>
+          </div>
+        )}
+        <div className="cosmic-divider" />
+        <div className="cosmic-label">The Cosmic Brief</div>
         <div className="art-title" style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 800 }}>
           {cosmic_brief?.headline}
         </div>
         {cosmic_brief?.article && (
           <div className="art-desc" style={{ marginTop: 10, fontSize: 14, lineHeight: 1.6, color: "#0C1A35" }}>
             {cosmic_brief.article}
-          </div>
-        )}
-        {apod?.title && (
-          <div className="art-meta" style={{ marginTop: 14, fontSize: 10, opacity: 0.6 }}>
-            Image: {apod.title} · NASA APOD
           </div>
         )}
       </div>
