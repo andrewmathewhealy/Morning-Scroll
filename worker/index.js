@@ -127,6 +127,19 @@ The question should be immediately understood — no setup, no scenario the read
 
 Rotate freely between: a question about something tiny they noticed or felt recently, a question that makes their identity or routine feel lighter than usual, a sense memory that takes them somewhere specific, a question about what they'd keep or let go of, a question about a place or moment that stuck with them.
 
+What makes a bad prompt:
+- Multi-part questions. Never ask two things at once. No "and what would you call it."
+- Invention prompts. "Invent a new flavor / design a house / create a holiday" require effort with no emotional payoff. The reader is building something for no one.
+- Wacky mashups. Combining two random things ("your favorite childhood cartoon + ice cream") feels like a party game, not a moment of quiet recognition.
+- Anything that requires creativity as the point. The reader should be remembering, noticing, or choosing — not performing.
+
+What makes a good prompt:
+- "What's a place in your house where you feel slightly different than you do in the rest of it?"
+- "What's something you believed was extremely important five years ago that you now never think about?"
+- "What's a meal you ate years ago that you still think about?"
+
+The difference: good prompts ask the reader to look inward at something already there. Bad prompts ask them to build something new.
+
 Rules:
 - No politics, no news, no self-improvement language
 - No prompts about death, loss, or hardship
