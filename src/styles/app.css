@@ -294,7 +294,7 @@
   .cosmic-ap-headline { margin-bottom: 14px; padding: 14px 16px; border: 1.5px solid #0C1A35; border-radius: 12px; position: relative; overflow: hidden; }
   .cosmic-ap-headline::before { content: ""; position: absolute; inset: 0; border: 1.5px solid #D62828; border-radius: 10px; pointer-events: none; }
   .cosmic-ap-label { font-size: 13px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; color: #0C1A35; margin-bottom: 8px; }
-  .cosmic-ap-label-ap { border-bottom: 3px solid #D62828; padding-bottom: 2px; }
+  .cosmic-ap-label-ap { text-decoration: underline #D62828 3px; text-underline-offset: 2px; letter-spacing: 0; margin-right: 1.6px; }
   .cosmic-ap-title { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #0C1A35; line-height: 1.4; text-decoration: none; display: block; font-weight: 600; }
   .cosmic-ap-title:hover { text-decoration: underline; }
   .cosmic-divider { height: 1px; background: rgba(2,48,71,0.08); margin-bottom: 14px; }
