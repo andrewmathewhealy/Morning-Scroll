@@ -241,7 +241,8 @@
   /* ── COMMUNITY / WORLD ── */
   .community-bg { min-height: 100%; background: transparent; padding-bottom: 32px; }
   .community-header { padding: 16px 24px 12px; }
-  .community-title { font-family: 'Instrument Serif', serif; font-size: 27.5px; font-weight: 400; color: #FDF2E8; text-transform: lowercase; }
+  .community-title { font-family: 'Fraunces', serif; font-size: 27.5px; font-weight: 600; color: #FDF2E8; }
+  .community-title.observer-title { font-family: 'Instrument Serif', serif; font-weight: 400; text-transform: lowercase; }
   .community-subtitle { font-size: 13.5px; color: rgba(253,242,232,0.6); margin-top: 2px; }
 
   .globe-hero {
@@ -299,7 +300,8 @@
   .cosmic-ap-title:hover { text-decoration: underline; }
   .cosmic-divider { height: 1px; background: rgba(2,48,71,0.08); margin-bottom: 14px; }
   .cosmic-observer-section { background: linear-gradient(rgba(12,26,53,0.12), rgba(12,26,53,0.12)), #FDF2E8; padding: 20px 20px 22px; border-radius: 0 0 24px 24px; border: 1.5px solid #0C1A35; }
-  .cosmic-label { font-family: 'Instrument Serif', serif; font-size: 19px; font-weight: 400; letter-spacing: 0.5px; text-transform: lowercase; color: #0C1A35; margin-bottom: 8px; }
+  .cosmic-label { font-family: 'Instrument Serif', serif; font-size: 26px; font-weight: 400; letter-spacing: 0.5px; text-transform: lowercase; color: #0C1A35; margin-bottom: 10px; -webkit-text-stroke: 1px #0C1A35; }
+  .observer-headline { font-family: 'Instrument Serif', serif; font-size: 18px; font-weight: 400; line-height: 1.3; color: #0C1A35; -webkit-text-stroke: 0.5px #0C1A35; }
 
   /* ── SPORTS ── */
   .sports-bg { min-height: 100%; background: transparent; padding-bottom: 32px; }

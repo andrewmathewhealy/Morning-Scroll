@@ -2525,7 +2525,7 @@ function CosmicBriefCard() {
       </div>
       <div className="cosmic-observer-section">
         <div className="cosmic-label">the aloof observer</div>
-        <div className="art-title" style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 800 }}>
+        <div className="observer-headline">
           {cosmic_brief?.headline}
         </div>
         {cosmic_brief?.article && (
@@ -2542,7 +2542,7 @@ function NewsScreen() {
   return (
     <div className="community-bg">
       <div className="community-header fade-up fade-up-1">
-        <div className="community-title">the aloof observer</div>
+        <div className="community-title observer-title">the aloof observer</div>
         <div className="community-subtitle">A dispatch from somewhere larger</div>
       </div>
       <div className="fade-up fade-up-2">
