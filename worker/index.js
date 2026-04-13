@@ -661,6 +661,7 @@ async function handleDaily(request, env, ctx) {
   const cacheUrl = new URL(request.url);
   cacheUrl.search = ""; // ignore query for cache key
   cacheUrl.searchParams.set("_v", "4"); // bump to bust stale cache
+  cacheUrl.searchParams.set("_d", todayUTC()); // new day = new cache key
   const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
 
   // Try cache first
