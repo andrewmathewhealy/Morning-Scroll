@@ -2497,7 +2497,7 @@ function CosmicBriefCard() {
 
   if (error || !data) return (
     <div className="art-card" style={{ padding: 24, textAlign: "center", color: "rgba(8,16,32,0.5)", fontSize: 13 }}>
-      The Cosmic Brief is unavailable right now.
+      The Aloof Observer is unavailable right now.
     </div>
   );
 
@@ -2505,12 +2505,12 @@ function CosmicBriefCard() {
 
   return (
     <div className="art-card">
-      {ap_headline?.image && (
-        <div className="art-image" style={{ background: "#0a1a24" }}>
-          <img src={ap_headline.image} alt={ap_headline.title} />
-        </div>
-      )}
-      <div className="art-info">
+      <div className="cosmic-ap-section">
+        {ap_headline?.image && (
+          <div className="art-image" style={{ background: "#0a1a24" }}>
+            <img src={ap_headline.image} alt={ap_headline.title} />
+          </div>
+        )}
         {ap_headline?.title && (
           <div className="cosmic-ap-headline">
             <div className="cosmic-ap-label"><span className="cosmic-ap-label-ap">AP</span> News</div>
@@ -2522,8 +2522,9 @@ function CosmicBriefCard() {
             >{ap_headline.title}</a>
           </div>
         )}
-        <div className="cosmic-divider" />
-        <div className="cosmic-label">The Cosmic Brief</div>
+      </div>
+      <div className="cosmic-observer-section">
+        <div className="cosmic-label">the aloof observer</div>
         <div className="art-title" style={{ fontSize: 20, lineHeight: 1.2, fontWeight: 800 }}>
           {cosmic_brief?.headline}
         </div>
@@ -2541,7 +2542,7 @@ function NewsScreen() {
   return (
     <div className="community-bg">
       <div className="community-header fade-up fade-up-1">
-        <div className="community-title">News</div>
+        <div className="community-title">the aloof observer</div>
         <div className="community-subtitle">A dispatch from somewhere larger</div>
       </div>
       <div className="fade-up fade-up-2">
@@ -3055,7 +3056,7 @@ const TABS = [
   { id: "home",     label: "Home",     ActiveIcon: p => <Icon.Home     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Home     {...p} color="rgba(12,26,53,0.35)" /> },
   { id: "feed",     label: "Feed",     ActiveIcon: p => <Icon.Feed     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Feed     {...p} color="rgba(12,26,53,0.35)" /> },
   { id: "world",    label: "World",    ActiveIcon: p => <Icon.Globe    {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Globe    {...p} color="rgba(12,26,53,0.35)" /> },
-  { id: "news",     label: "News",     ActiveIcon: p => <Icon.BookOpen {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.BookOpen {...p} color="rgba(12,26,53,0.35)" /> },
+  { id: "news",     label: "Aloof Observer", ActiveIcon: p => <Icon.BookOpen {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.BookOpen {...p} color="rgba(12,26,53,0.35)" /> },
   { id: "settings", label: "Settings", ActiveIcon: p => <Icon.Settings {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Settings {...p} color="rgba(12,26,53,0.35)" /> },
 ];
 

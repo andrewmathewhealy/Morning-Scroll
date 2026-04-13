@@ -1,5 +1,5 @@
 @import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Lora:ital,wght@1,400&family=Barlow+Condensed:wght@600&family=DM+Sans:wght@500&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Instrument+Serif&family=Lora:ital,wght@1,400&family=Barlow+Condensed:wght@600&family=DM+Sans:wght@500&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
 
   @keyframes liveBadgePulse {
     0%, 100% { opacity: 0.4; transform: scale(1); }
@@ -241,7 +241,7 @@
   /* ── COMMUNITY / WORLD ── */
   .community-bg { min-height: 100%; background: transparent; padding-bottom: 32px; }
   .community-header { padding: 16px 24px 12px; }
-  .community-title { font-family: 'Fraunces', serif; font-size: 27.5px; font-weight: 600; color: #FDF2E8; }
+  .community-title { font-family: 'Instrument Serif', serif; font-size: 27.5px; font-weight: 400; color: #FDF2E8; text-transform: lowercase; }
   .community-subtitle { font-size: 13.5px; color: rgba(253,242,232,0.6); margin-top: 2px; }
 
   .globe-hero {
@@ -283,7 +283,7 @@
   .poll-result-fill.chosen { background: linear-gradient(90deg, #fff8e7 0%, #FFD166 100%); }
   .poll-total { font-size: 11px; color: rgba(8,16,32,0.4); margin-top: 12px; text-align: center; }
 
-  .art-card { margin: 12px 20px 0; border-radius: 24px; overflow: hidden; border: 1.5px solid #FDF2E8; box-shadow: 0 8px 32px rgba(0,20,60,0.25), 0 1px 3px rgba(8,20,50,0.06); }
+  .art-card { margin: 12px 20px 0; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,20,60,0.25), 0 1px 3px rgba(8,20,50,0.06); }
   .art-image { min-height: 160px; max-height: 360px; background: #FDF2E8; display: flex; align-items: center; justify-content: center; position: relative; }
   .art-image img { width: 100%; height: 100%; object-fit: contain; }
   .art-info { background: #FDF2E8; padding: 28px 20px 18px; }
@@ -291,14 +291,15 @@
   .art-meta { font-size: 11px; color: rgba(2,48,71,0.55); margin-top: 3px; }
   .art-desc { font-size: 12px; color: rgba(2,48,71,0.55); margin-top: 6px; line-height: 1.5; }
 
-  .cosmic-ap-headline { margin-bottom: 14px; padding: 14px 16px; border: 1.5px solid #0C1A35; border-radius: 12px; position: relative; overflow: hidden; }
-  .cosmic-ap-headline::before { content: ""; position: absolute; inset: 0; border: 1.5px solid #D62828; border-radius: 10px; pointer-events: none; }
+  .cosmic-ap-section { background: #FDF2E8; border: 1.5px solid #D62828; border-bottom: none; border-radius: 24px 24px 0 0; overflow: hidden; }
+  .cosmic-ap-headline { padding: 14px 16px 18px; }
   .cosmic-ap-label { font-size: 13px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; color: #0C1A35; margin-bottom: 8px; }
   .cosmic-ap-label-ap { text-decoration: underline #D62828 3px; text-underline-offset: 2px; letter-spacing: 0; margin-right: 1.6px; }
   .cosmic-ap-title { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #0C1A35; line-height: 1.4; text-decoration: none; display: block; font-weight: 600; }
   .cosmic-ap-title:hover { text-decoration: underline; }
   .cosmic-divider { height: 1px; background: rgba(2,48,71,0.08); margin-bottom: 14px; }
-  .cosmic-label { font-size: 9px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: #D4940A; margin-bottom: 8px; }
+  .cosmic-observer-section { background: linear-gradient(rgba(12,26,53,0.12), rgba(12,26,53,0.12)), #FDF2E8; padding: 20px 20px 22px; border-radius: 0 0 24px 24px; border: 1.5px solid #0C1A35; }
+  .cosmic-label { font-family: 'Instrument Serif', serif; font-size: 19px; font-weight: 400; letter-spacing: 0.5px; text-transform: lowercase; color: #0C1A35; margin-bottom: 8px; }
 
   /* ── SPORTS ── */
   .sports-bg { min-height: 100%; background: transparent; padding-bottom: 32px; }
