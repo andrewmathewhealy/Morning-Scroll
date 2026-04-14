@@ -472,23 +472,7 @@ async function handleJournalPrompt(request, env) {
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 60,
-        system: `You generate a single daily journal prompt for a morning app.
-
-The prompt should be light, playful, and imaginative. It requires no spiritual knowledge, no self-improvement mindset, and no deep reflection. It should be genuinely answerable in one or two sentences.
-
-Formats to rotate between freely:
-- A preference between two random things
-- A hypothetical scenario with no real stakes
-- A memory prompt
-- A completely random question about life, food, travel, animals, music, movies, or anything ordinary
-
-Rules:
-- No politics, no news, no self-improvement language
-- No prompts about death, loss, or hardship
-- Should feel like a question a friend texts you randomly
-- One sentence only. No explanation, no context.
-
-Generate one prompt.${recentSection}`,
+        system: JOURNAL_PROMPT_INSTRUCTIONS + recentSection,
         messages: [
           { role: "user", content: `Generate a morning journal prompt for ${dateLabel}.` },
         ],
