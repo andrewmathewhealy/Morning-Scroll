@@ -175,21 +175,10 @@
     position: relative; border: 1.5px solid #FDF2E8;
     box-shadow: 0 8px 32px rgba(0,20,60,0.25), 0 1px 3px rgba(8,20,50,0.06);
   }
-  .moon-widget::before {
-    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
-    background-image:
-      radial-gradient(1px 1px at 12% 8%, rgba(253,242,232,0.7) 50%, transparent 50%),
-      radial-gradient(1px 1px at 28% 18%, rgba(253,242,232,0.5) 50%, transparent 50%),
-      radial-gradient(1px 1px at 75% 6%, rgba(253,242,232,0.6) 50%, transparent 50%),
-      radial-gradient(1px 1px at 88% 22%, rgba(253,242,232,0.4) 50%, transparent 50%),
-      radial-gradient(1px 1px at 45% 12%, rgba(253,242,232,0.55) 50%, transparent 50%),
-      radial-gradient(1px 1px at 62% 25%, rgba(253,242,232,0.45) 50%, transparent 50%),
-      radial-gradient(1px 1px at 8% 28%, rgba(253,242,232,0.35) 50%, transparent 50%),
-      radial-gradient(1.5px 1.5px at 92% 10%, rgba(253,242,232,0.65) 50%, transparent 50%),
-      radial-gradient(1px 1px at 35% 4%, rgba(253,242,232,0.5) 50%, transparent 50%),
-      radial-gradient(1px 1px at 55% 20%, rgba(253,242,232,0.4) 50%, transparent 50%),
-      radial-gradient(1px 1px at 18% 30%, rgba(253,242,232,0.3) 50%, transparent 50%),
-      radial-gradient(1.5px 1.5px at 70% 15%, rgba(253,242,232,0.55) 50%, transparent 50%);
+  @keyframes moonStarTwinkle { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.85; } }
+  .moon-star {
+    position: absolute; border-radius: 50%; background: #FDF2E8; pointer-events: none; z-index: 0;
+    opacity: 0.15; animation: moonStarTwinkle ease-in-out infinite;
   }
   .moon-img-wrap {
     width: 100%; aspect-ratio: 1; overflow: hidden; position: relative; z-index: 1;
@@ -216,7 +205,7 @@
   .photo-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
   .photo-gradient { position: absolute; inset: 0; background: linear-gradient(to top, rgba(2,48,71,0.8) 0%, transparent 55%); }
   .photo-label { position: relative; z-index: 1; padding: 16px; }
-  .photo-tag { font-size: 10px; color: #FFD166; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; }
+  .photo-tag { font-size: 10px; color: #D4940A; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; }
   .photo-caption { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #FDF2E8; margin-top: 2px; }
 
   .otd-widget {
@@ -225,11 +214,11 @@
     border: 1.5px solid rgba(12,26,53,0.08);
     box-shadow: 0 8px 32px rgba(0,20,60,0.18), 0 1px 3px rgba(8,20,50,0.06);
   }
-  .otd-label { font-size: 10px; color: #D4940A; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-  .otd-year { font-size: 22px; font-weight: 700; color: #D4940A; font-family: 'Space Mono', monospace; margin-bottom: 2px; }
+  .otd-label { font-size: 10px; color: #0C1A35; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .otd-year { font-size: 22px; font-weight: 700; color: #0C1A35; font-family: 'Space Mono', monospace; margin-bottom: 2px; }
   .otd-meta { font-size: 11px; color: rgba(2,48,71,0.55); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
   .otd-text { font-family: 'Satoshi', sans-serif; font-size: 14px; color: #0C1A35; line-height: 1.6; }
-  .otd-link { font-size: 11px; color: #D4940A; margin-top: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+  .otd-link { font-size: 11px; color: #0C1A35; margin-top: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
   .otd-loading { display: flex; align-items: center; gap: 8px; color: rgba(2,48,71,0.55); font-size: 13px; }
   .otd-dot { width: 6px; height: 6px; border-radius: 50%; background: #FFB703; animation: otd-pulse 1.4s ease-in-out infinite; }
   .otd-dot:nth-child(2) { animation-delay: 0.2s; }
@@ -261,7 +250,7 @@
   .comm-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
   .comm-card-title { font-family: 'Satoshi', sans-serif; font-size: 17px; color: #0C1A35; }
   .comm-card-sub { font-size: 11px; color: rgba(2,48,71,0.55); margin-top: 2px; }
-  .comm-card-tag { font-size: 10px; color: #D4940A; background: rgba(212,148,10,0.12); padding: 4px 8px; border-radius: 8px; font-weight: 500; white-space: nowrap; margin-left: 8px; }
+  .comm-card-tag { font-size: 10px; color: #0C1A35; background: rgba(12,26,53,0.12); padding: 4px 8px; border-radius: 8px; font-weight: 500; white-space: nowrap; margin-left: 8px; }
 
   .poll-option {
     padding: 11px 16px; border-radius: 14px; font-size: 13px; font-weight: 500;
@@ -433,7 +422,7 @@
   .yt-new-badge { display: inline-block; font-size: 9px; font-weight: 700; color: #FF0000; background: rgba(255,0,0,0.08); padding: 1px 6px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase; margin-left: 6px; vertical-align: middle; }
   .yt-time { font-size: 10px; color: rgba(8,16,32,0.3); }
   .yt-section-header { display: flex; align-items: center; gap: 8px; padding: 12px 20px 6px; }
-  .yt-section-label { font-size: 10px; color: #D4940A; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .yt-section-label { font-size: 10px; color: #0C1A35; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
 
   .yt-add-wrap { padding: 0 20px; margin-bottom: 8px; }
   .yt-add-row { display: flex; gap: 8px; }

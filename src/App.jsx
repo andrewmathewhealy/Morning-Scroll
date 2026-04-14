@@ -720,6 +720,21 @@ function getMoonInfo(phase) {
   return { name: moon.name, file: moon.file, pct, illum, glowX };
 }
 
+const MOON_STARS = [
+  { x: 12, y: 8, size: 1, dur: 3.2, delay: 0 },
+  { x: 28, y: 18, size: 1, dur: 4.8, delay: 1.1 },
+  { x: 75, y: 6, size: 1, dur: 2.9, delay: 0.5 },
+  { x: 88, y: 22, size: 1, dur: 5.4, delay: 2.3 },
+  { x: 45, y: 12, size: 1, dur: 3.7, delay: 0.8 },
+  { x: 62, y: 25, size: 1, dur: 4.1, delay: 1.9 },
+  { x: 8, y: 28, size: 1, dur: 6.2, delay: 3.1 },
+  { x: 92, y: 10, size: 1.5, dur: 3.5, delay: 0.3 },
+  { x: 35, y: 4, size: 1, dur: 5.1, delay: 2.7 },
+  { x: 55, y: 20, size: 1, dur: 4.4, delay: 1.5 },
+  { x: 18, y: 30, size: 1, dur: 6.8, delay: 4.0 },
+  { x: 70, y: 15, size: 1.5, dur: 3.9, delay: 0.7 },
+];
+
 function MoonWidget({ moonphase }) {
   if (moonphase == null) return (
     <div className="moon-widget widget-shimmer">
@@ -731,6 +746,14 @@ function MoonWidget({ moonphase }) {
   const { name, file, pct, illum, glowX } = getMoonInfo(moonphase);
   return (
     <div className="moon-widget">
+      {MOON_STARS.map((s, i) => (
+        <div key={i} className="moon-star" style={{
+          left: `${s.x}%`, top: `${s.y}%`,
+          width: s.size, height: s.size,
+          animationDuration: `${s.dur}s`,
+          animationDelay: `${s.delay}s`,
+        }} />
+      ))}
       <div className="moon-img-wrap" style={{
         '--glow-x': `${glowX}%`,
         '--glow-opacity': illum,
@@ -889,7 +912,7 @@ function OnThisDayWidget() {
   return (
     <div className="otd-widget">
       <div className="otd-label">
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="#D4940A" strokeWidth="1.2"/><line x1="5" y1="2.5" x2="5" y2="5" stroke="#D4940A" strokeWidth="1.2" strokeLinecap="round"/><line x1="5" y1="5" x2="7" y2="5" stroke="#D4940A" strokeWidth="1.2" strokeLinecap="round"/></svg>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" stroke="#0C1A35" strokeWidth="1.2"/><line x1="5" y1="2.5" x2="5" y2="5" stroke="#0C1A35" strokeWidth="1.2" strokeLinecap="round"/><line x1="5" y1="5" x2="7" y2="5" stroke="#0C1A35" strokeWidth="1.2" strokeLinecap="round"/></svg>
         On This Day
       </div>
       {loading && (
