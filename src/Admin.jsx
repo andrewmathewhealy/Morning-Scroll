@@ -97,6 +97,13 @@ const STYLES = `
   .poll-preview-option { padding: 11px 16px; border-radius: 14px; font-size: 13px; font-weight: 500; background: rgba(8,16,32,0.04); border: 1.5px solid rgba(8,16,32,0.15); color: #0C1A35; margin-bottom: 8px; }
   .poll-preview-option:last-child { margin-bottom: 0; }
 
+  .journal-char-count { font-size: 11px; color: rgba(253,242,232,0.3); text-align: right; margin-top: 4px; }
+  .journal-preview-card { background: rgba(253,242,232,0.55); border-radius: 24px; padding: 20px; border: 1.5px solid #FDF2E8; }
+  .journal-preview-prompt { font-family: 'Fraunces', serif; font-size: 17px; color: #0C1A35; line-height: 1.5; }
+  .journal-badge { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; margin-left: 8px; }
+  .journal-badge.manual { background: rgba(255,209,102,0.2); color: #FFD166; }
+  .journal-badge.auto { background: rgba(253,242,232,0.1); color: rgba(253,242,232,0.35); }
+
   .preview-section { margin-top: 24px; }
   .preview-label { font-size: 12px; color: rgba(253,242,232,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
   .preview-frame { background: linear-gradient(175deg, #081020, #162D52, #80A8B5, #FFF4E0); border-radius: 24px; padding: 20px; max-width: 390px; margin: 0 auto; }
@@ -306,6 +313,279 @@ function PollEditor() {
   );
 }
 
+// ── JOURNAL PROMPT EDITOR ────────────────────────────────
+function JournalPromptEditor() {
+  const today = new Date().toISOString().slice(0, 10);
+  const [mode, setMode] = useState("single"); // "single" | "bulk"
+
+  // Single mode state
+  const [date, setDate] = useState(today);
+  const [prompt, setPrompt] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState(null);
+
+  // Bulk mode state
+  const [bulkText, setBulkText] = useState("");
+  const [bulkStart, setBulkStart] = useState(today);
+  const [bulkSkipExisting, setBulkSkipExisting] = useState(true);
+  const [bulkPreview, setBulkPreview] = useState([]);
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkMsg, setBulkMsg] = useState(null);
+  const [bulkProgress, setBulkProgress] = useState(null);
+
+  // Shared queue
+  const [queue, setQueue] = useState([]);
+  const [queueLoading, setQueueLoading] = useState(true);
+
+  const loadQueue = useCallback(async () => {
+    setQueueLoading(true);
+    try {
+      const q = query(collection(db, "journalPrompts"), orderBy("date", "desc"));
+      const snap = await getDocs(q);
+      setQueue(snap.docs.map((d) => ({ id: d.id, ...d.data() })).slice(0, 60));
+    } catch {}
+    setQueueLoading(false);
+  }, []);
+
+  useEffect(() => { loadQueue(); }, [loadQueue]);
+
+  // Single mode: load existing prompt when date changes
+  useEffect(() => {
+    if (mode !== "single") return;
+    const existing = queue.find((q) => q.date === date);
+    if (existing) {
+      setPrompt(existing.prompt || "");
+    } else {
+      setPrompt("");
+    }
+    setSaveMsg(null);
+  }, [date, queue, mode]);
+
+  // Bulk mode: build preview when text or start date changes
+  useEffect(() => {
+    if (mode !== "bulk") return;
+    const lines = bulkText.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (!lines.length) { setBulkPreview([]); return; }
+    const existingDates = new Set(queue.filter((q) => q.manual).map((q) => q.date));
+    const preview = [];
+    let dateOffset = 0;
+    for (const line of lines) {
+      // Find next available date
+      const d = new Date(bulkStart + "T12:00:00");
+      d.setDate(d.getDate() + dateOffset);
+      let dateStr = d.toISOString().slice(0, 10);
+      if (bulkSkipExisting) {
+        while (existingDates.has(dateStr)) {
+          dateOffset++;
+          const d2 = new Date(bulkStart + "T12:00:00");
+          d2.setDate(d2.getDate() + dateOffset);
+          dateStr = d2.toISOString().slice(0, 10);
+        }
+      }
+      preview.push({ date: dateStr, prompt: line, exists: existingDates.has(dateStr) });
+      dateOffset++;
+    }
+    setBulkPreview(preview);
+  }, [bulkText, bulkStart, bulkSkipExisting, queue, mode]);
+
+  const handleSave = async () => {
+    if (!date || !prompt.trim()) {
+      setSaveMsg("Date and prompt are required.");
+      return;
+    }
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      await setDoc(doc(db, "journalPrompts", date), {
+        date,
+        prompt: prompt.trim(),
+        manual: true,
+        createdAt: new Date().toISOString(),
+      });
+      setSaveMsg("Saved!");
+      loadQueue();
+    } catch (err) {
+      setSaveMsg(`Error: ${err.message}`);
+    }
+    setSaving(false);
+  };
+
+  const handleBulkSave = async () => {
+    if (!bulkPreview.length) return;
+    setBulkSaving(true);
+    setBulkMsg(null);
+    setBulkProgress({ done: 0, total: bulkPreview.length });
+    try {
+      let done = 0;
+      for (const item of bulkPreview) {
+        await setDoc(doc(db, "journalPrompts", item.date), {
+          date: item.date,
+          prompt: item.prompt,
+          manual: true,
+          createdAt: new Date().toISOString(),
+        });
+        done++;
+        setBulkProgress({ done, total: bulkPreview.length });
+      }
+      setBulkMsg(`Saved ${done} prompts!`);
+      setBulkText("");
+      setBulkPreview([]);
+      loadQueue();
+    } catch (err) {
+      setBulkMsg(`Error: ${err.message}`);
+    }
+    setBulkSaving(false);
+    setBulkProgress(null);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this prompt?")) return;
+    try {
+      await deleteDoc(doc(db, "journalPrompts", id));
+      loadQueue();
+    } catch {}
+  };
+
+  return (
+    <>
+      {/* Mode toggle */}
+      <div className="form-section" style={{ padding: "4px" }}>
+        <div className="admin-tabs">
+          <button className={`admin-tab ${mode === "single" ? "active" : ""}`} onClick={() => setMode("single")}>Single</button>
+          <button className={`admin-tab ${mode === "bulk" ? "active" : ""}`} onClick={() => setMode("bulk")}>Bulk Import</button>
+        </div>
+      </div>
+
+      {mode === "single" ? (
+        <>
+          {/* Date picker */}
+          <div className="form-section">
+            <div className="form-section-title">Prompt Date</div>
+            <input className="form-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+
+          {/* Prompt text */}
+          <div className="form-section">
+            <div className="form-section-title">Journal Prompt</div>
+            <textarea
+              className="form-input form-textarea"
+              placeholder="What's a place in your house where you feel slightly different than you do in the rest of it?"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={3}
+            />
+            <div className="journal-char-count">{prompt.length} characters</div>
+          </div>
+
+          {/* Save */}
+          <div className="save-row">
+            <button className="save-btn" onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Prompt"}</button>
+            {saveMsg && <span className="save-status">{saveMsg}</span>}
+          </div>
+
+          {/* Preview */}
+          <div className="preview-section">
+            <div className="preview-label">Live Preview</div>
+            <div className="preview-frame">
+              <div className="journal-preview-card">
+                <div className="journal-preview-prompt">{prompt || "Your prompt here..."}</div>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Bulk paste */}
+          <div className="form-section">
+            <div className="form-section-title">Paste Prompts (one per line)</div>
+            <textarea
+              className="form-input form-textarea"
+              placeholder={"What's a sound you heard recently that made you stop for a second?\nWhat's something you own that you'd grab if you had to leave in 60 seconds?\nWhat's a meal you ate years ago that you still think about?"}
+              value={bulkText}
+              onChange={(e) => setBulkText(e.target.value)}
+              rows={10}
+              style={{ minHeight: "180px" }}
+            />
+            <div className="journal-char-count">
+              {bulkText.split("\n").map((l) => l.trim()).filter(Boolean).length} prompts detected
+            </div>
+          </div>
+
+          {/* Start date + options */}
+          <div className="form-section">
+            <div className="form-section-title">Starting Date</div>
+            <input className="form-input" type="date" value={bulkStart} onChange={(e) => setBulkStart(e.target.value)} />
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "12px", fontSize: "13px", color: "rgba(253,242,232,0.6)", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={bulkSkipExisting}
+                onChange={(e) => setBulkSkipExisting(e.target.checked)}
+                style={{ accentColor: "#FFD166" }}
+              />
+              Skip dates that already have a manual prompt
+            </label>
+          </div>
+
+          {/* Bulk preview */}
+          {bulkPreview.length > 0 && (
+            <div className="form-section">
+              <div className="form-section-title">Preview ({bulkPreview.length} prompts)</div>
+              <div style={{ maxHeight: "320px", overflowY: "auto", borderRadius: "12px" }}>
+                {bulkPreview.map((item, i) => (
+                  <div className="queue-item" key={i} style={{ opacity: item.exists && !bulkSkipExisting ? 0.5 : 1 }}>
+                    <div className="queue-info">
+                      <div className="queue-date">
+                        {item.date}
+                        {item.exists && !bulkSkipExisting && (
+                          <span className="journal-badge manual" style={{ marginLeft: "6px" }}>overwrite</span>
+                        )}
+                      </div>
+                      <div className="queue-art-title">{item.prompt}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Bulk save */}
+          <div className="save-row">
+            <button className="save-btn" onClick={handleBulkSave} disabled={bulkSaving || !bulkPreview.length}>
+              {bulkSaving ? `Saving ${bulkProgress?.done}/${bulkProgress?.total}...` : `Save ${bulkPreview.length} Prompts`}
+            </button>
+            {bulkMsg && <span className="save-status">{bulkMsg}</span>}
+          </div>
+        </>
+      )}
+
+      {/* Queue — shared across both modes */}
+      <div className="queue-section">
+        <div className="queue-title">Prompt History</div>
+        {queueLoading ? (
+          <div className="queue-empty">Loading...</div>
+        ) : queue.length === 0 ? (
+          <div className="queue-empty">No prompts yet</div>
+        ) : (
+          queue.map((item) => (
+            <div className={`queue-item ${item.date === today ? "queue-today" : ""}`} key={item.id}>
+              <div className="queue-info">
+                <div className="queue-date">
+                  {item.date}{item.date === today ? " — TODAY" : ""}
+                  <span className={`journal-badge ${item.manual ? "manual" : "auto"}`}>
+                    {item.manual ? "Manual" : "Auto"}
+                  </span>
+                </div>
+                <div className="queue-art-title">{item.prompt}</div>
+              </div>
+              <button className="queue-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+            </div>
+          ))
+        )}
+      </div>
+    </>
+  );
+}
+
 // ── ART EDITOR ──────────────────────────────────────────
 function AdminDashboard() {
   const today = new Date().toISOString().slice(0, 10);
@@ -451,9 +731,10 @@ function AdminDashboard() {
       <div className="admin-tabs">
         <button className={`admin-tab ${activeTab === "art" ? "active" : ""}`} onClick={() => setActiveTab("art")}>Art of the Day</button>
         <button className={`admin-tab ${activeTab === "polls" ? "active" : ""}`} onClick={() => setActiveTab("polls")}>Polls</button>
+        <button className={`admin-tab ${activeTab === "journal" ? "active" : ""}`} onClick={() => setActiveTab("journal")}>Journal Prompts</button>
       </div>
 
-      {activeTab === "polls" ? <PollEditor /> : <>
+      {activeTab === "journal" ? <JournalPromptEditor /> : activeTab === "polls" ? <PollEditor /> : <>
 
       {/* Date picker */}
       <div className="form-section">

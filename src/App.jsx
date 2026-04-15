@@ -955,6 +955,18 @@ function useJournalPrompt() {
 
     (async () => {
       try {
+        // Check Firestore for a manually-set prompt first
+        try {
+          const manualSnap = await getDoc(doc(db, "journalPrompts", today));
+          const manualData = manualSnap.data();
+          if (manualData?.manual && manualData?.prompt) {
+            const data = { date: today, prompt: manualData.prompt };
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+            setState({ loading: false, prompt: manualData.prompt });
+            return;
+          }
+        } catch {}
+
         // Fetch recent prompts from Firestore to avoid repetition
         let recentParam = "";
         try {

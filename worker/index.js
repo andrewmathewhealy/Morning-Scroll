@@ -147,7 +147,8 @@ Rules:
 - No puzzles — nothing that requires building a scenario before answering
 - One sentence only
 - Should be answerable in one or two sentences
-- Should make the reader smile slightly before they answer`;
+- Should make the reader smile slightly before they answer
+- Do not wrap the prompt in quotation marks`;
 
 // ── EDGE CACHE HELPER ──────────────────────────────────────
 // Wrap a handler with Cloudflare's persistent edge cache (caches.default).
