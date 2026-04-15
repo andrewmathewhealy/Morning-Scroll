@@ -2503,6 +2503,29 @@ function useDailyBrief() {
     } catch {}
     (async () => {
       try {
+        // Check Firestore for a manually-set dispatch first
+        try {
+          const manualSnap = await getDoc(doc(db, "aloofObserver", today));
+          const manual = manualSnap.data();
+          if (manual?.manual && manual?.observerHeadline) {
+            const data = {
+              apod: null,
+              ap_headline: {
+                title: manual.apTitle || null,
+                link: manual.apLink || null,
+                image: manual.imageUrl || null,
+              },
+              cosmic_brief: {
+                headline: manual.observerHeadline,
+                article: manual.observerArticle || "",
+              },
+            };
+            try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch {}
+            setState({ loading: false, data, error: null });
+            return;
+          }
+        } catch {}
+
         const res = await fetch(`${WORKER_URL}/api/daily`);
         const data = await res.json();
         if (data.error) throw new Error(data.error);
