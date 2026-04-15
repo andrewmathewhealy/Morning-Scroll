@@ -342,7 +342,7 @@ function JournalPromptEditor() {
     try {
       const q = query(collection(db, "journalPrompts"), orderBy("date", "desc"));
       const snap = await getDocs(q);
-      setQueue(snap.docs.map((d) => ({ id: d.id, ...d.data() })).slice(0, 60));
+      setQueue(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     } catch {}
     setQueueLoading(false);
   }, []);
