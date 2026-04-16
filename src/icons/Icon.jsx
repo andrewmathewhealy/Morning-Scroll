@@ -64,19 +64,13 @@ Home: ({ size = 22, color = "rgba(2,48,71,0.4)" }) => (
       <rect x="3" y="16" width="18" height="4.5" rx="2.25"/>
     </svg>
   ),
-  Globe: ({ size = 22, color = "rgba(2,48,71,0.4)" }) => {
-    // Dim to ~35% when the caller passes the inactive color
-    const isInactive = typeof color === "string" && color.includes("0.35");
-    return (
-      <img
-        src="/globe.png"
-        width={size}
-        height={size}
-        alt=""
-        style={{ display: "block", opacity: isInactive ? 0.35 : 1 }}
-      />
-    );
-  },
+  Globe: ({ size = 22, color = "rgba(2,48,71,0.4)" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <ellipse cx="12" cy="12" rx="4.5" ry="10"/>
+      <line x1="2" y1="12" x2="22" y2="12"/>
+    </svg>
+  ),
   Trophy: ({ size = 22, color = "rgba(2,48,71,0.4)" }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
@@ -85,7 +79,7 @@ Home: ({ size = 22, color = "rgba(2,48,71,0.4)" }) => (
     </svg>
   ),
   BookOpen: ({ size = 22, color = "rgba(2,48,71,0.4)" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
     </svg>
   ),

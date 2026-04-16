@@ -3111,11 +3111,11 @@ const getBgStyle = () => ({
 
 // ── NAV TABS ──────────────────────────────────────────────
 const TABS = [
-  { id: "home",     label: "Home",     ActiveIcon: p => <Icon.Home     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Home     {...p} color="rgba(12,26,53,0.35)" /> },
-  { id: "feed",     label: "Feed",     ActiveIcon: p => <Icon.Feed     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Feed     {...p} color="rgba(12,26,53,0.35)" /> },
-  { id: "world",    label: "World",    ActiveIcon: p => <Icon.Globe    {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Globe    {...p} color="rgba(12,26,53,0.35)" /> },
-  { id: "news",     label: "Aloof Observer", ActiveIcon: p => <Icon.BookOpen {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.BookOpen {...p} color="rgba(12,26,53,0.35)" /> },
-  { id: "settings", label: "Settings", ActiveIcon: p => <Icon.Settings {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Settings {...p} color="rgba(12,26,53,0.35)" /> },
+  { id: "home",     label: "Home",     ActiveIcon: p => <Icon.Home     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Home     {...p} color="rgba(12,26,53,0.5)" /> },
+  { id: "feed",     label: "Feed",     ActiveIcon: p => <Icon.Feed     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Feed     {...p} color="rgba(12,26,53,0.5)" /> },
+  { id: "world",    label: "World",    ActiveIcon: p => <Icon.Globe    {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Globe    {...p} color="rgba(12,26,53,0.5)" /> },
+  { id: "news",     label: "News",     ActiveIcon: p => <Icon.BookOpen {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.BookOpen {...p} color="rgba(12,26,53,0.5)" /> },
+  { id: "settings", label: "Settings", ActiveIcon: p => <Icon.Settings {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Settings {...p} color="rgba(12,26,53,0.5)" /> },
 ];
 
 // ── APP SHELL ─────────────────────────────────────────────
