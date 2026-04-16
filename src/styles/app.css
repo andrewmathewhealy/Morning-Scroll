@@ -293,15 +293,23 @@
   .cosmic-label {
     font-family: 'Instrument Serif', serif; font-size: 32px; font-weight: 400;
     letter-spacing: 2px; text-transform: lowercase; color: #0C1A35;
-    text-align: center; line-height: 1; padding: 10px 0; margin: 0 0 14px;
-    border-top: 1px solid #0C1A35; border-bottom: 1px solid #0C1A35;
+    text-align: center; line-height: 1; padding: 12px 0; margin: 0 0 14px;
     position: relative;
   }
-  .cosmic-label::before, .cosmic-label::after {
-    content: ''; position: absolute; left: 0; right: 0; height: 1px; background: #0C1A35;
+  .cosmic-label-rules { position: absolute; left: 0; right: 0; width: 100%; height: 5px; display: block; }
+  .cosmic-label-rules-top { top: 0; }
+  .cosmic-label-rules-bot { bottom: 0; }
+  .cosmic-label-mark-wrap {
+    position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+    width: 30px; height: 18px;
+    background: linear-gradient(rgba(12,26,53,0.12), rgba(12,26,53,0.12)), #FDF2E8;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
   }
-  .cosmic-label::before { top: 3px; }
-  .cosmic-label::after { bottom: 3px; }
+  .cosmic-label-mark {
+    width: 20px; height: 18px; object-fit: contain;
+    mix-blend-mode: multiply; display: block;
+  }
   .observer-headline { font-family: 'Instrument Serif', serif; font-size: 18px; font-weight: 400; line-height: 1.3; color: #0C1A35; -webkit-text-stroke: 0.5px #0C1A35; letter-spacing: 0.4px; }
 
   /* ── SPORTS ── */

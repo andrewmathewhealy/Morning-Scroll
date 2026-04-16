@@ -2582,7 +2582,20 @@ function CosmicBriefCard() {
         )}
       </div>
       <div className="cosmic-observer-section">
-        <div className="cosmic-label">the aloof observer</div>
+        <div className="cosmic-label">
+          <svg className="cosmic-label-rules cosmic-label-rules-top" viewBox="0 0 300 5" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 0.5 C75 0.5 100 1.25 150 1.25 C200 1.25 225 0.5 300 0.5" stroke="#0C1A35" fill="none" vectorEffect="non-scaling-stroke" />
+            <path d="M0 4.5 C75 4.5 100 3.75 150 3.75 C200 3.75 225 4.5 300 4.5" stroke="#0C1A35" fill="none" vectorEffect="non-scaling-stroke" />
+          </svg>
+          <span className="cosmic-label-mark-wrap">
+            <img src="/aloof-observer-eye.png?v=2" alt="" className="cosmic-label-mark" />
+          </span>
+          the aloof observer
+          <svg className="cosmic-label-rules cosmic-label-rules-bot" viewBox="0 0 300 5" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 0.5 C75 0.5 100 1.25 150 1.25 C200 1.25 225 0.5 300 0.5" stroke="#0C1A35" fill="none" vectorEffect="non-scaling-stroke" />
+            <path d="M0 4.5 C75 4.5 100 3.75 150 3.75 C200 3.75 225 4.5 300 4.5" stroke="#0C1A35" fill="none" vectorEffect="non-scaling-stroke" />
+          </svg>
+        </div>
         <div className="observer-headline">
           {cosmic_brief?.headline}
         </div>
