@@ -3098,10 +3098,10 @@ const OTHER_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0B1528 8%,
 // 19 stops spanning dark blue → light blue → gold. The gradient is 180% tall.
 // Start: window shows top (dark blue to light blue). End: window shows bottom (mid-blue to gold).
 const SUNRISE_GRADIENT = `linear-gradient(in oklch 175deg,
-  #081020 0%, #0B1528 5.5%, #10203E 11%, #162D52 16.5%, #1E3D62 22%,
-  #2B5278 27.5%, #3A6A8E 33%, #4E82A0 38.5%, #6498B0 44%, #7EAEBB 49.5%,
-  #98C2C6 55%, #B0D0CC 60.5%, #CCDCCC 66%, #E8EACC 71.5%, #F0EABC 77%,
-  #F5E8A8 82.5%, #F8E698 88%, #FAE48E 94%, #FCE488 100%
+  #081020 0%, #0B1528 5.5%, #10203E 11%, #162D52 16.5%, #1E4580 22%,
+  #2962A8 27.5%, #3480C8 33%, #44A0DE 38.5%, #5FBBED 44%, #7FCDF0 49.5%,
+  #9DDAF0 55%, #BEE5EC 60.5%, #D6E5D4 66%, #EAE5C8 71.5%, #F4E49A 77%,
+  #F7D87A 82.5%, #FACC5C 88%, #FDC148 94%, #FFB432 100%
 )`;
 
 const getBgStyle = () => ({
