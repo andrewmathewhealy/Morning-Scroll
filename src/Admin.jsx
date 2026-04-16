@@ -36,8 +36,8 @@ const STYLES = `
   .login-input { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid rgba(253,242,232,0.2); background: rgba(253,242,232,0.06); color: #FDF2E8; font-size: 14px; font-family: 'Satoshi', sans-serif; outline: none; margin-bottom: 12px; }
   .login-input:focus { border-color: rgba(253,242,232,0.5); }
   .login-input::placeholder { color: rgba(253,242,232,0.3); }
-  .login-btn { width: 100%; padding: 12px; border-radius: 12px; border: none; background: #FFD166; color: #023047; font-size: 14px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
-  .login-btn:hover { background: #FFBC42; }
+  .login-btn { width: 100%; padding: 12px; border-radius: 12px; border: none; background: #FDC148; color: #023047; font-size: 14px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
+  .login-btn:hover { background: #FFB432; }
   .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .login-err { font-size: 12px; color: #FF6B6B; text-align: center; margin-top: 10px; }
 
@@ -55,14 +55,14 @@ const STYLES = `
     border: 2px dashed rgba(253,242,232,0.2); border-radius: 16px; padding: 32px; text-align: center;
     cursor: pointer; transition: all 0.2s; margin-bottom: 12px; position: relative;
   }
-  .dropzone:hover, .dropzone.drag-over { border-color: #FFD166; background: rgba(255,209,102,0.05); }
+  .dropzone:hover, .dropzone.drag-over { border-color: #FDC148; background: rgba(253,193,72,0.05); }
   .dropzone-text { font-size: 13px; color: rgba(253,242,232,0.4); }
   .dropzone-hint { font-size: 11px; color: rgba(253,242,232,0.25); margin-top: 4px; }
   .dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
   .dropzone-preview { width: 100%; max-height: 300px; object-fit: contain; border-radius: 12px; }
 
-  .save-btn { padding: 12px 32px; border-radius: 12px; border: none; background: #FFD166; color: #023047; font-size: 14px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
-  .save-btn:hover { background: #FFBC42; }
+  .save-btn { padding: 12px 32px; border-radius: 12px; border: none; background: #FDC148; color: #023047; font-size: 14px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
+  .save-btn:hover { background: #FFB432; }
   .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .save-status { font-size: 12px; color: rgba(253,242,232,0.5); margin-left: 12px; }
   .save-row { display: flex; align-items: center; margin-top: 16px; }
@@ -73,10 +73,10 @@ const STYLES = `
   .queue-item { display: flex; align-items: center; gap: 14px; padding: 12px; background: rgba(253,242,232,0.04); border-radius: 14px; margin-bottom: 8px; border: 1px solid rgba(253,242,232,0.08); }
   .queue-thumb { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: #023047; flex-shrink: 0; }
   .queue-info { flex: 1; min-width: 0; }
-  .queue-date { font-size: 11px; color: #FFD166; font-weight: 600; font-family: 'Space Mono', monospace; }
+  .queue-date { font-size: 11px; color: #FDC148; font-weight: 600; font-family: 'Space Mono', monospace; }
   .queue-art-title { font-size: 14px; color: #FDF2E8; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .queue-art-meta { font-size: 11px; color: rgba(253,242,232,0.4); }
-  .queue-today { border-color: #FFD166; background: rgba(255,209,102,0.06); }
+  .queue-today { border-color: #FDC148; background: rgba(253,193,72,0.06); }
   .queue-delete { font-size: 11px; color: #FF6B6B; background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.2); border-radius: 8px; padding: 4px 10px; cursor: pointer; flex-shrink: 0; }
   .queue-delete:hover { background: rgba(255,107,107,0.2); }
 
@@ -112,7 +112,7 @@ const STYLES = `
   .journal-preview-card { background: rgba(253,242,232,0.55); border-radius: 24px; padding: 20px; border: 1.5px solid #FDF2E8; }
   .journal-preview-prompt { font-family: 'Fraunces', serif; font-size: 17px; color: #0C1A35; line-height: 1.5; }
   .journal-badge { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; margin-left: 8px; }
-  .journal-badge.manual { background: rgba(255,209,102,0.2); color: #FFD166; }
+  .journal-badge.manual { background: rgba(253,193,72,0.2); color: #FDC148; }
   .journal-badge.auto { background: rgba(253,242,232,0.1); color: rgba(253,242,232,0.35); }
 
   .preview-section { margin-top: 24px; }
@@ -531,7 +531,7 @@ function JournalPromptEditor() {
                 type="checkbox"
                 checked={bulkSkipExisting}
                 onChange={(e) => setBulkSkipExisting(e.target.checked)}
-                style={{ accentColor: "#FFD166" }}
+                style={{ accentColor: "#FDC148" }}
               />
               Skip dates that already have a manual prompt
             </label>

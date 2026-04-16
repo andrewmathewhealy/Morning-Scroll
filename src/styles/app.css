@@ -138,7 +138,7 @@
   .nav-item.active .nav-icon { transform: scale(1.1); }
   .nav-label { font-size: 10px; font-weight: 500; color: rgba(12,26,53,0.55); letter-spacing: 0.3px; transition: color 0.2s; }
   .nav-item.active .nav-label { color: #0C1A35; }
-  .nav-dot { width: 22px; height: 2.5px; border-radius: 2px; background: linear-gradient(90deg, #E8A830 0%, #FFD166 100%); position: absolute; bottom: 4px; opacity: 0; transition: opacity 0.2s; }
+  .nav-dot { width: 22px; height: 2.5px; border-radius: 2px; background: linear-gradient(90deg, #FFB432 0%, #FDC148 100%); position: absolute; bottom: 4px; opacity: 0; transition: opacity 0.2s; }
   .nav-item.active .nav-dot { opacity: 1; }
 
   /* ── HOME ── */
@@ -159,7 +159,7 @@
   }
   .weather-widget::before {
     content: ''; position: absolute; top: -30px; right: -30px; width: 130px; height: 130px;
-    background: radial-gradient(circle, rgba(255,183,3,0.12) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255,180,50,0.12) 0%, transparent 70%);
   }
   .weather-temp { font-family: 'Satoshi', sans-serif; font-size: 48px; color: #FDF2E8; line-height: 1; position: relative; z-index: 1; }
   .weather-label { font-size: 11px; color: rgba(253,242,232,0.75); margin-top: 4px; letter-spacing: 0.5px; position: relative; z-index: 1; text-shadow: 0 1px 2px rgba(0,0,0,0.15); }
@@ -206,7 +206,7 @@
   .photo-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
   .photo-gradient { position: absolute; inset: 0; background: linear-gradient(to top, rgba(2,48,71,0.8) 0%, transparent 55%); }
   .photo-label { position: relative; z-index: 1; padding: 16px; }
-  .photo-tag { font-size: 10px; color: #D4940A; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; }
+  .photo-tag { font-size: 10px; color: #C89A20; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; }
   .photo-caption { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #FDF2E8; margin-top: 2px; }
 
   .otd-widget {
@@ -221,7 +221,7 @@
   .otd-text { font-family: 'Satoshi', sans-serif; font-size: 14px; color: #0C1A35; line-height: 1.6; }
   .otd-link { font-size: 11px; color: #0C1A35; margin-top: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
   .otd-loading { display: flex; align-items: center; gap: 8px; color: rgba(2,48,71,0.55); font-size: 13px; }
-  .otd-dot { width: 6px; height: 6px; border-radius: 50%; background: #FFB703; animation: otd-pulse 1.4s ease-in-out infinite; }
+  .otd-dot { width: 6px; height: 6px; border-radius: 50%; background: #FFB432; animation: otd-pulse 1.4s ease-in-out infinite; }
   .otd-dot:nth-child(2) { animation-delay: 0.2s; }
   .otd-dot:nth-child(3) { animation-delay: 0.4s; }
   @keyframes otd-pulse { 0%,80%,100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
@@ -260,8 +260,8 @@
     text-align: left;
   }
   .poll-option:last-child { margin-bottom: 0; }
-  .poll-option:hover { border-color: #FFD166; background: rgba(255,183,3,0.12); }
-  .poll-option.chosen { background: #FFD166; border-color: #FFD166; color: #023047; font-weight: 600; }
+  .poll-option:hover { border-color: #FDC148; background: rgba(255,180,50,0.12); }
+  .poll-option.chosen { background: #FDC148; border-color: #FDC148; color: #023047; font-weight: 600; }
 
   .poll-result { margin-bottom: 10px; }
   .poll-result:last-child { margin-bottom: 0; }
@@ -270,8 +270,8 @@
   .poll-result-pct { font-size: 12px; color: rgba(8,16,32,0.5); font-weight: 600; }
   .poll-result-track { height: 8px; background: rgba(8,16,32,0.08); border-radius: 4px; overflow: hidden; }
   .poll-result-fill { height: 100%; border-radius: 4px; background: #219EBC; transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
-  .poll-result-fill.winner { background: #FFD166; }
-  .poll-result-fill.chosen { background: linear-gradient(90deg, #fff8e7 0%, #FFD166 100%); }
+  .poll-result-fill.winner { background: #FDC148; }
+  .poll-result-fill.chosen { background: linear-gradient(90deg, #fff8e7 0%, #FDC148 100%); }
   .poll-total { font-size: 11px; color: rgba(8,16,32,0.4); margin-top: 12px; text-align: center; }
 
   .art-card { margin: 12px 20px 0; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,20,60,0.25), 0 1px 3px rgba(8,20,50,0.06); }
@@ -307,7 +307,7 @@
   .game-status { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; }
   .game-status.final { color: rgba(253,242,232,0.5); background: rgba(253,242,232,0.08); }
   .game-status.live { color: #FF6B6B; background: rgba(255,107,107,0.15); }
-  .game-status.scheduled { color: #FFD166; background: rgba(255,209,102,0.12); }
+  .game-status.scheduled { color: #FDC148; background: rgba(253,193,72,0.12); }
   .game-time { font-size: 10px; color: rgba(253,242,232,0.4); }
   .game-teams { display: flex; flex-direction: column; gap: 6px; }
   .game-team-row { display: flex; align-items: center; justify-content: space-between; }
@@ -317,7 +317,7 @@
   .game-team-name { font-size: 14px; color: #FDF2E8; font-weight: 500; }
   .game-team-name.winner { font-weight: 700; }
   .game-score { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #FDF2E8; font-weight: 600; min-width: 24px; text-align: right; }
-  .game-score.winner { color: #FFD166; }
+  .game-score.winner { color: #FDC148; }
   .game-score.pending { color: rgba(253,242,232,0.3); font-size: 13px; font-weight: 500; }
   .game-venue { font-size: 10px; color: rgba(253,242,232,0.3); margin-top: 6px; }
   .sports-skeleton { margin: 0 20px 8px; background: rgba(2,48,71,0.35); border-radius: 18px; padding: 14px 16px; border: 1.5px solid rgba(253,242,232,0.08); }
@@ -349,7 +349,7 @@
   body.journal-open .screen { overflow: hidden !important; touch-action: none; }
   body.journal-open .rubber-scroll { overflow: hidden !important; touch-action: none; }
   .journal-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-  .journal-label { font-size: 10px; color: #D4940A; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .journal-label { font-size: 10px; color: #C89A20; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
   .journal-prompt { font-family: 'Satoshi', sans-serif; font-size: 15px; color: #0C1A35; line-height: 1.6; margin-bottom: 14px; font-style: italic; }
   .journal-textarea { width: 100%; min-height: 100px; padding: 14px; border-radius: 14px; border: 1px solid rgba(8,16,32,0.1); background: rgba(255,255,255,0.25); color: #0C1A35; font-size: 14px; font-family: 'Satoshi', sans-serif; line-height: 1.6; resize: vertical; outline: none; }
   .journal-textarea:focus { border-color: rgba(8,16,32,0.25); }
@@ -360,7 +360,7 @@
   .journal-save:disabled { opacity: 0.4; cursor: not-allowed; }
   .journal-saved { font-size: 12px; color: rgba(8,16,32,0.4); }
   .journal-login-prompt { font-size: 12px; color: rgba(8,16,32,0.4); text-align: center; padding: 8px 0; }
-  .journal-login-btn { background: none; border: none; color: #D4940A; font-weight: 600; cursor: pointer; font-size: 12px; font-family: 'Satoshi', sans-serif; }
+  .journal-login-btn { background: none; border: none; color: #C89A20; font-weight: 600; cursor: pointer; font-size: 12px; font-family: 'Satoshi', sans-serif; }
   .journal-shimmer { min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 
   .journal-history-btn { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(8,16,32,0.45); cursor: pointer; background: none; border: none; font-family: 'Satoshi', sans-serif; padding: 0; }
@@ -386,10 +386,10 @@
   }
   .diary-page::before {
     content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
-    background: linear-gradient(to bottom, #FFD166, #D4940A);
+    background: linear-gradient(to bottom, #FDC148, #C89A20);
     border-radius: 3px 0 0 3px; opacity: 0.5;
   }
-  .diary-page-date { font-size: 13px; color: #D4940A; font-weight: 600; font-family: 'Space Mono', monospace; margin-bottom: 4px; }
+  .diary-page-date { font-size: 13px; color: #C89A20; font-weight: 600; font-family: 'Space Mono', monospace; margin-bottom: 4px; }
   .diary-page-weekday { font-family: 'Fraunces', serif; font-size: 20px; color: #0C1A35; font-weight: 600; margin-bottom: 16px; }
   .diary-page-prompt { font-size: 14px; color: rgba(8,16,32,0.45); font-style: italic; line-height: 1.6; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid rgba(8,16,32,0.06); }
   .diary-page-text { font-size: 15px; color: #0C1A35; line-height: 1.7; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -404,8 +404,8 @@
   .journal-auth-input { width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px solid rgba(8,16,32,0.12); background: rgba(255,255,255,0.5); color: #0C1A35; font-size: 13px; font-family: 'Satoshi', sans-serif; outline: none; margin-bottom: 8px; }
   .journal-auth-input:focus { border-color: rgba(8,16,32,0.3); }
   .journal-auth-input::placeholder { color: rgba(8,16,32,0.25); }
-  .journal-auth-btn { width: 100%; padding: 10px; border-radius: 12px; border: none; background: #FFD166; color: #023047; font-size: 13px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
-  .journal-auth-btn:hover { background: #FFBC42; }
+  .journal-auth-btn { width: 100%; padding: 10px; border-radius: 12px; border: none; background: #FDC148; color: #023047; font-size: 13px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
+  .journal-auth-btn:hover { background: #FFB432; }
   .journal-auth-err { font-size: 11px; color: #FF6B6B; margin-top: 8px; }
 
   /* ── YOUTUBE ── */
@@ -461,11 +461,11 @@
   .profile-avatar-large { width: 64px; height: 64px; border-radius: 50%; background: #023047; display: flex; align-items: center; justify-content: center; }
   .profile-name { font-family: 'Satoshi', sans-serif; font-size: 23.5px; color: #FDF2E8; -webkit-text-fill-color: #FDF2E8; }
   .profile-streak { font-size: 13.5px; color: rgba(253,242,232,0.6); margin-top: 3px; }
-  .profile-streak span { color: #FFBC42; font-weight: 600; }
+  .profile-streak span { color: #FFB432; font-weight: 600; }
 
   .section-label { font-size: 10px; color: #FDF2E8; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 0 24px; margin-bottom: 10px; margin-top: 20px; display: block; }
 
-  .setting-row { margin: 0 20px 8px; background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); border-radius: 16px; padding: 14px 16px; box-shadow: 0 0 0 1px rgba(255,209,102,0.3), 0 2px 10px rgba(2,48,71,0.05); display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+  .setting-row { margin: 0 20px 8px; background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); border-radius: 16px; padding: 14px 16px; box-shadow: 0 0 0 1px rgba(253,193,72,0.3), 0 2px 10px rgba(2,48,71,0.05); display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
   .setting-left { display: flex; align-items: center; gap: 12px; }
   .setting-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(33,158,188,0.12); display: flex; align-items: center; justify-content: center; }
   .setting-name { font-size: 14px; color: #023047; }
@@ -516,7 +516,7 @@
     margin-left: 4px;
   }
   /* ── ACCORDION ── */
-  .accordion { margin: 0 20px 8px; border-radius: 16px; overflow: hidden; background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); box-shadow: 0 0 0 1px rgba(255,209,102,0.3), 0 2px 10px rgba(2,48,71,0.05); }
+  .accordion { margin: 0 20px 8px; border-radius: 16px; overflow: hidden; background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); box-shadow: 0 0 0 1px rgba(253,193,72,0.3), 0 2px 10px rgba(2,48,71,0.05); }
   .accordion-header { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; cursor: pointer; user-select: none; }
   .accordion-header:active { opacity: 0.8; }
   .accordion-left { display: flex; align-items: center; gap: 10px; }
