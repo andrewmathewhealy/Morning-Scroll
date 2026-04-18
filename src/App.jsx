@@ -237,10 +237,10 @@ function HomeAtmosphere() {
 // ── PALETTE ───────────────────────────────────────────────
 // BG:           #8ECAE6  sky blue
 // BG deep:      #219EBC
-// BG darkest:   #023047  deep navy
+// BG darkest:   #0C1A35  deep navy
 // Accent:       #FDC148  amber
 // Accent dark:  #FFB432
-// Text dark:    #023047
+// Text dark:    #0C1A35
 // Text mid:     #2a5f7a
 // Text light:   #5a9ab5
 // Text subtle:  #8ec5d9
@@ -577,7 +577,7 @@ const WEATHER_MAP = {
   'freezing-rain':         { label: 'Freezing Rain',       icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1a2535 0%, #2d4055 50%, #4a6a85 100%)', effect: 'rain' },
 };
 
-const DEFAULT_WEATHER = { label: 'Loading…', icon: () => Icon.Sun, bg: 'linear-gradient(135deg, #023047 0%, #219EBC 100%)', effect: null };
+const DEFAULT_WEATHER = { label: 'Loading…', icon: () => Icon.Sun, bg: 'linear-gradient(135deg, #0C1A35 0%, #219EBC 100%)', effect: null };
 
 // ── WEATHER ATMOSPHERIC EFFECTS ──────────────────────────
 function WeatherEffect({ effect }) {
@@ -738,7 +738,7 @@ const MOON_STARS = [
 function MoonWidget({ moonphase }) {
   if (moonphase == null) return (
     <div className="moon-widget widget-shimmer">
-      <Icon.Moon size={38} color="#023047" />
+      <Icon.Moon size={38} color="#0C1A35" />
       <div className="moon-pct">--</div>
       <div className="moon-phase">Loading…</div>
     </div>
@@ -2214,7 +2214,7 @@ function LiveStreamPlayer({ stream, onClose }) {
     <div
       style={{
         position: "fixed", inset: 0, zIndex: 9999,
-        background: "#023047",
+        background: "#0C1A35",
         display: "flex", flexDirection: "column",
         animation: "globeOverlayIn 0.3s ease-out both",
       }}
@@ -2436,7 +2436,7 @@ function WorldScreen() {
                   <div className="poll-result-top">
                     <div className="poll-result-label">
                       {isChosen && <Icon.Check size={13} color="#2E6FF2" />}
-                      <span style={{ color: isChosen ? "#2E6FF2" : "#023047", fontWeight: isChosen ? 600 : 500 }}>{opt.label}</span>
+                      <span style={{ color: isChosen ? "#2E6FF2" : "#0C1A35", fontWeight: isChosen ? 600 : 500 }}>{opt.label}</span>
                     </div>
                     <div className="poll-result-pct" style={{ color: isWinner ? "#2E6FF2" : undefined }}>{pct}%</div>
                   </div>
@@ -3046,7 +3046,7 @@ function SettingsScreen() {
       ].map(s => (
         <div className="setting-row fade-up fade-up-4" key={s.key}>
           <div className="setting-left">
-            <div className="setting-icon"><s.Ico size={18} color="#023047" /></div>
+            <div className="setting-icon"><s.Ico size={18} color="#0C1A35" /></div>
             <div><div className="setting-name">{s.label}</div><div className="setting-value">{s.value}</div></div>
           </div>
           <Toggle on={toggles[s.key]} onToggle={() => toggle(s.key)} />
@@ -3060,7 +3060,7 @@ function SettingsScreen() {
       ].map((s, i) => (
         <div className="setting-row fade-up fade-up-4" key={i}>
           <div className="setting-left">
-            <div className="setting-icon"><s.Ico size={18} color="#023047" /></div>
+            <div className="setting-icon"><s.Ico size={18} color="#0C1A35" /></div>
             <div><div className="setting-name">{s.label}</div><div className="setting-value">{s.value}</div></div>
           </div>
           <div className="setting-arrow">›</div>
@@ -3078,7 +3078,7 @@ function SettingsScreen() {
       ].map(s => (
         <div className="setting-row fade-up fade-up-5" key={s.league}>
           <div className="setting-left">
-            <div className="setting-icon"><s.Ico size={18} color="#023047" /></div>
+            <div className="setting-icon"><s.Ico size={18} color="#0C1A35" /></div>
             <div><div className="setting-name">{s.label}</div><div className="setting-value">{s.value}</div></div>
           </div>
           <Toggle on={true} onToggle={() => {}} />
@@ -3092,7 +3092,7 @@ function SettingsScreen() {
       ].map(s => (
         <div className="setting-row fade-up fade-up-5" key={s.key}>
           <div className="setting-left">
-            <div className="setting-icon"><s.Ico size={18} color="#023047" /></div>
+            <div className="setting-icon"><s.Ico size={18} color="#0C1A35" /></div>
             <div><div className="setting-name">{s.label}</div><div className="setting-value">{s.value}</div></div>
           </div>
           <Toggle on={toggles[s.key]} onToggle={() => toggle(s.key)} />

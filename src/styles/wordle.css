@@ -30,7 +30,7 @@
   .wg-ornament { font-size: 10px; color: rgba(139,90,43,0.5); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 2px; }
   .wg-title {
     font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900;
-    background: linear-gradient(90deg, #fff8e7 0%, #FDC148 50%, #FFB432 100%);
+    background: linear-gradient(90deg, #fff8e7 0%, #FFCC00 50%, #FFCC00 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     letter-spacing: 6px; text-transform: uppercase;
     filter: drop-shadow(0 1px 2px rgba(139,90,43,0.3));
@@ -38,11 +38,11 @@
   .wg-sub { font-size: 10px; color: rgba(42,74,90,0.55); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
   .wg-divider { display: flex; align-items: center; gap: 8px; margin-top: 8px; justify-content: center; }
   .wg-dline { flex: 1; max-width: 60px; height: 1px; background: linear-gradient(90deg, transparent, rgba(139,90,43,0.3), transparent); }
-  .wg-ddot { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,180,50,0.6); }
+  .wg-ddot { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,204,0,0.6); }
 
   .wg-area { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 20px 8px; gap: 10px; width: 100%; }
 
-  .w-toast { background: rgba(2,48,71,0.88); color: #FDC148; font-size: 13px; font-weight: 600; letter-spacing: 1px; padding: 8px 20px; border-radius: 20px; text-align: center; backdrop-filter: blur(8px); border: 1px solid rgba(253,193,72,0.2); min-height: 34px; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 280px; }
+  .w-toast { background: rgba(2,48,71,0.88); color: #FFCC00; font-size: 13px; font-weight: 600; letter-spacing: 1px; padding: 8px 20px; border-radius: 20px; text-align: center; backdrop-filter: blur(8px); border: 1px solid rgba(255,204,0,0.2); min-height: 34px; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 280px; }
   .w-toast-hidden { opacity: 0; }
 
   .w-grid { display: flex; flex-direction: column; align-items: center; gap: 6px; }
@@ -50,7 +50,7 @@
 
   .w-tile { width: 54px; height: 54px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 25px; font-weight: 700; position: relative; overflow: hidden; transition: transform 0.1s ease; cursor: default; user-select: none; }
   .w-tile-empty { background: rgba(255,255,255,0.25); border: 1.5px solid rgba(139,90,43,0.2); box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 3px rgba(0,0,0,0.08); }
-  .w-tile-active { background: rgba(255,255,255,0.45); border: 1.5px solid rgba(255,180,50,0.5); box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 0 0 2px rgba(253,193,72,0.15), 0 2px 6px rgba(0,0,0,0.1); color: #1a3a50; }
+  .w-tile-active { background: rgba(255,255,255,0.45); border: 1.5px solid rgba(255,204,0,0.5); box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 0 0 2px rgba(255,204,0,0.15), 0 2px 6px rgba(0,0,0,0.1); color: #1a3a50; }
   @keyframes w-pop { 0% { transform: scale(1); } 50% { transform: scale(1.12); } 100% { transform: scale(1); } }
   .w-tile-pop { animation: w-pop 0.1s ease; }
   @keyframes w-shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
@@ -58,7 +58,7 @@
   .w-tile-revealed { border: none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.2); color: #f5ede0; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
   .w-tile-revealed::before { content: ''; position: absolute; inset: 0; background-image: repeating-linear-gradient(88deg, transparent 0px, rgba(255,255,255,0.04) 1px, transparent 2px, transparent 5px); border-radius: 10px; }
   .w-tile-correct { background: linear-gradient(135deg, #5C7A3E 0%, #7A9E52 40%, #4E6A32 100%); border: 2.5px solid #A8CC7A; color: #f5ede0; text-shadow: 0 1px 2px rgba(0,0,0,0.3); box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 0 10px rgba(122,158,82,0.5), 0 2px 8px rgba(92,122,62,0.4); }
-  .w-tile-present { background: linear-gradient(135deg, #FFB432 0%, #FDC148 40%, #fff8e7 100%); border: 2.5px solid #C89A20; color: #023047; text-shadow: 0 1px 1px rgba(255,255,255,0.4); box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 0 10px rgba(200,154,32,0.4), 0 2px 8px rgba(200,154,32,0.3); }
+  .w-tile-present { background: linear-gradient(135deg, #FFCC00 0%, #FFCC00 40%, #fff8e7 100%); border: 2.5px solid #E6B800; color: #0C1A35; text-shadow: 0 1px 1px rgba(255,255,255,0.4); box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 0 10px rgba(230,184,0,0.4), 0 2px 8px rgba(230,184,0,0.3); }
   .w-tile-absent { background: linear-gradient(135deg, #3A2E24 0%, #4A3C30 40%, #2E2418 100%); color: rgba(245,237,224,0.85); }
   @keyframes w-bounce { 0%,100% { transform: translateY(0); } 40% { transform: translateY(-12px); } 60% { transform: translateY(-6px); } }
   .w-tile-win { animation: w-bounce 0.6s ease forwards; }
@@ -67,42 +67,42 @@
   .w-kb-action { display: flex; justify-content: center; gap: 8px; padding: 0 8px; }
   .w-key-enter, .w-key-delete { flex: 1; height: 44px; border-radius: 10px; border: none; font-family: 'Satoshi', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: 1.5px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 6px; position: relative; overflow: hidden; transition: all 0.15s ease; }
   .w-key-enter:active, .w-key-delete:active { transform: scale(0.96); }
-  .w-key-enter { background: linear-gradient(135deg, #fff8e7 0%, #FDC148 55%, #FFB432 100%); color: #023047; box-shadow: 0 0 0 1px rgba(255,180,50,0.4), 0 3px 10px rgba(255,180,50,0.3), inset 0 1px 0 rgba(255,255,255,0.7); }
+  .w-key-enter { background: linear-gradient(135deg, #fff8e7 0%, #FFCC00 55%, #FFCC00 100%); color: #0C1A35; box-shadow: 0 0 0 1px rgba(255,204,0,0.4), 0 3px 10px rgba(255,204,0,0.3), inset 0 1px 0 rgba(255,255,255,0.7); }
   .w-key-delete { background: linear-gradient(135deg, #3A2E24 0%, #4A3C30 40%, #2E2418 100%); color: rgba(245,237,224,0.85); box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 3px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08); }
   .w-kb-row { display: flex; justify-content: center; gap: 4px; }
   .w-key { height: 44px; min-width: 30px; flex: 1; max-width: 36px; padding: 0 2px; border-radius: 8px; border: none; font-family: 'Satoshi', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; letter-spacing: 0.3px; }
   .w-key:active { transform: scale(0.94); }
   .w-key-default { background: linear-gradient(160deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.3) 100%); color: #1a3a50; box-shadow: 0 0 0 1px rgba(139,90,43,0.18), 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5); }
   .w-key-correct { background: linear-gradient(135deg, #5C7A3E 0%, #7A9E52 100%); color: #f5ede0; border: none; box-shadow: 0 2px 8px rgba(92,122,62,0.4); }
-  .w-key-present { background: linear-gradient(135deg, #FFB432 0%, #FDC148 60%, #fff8e7 100%); color: #023047; border: none; box-shadow: 0 2px 8px rgba(200,154,32,0.3); }
+  .w-key-present { background: linear-gradient(135deg, #FFCC00 0%, #FFCC00 60%, #fff8e7 100%); color: #0C1A35; border: none; box-shadow: 0 2px 8px rgba(230,184,0,0.3); }
   .w-key-absent { background: linear-gradient(135deg, #3A2E24 0%, #4A3C30 100%); color: rgba(245,237,224,0.55); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
 
-  .w-result { background: rgba(255,255,255,0.55); backdrop-filter: blur(12px); border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 0 0 1px rgba(253,193,72,0.3), 0 8px 24px rgba(0,0,0,0.12); width: 100%; max-width: 300px; }
-  .w-result-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 900; background: linear-gradient(90deg, #fff8e7 0%, #FDC148 50%, #FFB432 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 2px; text-transform: uppercase; }
+  .w-result { background: rgba(255,255,255,0.55); backdrop-filter: blur(12px); border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 0 0 1px rgba(255,204,0,0.3), 0 8px 24px rgba(0,0,0,0.12); width: 100%; max-width: 300px; }
+  .w-result-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 900; background: linear-gradient(90deg, #fff8e7 0%, #FFCC00 50%, #FFCC00 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 2px; text-transform: uppercase; }
   .w-result-word { font-family: 'Playfair Display', serif; font-size: 14px; color: #4a6a7a; margin-top: 6px; letter-spacing: 3px; }
-  .w-result-word span { font-weight: 700; color: #023047; letter-spacing: 4px; }
+  .w-result-word span { font-weight: 700; color: #0C1A35; letter-spacing: 4px; }
   .w-result-next { font-size: 11px; color: rgba(42,74,90,0.5); margin-top: 10px; letter-spacing: 0.5px; }
-  .w-play-again { margin-top: 14px; background: linear-gradient(135deg, #fff8e7 0%, #FDC148 60%, #FFB432 100%); border: none; border-radius: 14px; padding: 10px 24px; font-family: 'Satoshi', sans-serif; font-size: 13px; font-weight: 700; color: #023047; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 2px 8px rgba(255,180,50,0.3); transition: opacity 0.2s; }
+  .w-play-again { margin-top: 14px; background: linear-gradient(135deg, #fff8e7 0%, #FFCC00 60%, #FFCC00 100%); border: none; border-radius: 14px; padding: 10px 24px; font-family: 'Satoshi', sans-serif; font-size: 13px; font-weight: 700; color: #0C1A35; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 2px 8px rgba(255,204,0,0.3); transition: opacity 0.2s; }
   .w-play-again:active { opacity: 0.8; }
 
   .w-legend { display: flex; gap: 12px; justify-content: center; padding: 0 20px 4px; flex-wrap: wrap; }
   .w-legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: rgba(42,74,90,0.6); letter-spacing: 0.3px; }
   .w-swatch { width: 12px; height: 12px; border-radius: 3px; }
   .w-swatch-correct { background: linear-gradient(135deg, #5C7A3E, #7A9E52); }
-  .w-swatch-present { background: linear-gradient(135deg, #FFB432, #fff8e7); border: 1px solid rgba(200,154,32,0.3); }
+  .w-swatch-present { background: linear-gradient(135deg, #FFCC00, #fff8e7); border: 1px solid rgba(230,184,0,0.3); }
   .w-swatch-absent { background: linear-gradient(135deg, #3A2E24, #4A3C30); }
 
   /* Home Wordle Card */
-  .wordle-card { background: #023047; border-radius: 24px; padding: 18px 20px; cursor: pointer; transition: transform 0.15s ease; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 8px 32px rgba(0,20,60,0.25), 0 1px 3px rgba(8,20,50,0.06); border: 1.5px solid #FDF2E8; }
+  .wordle-card { background: #0C1A35; border-radius: 24px; padding: 18px 20px; cursor: pointer; transition: transform 0.15s ease; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 8px 32px rgba(0,20,60,0.25), 0 1px 3px rgba(8,20,50,0.06); border: 1.5px solid #FDF2E8; }
   .wordle-card:active { transform: scale(0.98); }
   .wc-left { display: flex; flex-direction: column; gap: 3px; }
-  .wc-label { font-size: 10px; color: #FDC148; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  .wc-label { font-size: 10px; color: #FFCC00; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
   .wc-title { font-family: 'Playfair Display', serif; font-size: 22px; color: #FDF2E8; font-weight: 900; letter-spacing: 3px; }
   .wc-date { font-size: 11px; color: rgba(253,242,232,0.5); margin-top: 2px; letter-spacing: 0.5px; }
   .wc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
   .wc-play { font-size: 12px; color: rgba(253,242,232,0.6); font-weight: 600; letter-spacing: 0.5px; }
   .wc-tiles { display: flex; gap: 4px; }
   .wc-tile { width: 18px; height: 18px; border-radius: 4px; background: rgba(255,255,255,0.15); }
-  .wc-tile-amber { background: #FDC148; }
+  .wc-tile-amber { background: #FFCC00; }
   .wc-tile-green { background: #7A9E52; }
   .wc-tile-dark { background: rgba(255,255,255,0.1); }
