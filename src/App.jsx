@@ -3104,17 +3104,14 @@ function SettingsScreen() {
 }
 
 // ── BACKGROUND GRADIENT (per-tab) ────────────────────────
-const HOME_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0B1528 8%, #10203E 18%, #162D52 28%, #1E3D62 38%, #2E5575 48%, #4E7E94 56%, #80A8B5 64%, #AAC8C8 72%, #CCDCCE 78%, #E0E8D6 84%, #EEEEDE 90%, #FFF4E0 100%)";
-const OTHER_GRADIENT = "linear-gradient(in oklch 175deg, #081020 0%, #0B1528 8%, #10203E 18%, #162D52 28%, #1E3555 38%, #2E4E68 48%, #4A7080 56%, #6E9098 64%, #90AAA8 72%, #AAB8AC 78%, #C0C8B8 84%, #D0D0C4 90%, #DCD8CC 100%)";
-
 // ── Living sunrise: tall gradient strip, visible window slides up over 270s ──
-// 19 stops spanning dark blue → light blue → gold. The gradient is 180% tall.
-// Start: window shows top (dark blue to light blue). End: window shows bottom (mid-blue to gold).
+// 19 stops spanning dark navy → bright blue → light blue → cream. 180% tall.
+// Start: window shows top (dark navy). End: window shows bottom (light blue to cream).
 const SUNRISE_GRADIENT = `linear-gradient(in oklch 175deg,
   #081020 0%, #0B1528 5.5%, #10203E 11%, #162D52 16.5%, #1E4580 22%,
   #2962A8 27.5%, #3480C8 33%, #44A0DE 38.5%, #5FBBED 44%, #7FCDF0 49.5%,
-  #9DDAF0 55%, #BEE5EC 60.5%, #D6E5D4 66%, #EAE5C8 71.5%, #F4E49A 77%,
-  #F7D87A 82.5%, #FACC5C 88%, #FDC148 94%, #FFB432 100%
+  #9DDAF0 55%, #B4E2EE 60.5%, #C8E6EA 66%, #D9EBE8 71.5%, #E6EDE6 77%,
+  #EEEEE8 82.5%, #F4F0E8 88%, #F9F2E8 94%, #FDF2E8 100%
 )`;
 
 const getBgStyle = () => ({
