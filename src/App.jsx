@@ -1104,7 +1104,7 @@ function JournalWidget() {
       {/* Inline card — collapsed view */}
       <div className="journal-card" onClick={() => { if (user) setExpanded(true); }}>
         <div className="journal-header">
-          <Icon.Feather size={14} color="#C89A20" />
+          <Icon.Feather size={14} color="#2E6FF2" />
           <div className="journal-label">Morning Journal</div>
         </div>
         <div className="journal-prompt">{prompt}</div>
@@ -1112,7 +1112,7 @@ function JournalWidget() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ color: 'rgba(8,16,32,0.3)', fontStyle: 'italic', fontSize: 12 }}>Tap to write...</div>
             <button className="journal-history-btn" onClick={(e) => { e.stopPropagation(); setDiaryOpen(true); }}>
-              <Icon.BookOpen size={13} color="#C89A20" /> Past entries
+              <Icon.BookOpen size={13} color="#2E6FF2" /> Past entries
             </button>
           </div>
         ) : loginMode ? (
@@ -1140,7 +1140,7 @@ function JournalWidget() {
               onTouchEnd={handleTouchEnd}
             />
             <div className="journal-header">
-              <Icon.Feather size={14} color="#C89A20" />
+              <Icon.Feather size={14} color="#2E6FF2" />
               <div className="journal-label">Morning Journal</div>
             </div>
             <div className="journal-prompt">{prompt}</div>
@@ -1153,7 +1153,7 @@ function JournalWidget() {
             />
             <div className="journal-actions">
               <button className="journal-history-btn" onClick={() => setDiaryOpen(true)}>
-                <Icon.BookOpen size={13} color="#C89A20" /> Past entries
+                <Icon.BookOpen size={13} color="#2E6FF2" /> Past entries
               </button>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 {saved && <span className="journal-saved">Saved</span>}
@@ -1366,7 +1366,6 @@ function HomeScreen({ onOpenWordle }) {
           <div className="home-greeting">Good morning, <span>Andrew</span></div>
           <div className="home-date">{dateStr} · {timeStr}</div>
         </div>
-        <div className="home-avatar"><Icon.Sunrise size={22} /></div>
       </div>
 
       <div className="section-pad spring-in spring-in-2 depth-mid">
@@ -2436,10 +2435,10 @@ function WorldScreen() {
                 <div className="poll-result" key={opt.label}>
                   <div className="poll-result-top">
                     <div className="poll-result-label">
-                      {isChosen && <Icon.Check size={13} color="#FFB432" />}
-                      <span style={{ color: isChosen ? "#FFB432" : "#023047", fontWeight: isChosen ? 600 : 500 }}>{opt.label}</span>
+                      {isChosen && <Icon.Check size={13} color="#2E6FF2" />}
+                      <span style={{ color: isChosen ? "#2E6FF2" : "#023047", fontWeight: isChosen ? 600 : 500 }}>{opt.label}</span>
                     </div>
-                    <div className="poll-result-pct" style={{ color: isWinner ? "#FFB432" : undefined }}>{pct}%</div>
+                    <div className="poll-result-pct" style={{ color: isWinner ? "#2E6FF2" : undefined }}>{pct}%</div>
                   </div>
                   <div className="poll-result-track">
                     <div className={`poll-result-fill ${isWinner ? "winner" : ""} ${isChosen && !isWinner ? "chosen" : ""}`}
