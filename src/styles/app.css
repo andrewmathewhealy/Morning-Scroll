@@ -213,10 +213,10 @@
   .photo-caption { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #FDF2E8; margin-top: 2px; }
 
   .otd-widget {
-    background: #FDF2E8;
+    background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     border-radius: 20px; padding: 20px; min-height: 110px;
-    border: 1.5px solid rgba(12,26,53,0.08);
-    box-shadow: 0 8px 32px rgba(0,20,60,0.18), 0 1px 3px rgba(8,20,50,0.06);
+    border: 1px solid rgba(255,255,255,0.25);
+    box-shadow: 0 4px 16px rgba(0,20,60,0.1), 0 1px 3px rgba(8,20,50,0.04);
   }
   .otd-label { font-size: 10px; color: #0C1A35; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
   .otd-year { font-size: 22px; font-weight: 700; color: #0C1A35; font-family: 'Space Mono', monospace; margin-bottom: 2px; }
@@ -246,10 +246,10 @@
 
   .comm-card {
     margin: 14px 20px 0; padding: 20px;
-    background: #FDF2E8;
+    background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     border-radius: 20px;
-    border: 1.5px solid rgba(12,26,53,0.08);
-    box-shadow: 0 8px 32px rgba(0,20,60,0.18), 0 1px 3px rgba(8,20,50,0.06);
+    border: 1px solid rgba(255,255,255,0.25);
+    box-shadow: 0 4px 16px rgba(0,20,60,0.1), 0 1px 3px rgba(8,20,50,0.04);
   }
   .comm-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
   .comm-card-title { font-family: 'Satoshi', sans-serif; font-size: 17px; color: #0C1A35; }
@@ -373,10 +373,10 @@
 
   /* ── JOURNAL ── */
   .journal-card {
-    background: #FDF2E8;
+    background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     border-radius: 20px; padding: 20px;
-    border: 1.5px solid rgba(12,26,53,0.08);
-    box-shadow: 0 8px 32px rgba(0,20,60,0.18), 0 1px 3px rgba(8,20,50,0.06);
+    border: 1px solid rgba(255,255,255,0.25);
+    box-shadow: 0 4px 16px rgba(0,20,60,0.1), 0 1px 3px rgba(8,20,50,0.04);
     transition: all 0.3s ease;
   }
 
@@ -588,8 +588,8 @@
   flex: 0 0 auto;
   padding: 7px 16px;
   border-radius: 20px;
-  border: 1.5px solid rgba(12,26,53,0.10);
-  background: #FDF2E8;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   font-family: 'Satoshi', sans-serif;
   font-size: 12px; font-weight: 600;
   color: rgba(2,48,71,0.55);
@@ -608,8 +608,8 @@
 
 .vfeed-card-v {
   border-radius: 12px;
-  background: #FDF2E8;
-  border: 1.5px solid rgba(12,26,53,0.08);
+  background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.25);
   box-shadow: 0 4px 16px rgba(0,20,60,0.10), 0 1px 3px rgba(8,20,50,0.04);
   overflow: hidden;
   cursor: pointer;
