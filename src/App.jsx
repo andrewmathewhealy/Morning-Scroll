@@ -1369,7 +1369,7 @@ function HomeScreen({ onOpenWordle }) {
         <div className="home-avatar"><Icon.Sunrise size={22} /></div>
       </div>
 
-      <div style={{ padding: "16px 20px 0" }} className="spring-in spring-in-2 depth-mid">
+      <div className="section-pad spring-in spring-in-2 depth-mid">
         <div className="widget-row">
           <WeatherWidget />
           <MoonWidget moonphase={weatherData?.moonphase ?? null} />
@@ -2461,7 +2461,7 @@ function WorldScreen() {
         )}
         {liveCategories && Object.entries(liveCategories).map(([cat, streams]) => (
           <div key={cat} style={{ marginBottom: 14 }}>
-            <div style={{ padding: "0 22px", marginBottom: 8 }}>
+            <div style={{ padding: "0 20px", marginBottom: 8 }}>
               <div style={{
                 display: "inline-flex", alignItems: "center", gap: 6,
                 background: "rgba(2,48,71,0.7)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
@@ -2474,9 +2474,9 @@ function WorldScreen() {
             </div>
             <div style={{
               display: "flex", gap: 10, overflowX: "auto",
-              padding: "4px 20px 8px 22px",
+              padding: "4px 20px 8px 20px",
               scrollSnapType: "x mandatory",
-              scrollPaddingLeft: 22,
+              scrollPaddingLeft: 20,
               scrollbarWidth: "none",
             }}>
               {streams.map(s => (
@@ -3149,17 +3149,6 @@ export default function MorningScrollApp() {
     setTimeout(() => { setWordleOpen(false); setWordleClosing(false); }, 260);
   };
 
-  const Screen = () => {
-    switch (tab) {
-      case "home":     return <HomeScreen onOpenWordle={() => setWordleOpen(true)} />;
-      case "feed":     return <FeedScreen />;
-      case "world":    return <WorldScreen />;
-      case "news":     return <NewsScreen />;
-      case "settings": return <SettingsScreen />;
-      default:         return <HomeScreen onOpenWordle={() => setWordleOpen(true)} />;
-    }
-  };
-
   const now = new Date();
   const clockTime = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 
@@ -3186,7 +3175,11 @@ export default function MorningScrollApp() {
 
           {/* Main Screen */}
           <div className="screen rubber-scroll" ref={screenRef}>
-            <Screen />
+            {tab === "home" && <HomeScreen onOpenWordle={() => setWordleOpen(true)} />}
+            {tab === "feed" && <FeedScreen />}
+            {tab === "world" && <WorldScreen />}
+            {tab === "news" && <NewsScreen />}
+            {tab === "settings" && <SettingsScreen />}
           </div>
 
           {/* Bottom Nav */}
