@@ -1376,18 +1376,23 @@ function HomeScreen({ onOpenWordle }) {
       </div>
 
       <div className="section-pad spring-in spring-in-3 depth-mid">
-        <JournalWidget />
+        <ErrorBoundary label="CompactAP"><CompactAPHeadline /></ErrorBoundary>
       </div>
 
       <div className="section-pad spring-in spring-in-4 depth-mid">
-        <div className="photo-widget">
-          <div className="photo-placeholder"><Icon.Image size={80} /></div>
-          <div className="photo-gradient" />
-          <div className="photo-label">
-            <div className="photo-tag">On this day · 2 years ago</div>
-            <div className="photo-caption">Trip to Colorado</div>
-          </div>
-        </div>
+        <JournalWidget />
+      </div>
+
+      <div className="section-pad spring-in spring-in-5 depth-mid">
+        <ErrorBoundary label="PollCard"><PollCard /></ErrorBoundary>
+      </div>
+
+      <div className="spring-in spring-in-6 depth-mid">
+        <ErrorBoundary label="ArtOfTheDay"><ArtOfTheDayCard /></ErrorBoundary>
+      </div>
+
+      <div className="section-pad spring-in spring-in-6 depth-mid">
+        <ErrorBoundary label="OnThisDay"><OnThisDayWidget /></ErrorBoundary>
       </div>
 
       <div className="section-pad spring-in spring-in-6 depth-mid">
@@ -2305,9 +2310,79 @@ function LiveStreamCard({ stream, onOpen }) {
   );
 }
 
-function WorldScreen() {
+// ── POLL CARD (reusable) ──────────────────────────────────
+function PollCard() {
   const [vote, setVote] = useState(null);
   const [animating, setAnimating] = useState(false);
+  const { question: pollQuestion, options: POLL_OPTIONS } = useTodaysPoll();
+  const TOTAL_VOTES = POLL_OPTIONS.reduce((s, o) => s + o.votes, 0);
+  const winnerVotes = Math.max(...POLL_OPTIONS.map(o => o.votes));
+
+  const handleVote = (label) => {
+    setVote(label);
+    setAnimating(true);
+    setTimeout(() => setAnimating(false), 50);
+  };
+
+  return (
+    <div className="comm-card">
+      <div className="comm-card-header">
+        <div>
+          <div className="comm-card-title">{pollQuestion}</div>
+          <div className="comm-card-sub">{vote ? `${(TOTAL_VOTES + 1).toLocaleString()} responses · anonymous` : "Tap to share anonymously"}</div>
+        </div>
+        <div className="comm-card-tag">{vote ? "Results" : "Today"}</div>
+      </div>
+      {!vote ? (
+        POLL_OPTIONS.map(opt => (
+          <button key={opt.label} className="poll-option" onClick={() => handleVote(opt.label)}>{opt.label}</button>
+        ))
+      ) : (
+        <>
+          {POLL_OPTIONS.map(opt => {
+            const total = TOTAL_VOTES + 1;
+            const votes = opt.votes + (opt.label === vote ? 1 : 0);
+            const pct = Math.round((votes / total) * 100);
+            const isWinner = opt.votes === winnerVotes;
+            const isChosen = opt.label === vote;
+            return (
+              <div className="poll-result" key={opt.label}>
+                <div className="poll-result-top">
+                  <div className="poll-result-label">
+                    {isChosen && <Icon.Check size={13} color="#2E6FF2" />}
+                    <span style={{ color: isChosen ? "#2E6FF2" : "#0C1A35", fontWeight: isChosen ? 600 : 500 }}>{opt.label}</span>
+                  </div>
+                  <div className="poll-result-pct" style={{ color: isWinner ? "#2E6FF2" : undefined }}>{pct}%</div>
+                </div>
+                <div className="poll-result-track">
+                  <div className={`poll-result-fill ${isWinner ? "winner" : ""} ${isChosen && !isWinner ? "chosen" : ""}`}
+                    style={{ width: animating ? "0%" : `${pct}%`, transition: animating ? "none" : "width 0.7s cubic-bezier(0.34,1.2,0.64,1)" }} />
+                </div>
+              </div>
+            );
+          })}
+          <div className="poll-total">{(TOTAL_VOTES + 1).toLocaleString()} people have responded today</div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── COMPACT AP HEADLINE (for Home scroll) ────────────────
+function CompactAPHeadline() {
+  const { loading, data } = useDailyBrief();
+  if (loading) return <div className="compact-ap skeleton" style={{ height: 48 }} />;
+  if (!data?.ap_headline?.title) return null;
+  return (
+    <a href={data.ap_headline.link} target="_blank" rel="noopener noreferrer" className="compact-ap tappable-card">
+      <div className="compact-ap-label"><span className="cosmic-ap-label-ap">AP</span> News</div>
+      <div className="compact-ap-title">{data.ap_headline.title}</div>
+    </a>
+  );
+}
+
+// ── DISCOVER SCREEN (globe, observer, live streams) ──────
+function DiscoverScreen() {
   const [globeExpanded, setGlobeExpanded] = useState(false);
   const [openStream, setOpenStream] = useState(null);
   const allStreams = useMemo(
@@ -2324,21 +2399,12 @@ function WorldScreen() {
     }
     return out;
   }, [liveStatus]);
-  const { question: pollQuestion, options: POLL_OPTIONS } = useTodaysPoll();
-  const TOTAL_VOTES = POLL_OPTIONS.reduce((s, o) => s + o.votes, 0);
-  const winnerVotes = Math.max(...POLL_OPTIONS.map(o => o.votes));
-
-  const handleVote = (label) => {
-    setVote(label);
-    setAnimating(true);
-    setTimeout(() => setAnimating(false), 50);
-  };
 
   return (
     <div className="community-bg">
       <div className="community-header fade-up fade-up-1">
-        <div className="community-title">Our World</div>
-        <div className="community-subtitle">What we all share right now</div>
+        <div className="community-title">Discover</div>
+        <div className="community-subtitle">The world right now</div>
       </div>
 
       <div
@@ -2374,23 +2440,13 @@ function WorldScreen() {
           animation: "globeOverlayIn 0.35s ease-out both",
           display: "flex", flexDirection: "column",
         }}>
-          {/* Top gradient buffer */}
-          <div style={{
-            height: 60, flexShrink: 0,
-            background: "linear-gradient(to bottom, #06091a 0%, #030510 60%, #020308 100%)",
-          }} />
-          {/* Globe canvas — fills the middle */}
+          <div style={{ height: 60, flexShrink: 0, background: "linear-gradient(to bottom, #06091a 0%, #030510 60%, #020308 100%)" }} />
           <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
             <Suspense fallback={<div style={{ width: "100%", height: "100%", background: "#020308" }} />}>
               <GlobeCanvas style={{ width: "100%", height: "100%" }} fullscreen />
             </Suspense>
           </div>
-          {/* Bottom gradient buffer */}
-          <div style={{
-            height: 60, flexShrink: 0,
-            background: "linear-gradient(to top, #06091a 0%, #030510 60%, #020308 100%)",
-          }} />
-          {/* Close button */}
+          <div style={{ height: 60, flexShrink: 0, background: "linear-gradient(to top, #06091a 0%, #030510 60%, #020308 100%)" }} />
           <div
             onClick={() => setGlobeExpanded(false)}
             style={{
@@ -2411,48 +2467,13 @@ function WorldScreen() {
         </div>
       )}
 
-      <div className="comm-card fade-up fade-up-3">
-        <div className="comm-card-header">
-          <div>
-            <div className="comm-card-title">{pollQuestion}</div>
-            <div className="comm-card-sub">{vote ? `${(TOTAL_VOTES + 1).toLocaleString()} responses · anonymous` : "Tap to share anonymously"}</div>
-          </div>
-          <div className="comm-card-tag">{vote ? "Results" : "Today"}</div>
-        </div>
-        {!vote ? (
-          POLL_OPTIONS.map(opt => (
-            <button key={opt.label} className="poll-option" onClick={() => handleVote(opt.label)}>{opt.label}</button>
-          ))
-        ) : (
-          <>
-            {POLL_OPTIONS.map(opt => {
-              const total = TOTAL_VOTES + 1;
-              const votes = opt.votes + (opt.label === vote ? 1 : 0);
-              const pct = Math.round((votes / total) * 100);
-              const isWinner = opt.votes === winnerVotes;
-              const isChosen = opt.label === vote;
-              return (
-                <div className="poll-result" key={opt.label}>
-                  <div className="poll-result-top">
-                    <div className="poll-result-label">
-                      {isChosen && <Icon.Check size={13} color="#2E6FF2" />}
-                      <span style={{ color: isChosen ? "#2E6FF2" : "#0C1A35", fontWeight: isChosen ? 600 : 500 }}>{opt.label}</span>
-                    </div>
-                    <div className="poll-result-pct" style={{ color: isWinner ? "#2E6FF2" : undefined }}>{pct}%</div>
-                  </div>
-                  <div className="poll-result-track">
-                    <div className={`poll-result-fill ${isWinner ? "winner" : ""} ${isChosen && !isWinner ? "chosen" : ""}`}
-                      style={{ width: animating ? "0%" : `${pct}%`, transition: animating ? "none" : "width 0.7s cubic-bezier(0.34,1.2,0.64,1)" }} />
-                  </div>
-                </div>
-              );
-            })}
-            <div className="poll-total">{(TOTAL_VOTES + 1).toLocaleString()} people have responded today</div>
-          </>
-        )}
+      <div className="fade-up fade-up-3">
+        <ErrorBoundary label="CosmicBriefCard">
+          <CosmicBriefCard />
+        </ErrorBoundary>
       </div>
 
-      <div className="fade-up fade-up-5" style={{ marginTop: 20 }}>
+      <div className="fade-up fade-up-4" style={{ marginTop: 20 }}>
         {!liveCategories && (
           <div style={{ padding: "0 20px", fontSize: 11, color: "rgba(253,242,232,0.4)", letterSpacing: 0.5 }}>
             Checking live streams…
@@ -2540,6 +2561,7 @@ function useDailyBrief() {
 
 function CosmicBriefCard() {
   const { loading, data, error } = useDailyBrief();
+  const [expanded, setExpanded] = useState(false);
 
   if (loading) return (
     <div className="art-card widget-shimmer" style={{ minHeight: 280 }}>
@@ -2582,55 +2604,41 @@ function CosmicBriefCard() {
       </div>
       <div className="cosmic-observer-section">
         <div className="cosmic-label">
-          <svg className="cosmic-label-rules cosmic-label-rules-top" viewBox="0 0 300 5" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0 0.5 C75 0.5 100 1.25 150 1.25 C200 1.25 225 0.5 300 0.5" stroke="#0C1A35" fill="none" vectorEffect="non-scaling-stroke" />
-            <path d="M0 4.5 C75 4.5 100 3.75 150 3.75 C200 3.75 225 4.5 300 4.5" stroke="#0C1A35" fill="none" vectorEffect="non-scaling-stroke" />
-          </svg>
+          <div className="cosmic-label-rules cosmic-label-rules-top">
+            <div className="cosmic-rule-line" />
+            <div className="cosmic-rule-line" />
+          </div>
           <span className="cosmic-label-mark-wrap">
-            <img src="/aloof-observer-eye.png?v=2" alt="" className="cosmic-label-mark" />
+            <span className="cosmic-label-asterisks">{"*\n* *"}</span>
           </span>
           the aloof observer
-          <svg className="cosmic-label-rules cosmic-label-rules-bot" viewBox="0 0 300 5" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0 0.5 C75 0.5 100 1.25 150 1.25 C200 1.25 225 0.5 300 0.5" stroke="#0C1A35" fill="none" vectorEffect="non-scaling-stroke" />
-            <path d="M0 4.5 C75 4.5 100 3.75 150 3.75 C200 3.75 225 4.5 300 4.5" stroke="#0C1A35" fill="none" vectorEffect="non-scaling-stroke" />
-          </svg>
+          <div className="cosmic-label-rules cosmic-label-rules-bot">
+            <div className="cosmic-rule-line" />
+            <div className="cosmic-rule-line" />
+          </div>
         </div>
         <div className="observer-headline">
           {cosmic_brief?.headline}
         </div>
         {cosmic_brief?.article && (
-          <div className="art-desc" style={{ marginTop: 10, fontSize: 14, lineHeight: 1.6, color: "#0C1A35" }}>
-            {cosmic_brief.article}
-          </div>
+          expanded ? (
+            <div className="observer-article" style={{ marginTop: 10, fontSize: 14, lineHeight: 1.6, color: "#0C1A35", animation: "fadeUp 0.3s ease forwards" }}>
+              {cosmic_brief.article}
+            </div>
+          ) : (
+            <button
+              className="observer-read-more"
+              onClick={() => setExpanded(true)}
+            >
+              Read more <span style={{ display: "inline-block", fontSize: 10, marginLeft: 4, transition: "transform 0.2s" }}>▼</span>
+            </button>
+          )
         )}
       </div>
     </div>
   );
 }
 
-function NewsScreen() {
-  return (
-    <div className="community-bg">
-      <div className="community-header fade-up fade-up-1">
-        <div className="community-title observer-title">the aloof observer</div>
-        <div className="community-subtitle">A dispatch from somewhere larger</div>
-      </div>
-      <div className="fade-up fade-up-2">
-        <ErrorBoundary label="CosmicBriefCard">
-          <CosmicBriefCard />
-        </ErrorBoundary>
-      </div>
-      <div className="section-pad fade-up fade-up-3">
-        <ErrorBoundary label="OnThisDayWidget">
-          <OnThisDayWidget />
-        </ErrorBoundary>
-      </div>
-      <div className="fade-up fade-up-4">
-        <ArtOfTheDayCard />
-      </div>
-    </div>
-  );
-}
 
 // ── YOUTUBE HOOKS & COMPONENTS ────────────────────────────
 function useYouTubeChannels(user) {
@@ -3122,8 +3130,7 @@ const getBgStyle = () => ({
 const TABS = [
   { id: "home",     label: "Home",     ActiveIcon: p => <Icon.Home     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Home     {...p} color="rgba(12,26,53,0.5)" /> },
   { id: "feed",     label: "Feed",     ActiveIcon: p => <Icon.Feed     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Feed     {...p} color="rgba(12,26,53,0.5)" /> },
-  { id: "world",    label: "World",    ActiveIcon: p => <Icon.Globe    {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Globe    {...p} color="rgba(12,26,53,0.5)" /> },
-  { id: "news",     label: "News",     ActiveIcon: p => <Icon.BookOpen {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.BookOpen {...p} color="rgba(12,26,53,0.5)" /> },
+  { id: "discover", label: "Discover", ActiveIcon: p => <Icon.Globe    {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Globe    {...p} color="rgba(12,26,53,0.5)" /> },
   { id: "settings", label: "Settings", ActiveIcon: p => <Icon.Settings {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Settings {...p} color="rgba(12,26,53,0.5)" /> },
 ];
 
@@ -3173,8 +3180,7 @@ export default function MorningScrollApp() {
           <div className="screen rubber-scroll" ref={screenRef}>
             {tab === "home" && <HomeScreen onOpenWordle={() => setWordleOpen(true)} />}
             {tab === "feed" && <FeedScreen />}
-            {tab === "world" && <WorldScreen />}
-            {tab === "news" && <NewsScreen />}
+            {tab === "discover" && <DiscoverScreen />}
             {tab === "settings" && <SettingsScreen />}
           </div>
 

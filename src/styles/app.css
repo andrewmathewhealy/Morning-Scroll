@@ -132,7 +132,7 @@
     background: rgba(253,242,232,0.75);
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid rgba(12,26,53,0.1);
-    display: grid; grid-template-columns: repeat(5, 1fr); justify-items: center; align-items: center;
+    display: grid; grid-template-columns: repeat(4, 1fr); justify-items: center; align-items: center;
     padding: 0 8px 16px; flex-shrink: 0; z-index: 20;
   }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 16px; border-radius: 16px; cursor: pointer; transition: all 0.2s; position: relative; }
@@ -299,21 +299,45 @@
     text-align: center; line-height: 1; padding: 12px 0; margin: 0 0 14px;
     position: relative;
   }
-  .cosmic-label-rules { position: absolute; left: 0; right: 0; width: 100%; height: 5px; display: block; }
+  .cosmic-label-rules {
+    position: absolute; left: 0; right: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
   .cosmic-label-rules-top { top: 0; }
   .cosmic-label-rules-bot { bottom: 0; }
+  .cosmic-rule-line { height: 1px; background: #0C1A35; }
   .cosmic-label-mark-wrap {
     position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
-    width: 30px; height: 18px;
-    background: linear-gradient(rgba(12,26,53,0.12), rgba(12,26,53,0.12)), #FDF2E8;
-    display: flex; align-items: center; justify-content: center;
+    width: 20px; height: 14px;
+    background: inherit;
+    display: flex; align-items: flex-end; justify-content: center;
     pointer-events: none;
   }
-  .cosmic-label-mark {
-    width: 20px; height: 18px; object-fit: contain;
-    mix-blend-mode: multiply; display: block;
+  .cosmic-label-asterisks {
+    font-family: 'Instrument Serif', serif; font-size: 7px; line-height: 0.85;
+    color: #0C1A35; white-space: pre; text-align: center; letter-spacing: 0px;
+    display: block;
   }
   .observer-headline { font-family: 'Instrument Serif', serif; font-size: 18px; font-weight: 400; line-height: 1.3; color: #0C1A35; -webkit-text-stroke: 0.5px #0C1A35; letter-spacing: 0.4px; }
+
+  .compact-ap {
+    display: block; text-decoration: none;
+    padding: 14px 16px; border-radius: 20px;
+    background: rgba(255,255,255,0.62); backdrop-filter: blur(8px);
+    box-shadow: 0 4px 16px rgba(0,20,60,0.1), 0 1px 3px rgba(8,20,50,0.04);
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .compact-ap-label { font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: #0C1A35; margin-bottom: 4px; }
+  .compact-ap-title { font-family: 'Satoshi', sans-serif; font-size: 14px; color: #0C1A35; line-height: 1.4; font-weight: 600; }
+
+  .observer-read-more {
+    background: none; border: none; cursor: pointer;
+    font-family: 'Instrument Serif', serif; font-size: 14px; font-style: italic;
+    color: rgba(12,26,53,0.5); margin-top: 10px; padding: 0;
+    transition: color 0.2s;
+  }
+  .observer-read-more:hover { color: #0C1A35; }
+  .observer-article { animation: fadeUp 0.3s ease forwards; }
 
   /* ── SPORTS ── */
   .sports-bg { min-height: 100%; background: transparent; padding-bottom: 32px; }
