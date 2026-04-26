@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense, Component } from "react";
 import { createPortal } from "react-dom";
-const GlobeCanvas = lazy(() => import("./Globe.jsx"));
+const PulseMap = lazy(() => import("./components/PulseMap/PulseMap.jsx"));
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, getDocs, query, orderBy, limit as fbLimit } from "firebase/firestore";
@@ -13,6 +13,7 @@ import { useCountUp } from "./hooks/useCountUp.js";
 import { useColorTemp } from "./hooks/useColorTemp.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { useLiveTime, formatTimeAgo } from "./hooks/useLiveTime.js";
+import { useRadioPlayer } from "./hooks/useRadioPlayer.js";
 
 // ── ERROR BOUNDARY ────────────────────────────────────────
 // Isolates render/runtime errors in a subtree so one broken widget
@@ -248,16 +249,6 @@ function HomeAtmosphere() {
 
 
 
-
-// ── STARS (for globe bg) ───────────────────────────────────
-function Stars() {
-  const s = useRef(Array.from({ length: 70 }, () => ({ x: Math.random() * 100, y: Math.random() * 100, r: Math.random() * 1.1 + 0.3, o: Math.random() * 0.45 + 0.1 })));
-  return (
-    <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
-      {s.current.map((p, i) => <circle key={i} cx={`${p.x}%`} cy={`${p.y}%`} r={p.r} fill="#8ECAE6" opacity={p.o} />)}
-    </svg>
-  );
-}
 
 function Toggle({ on, onToggle }) {
   return (
@@ -1691,14 +1682,13 @@ function useVideoFeed() {
   return state;
 }
 
-const FEED_TABS = ["animals", "nature", "sports", "travel + food", "art", "news"];
+const FEED_TABS = ["animals", "nature", "sports", "food", "art"];
 const FEED_TAB_LABELS = {
   animals: "Animals",
   nature: "Nature",
   sports: "Sports",
-  "travel + food": "Travel + Food",
+  food: "Food",
   art: "Art",
-  news: "News",
 };
 
 // Load YouTube IFrame API once globally
@@ -1787,7 +1777,7 @@ function VideoCard({ video, isVisible, unlocked, onUnlock }) {
         <div className="vfeed-meta">
           <span className="vfeed-channel">{video.channel}</span>
           <span className="vfeed-dot">·</span>
-          <span className="vfeed-time">{formatTimeAgo(new Date(video.published_at))}</span>
+          <span className="vfeed-time">{formatTimeAgo(Math.floor(new Date(video.published_at).getTime() / 1000))}</span>
         </div>
       </div>
     </div>
@@ -2382,7 +2372,7 @@ function CompactAPHeadline() {
 }
 
 // ── DISCOVER SCREEN (globe, observer, live streams) ──────
-function DiscoverScreen() {
+function DiscoverScreen({ radioPlayer }) {
   const [globeExpanded, setGlobeExpanded] = useState(false);
   const [openStream, setOpenStream] = useState(null);
   const allStreams = useMemo(
@@ -2410,12 +2400,12 @@ function DiscoverScreen() {
       <div
         className="globe-hero fade-up fade-up-2"
         style={{ overflow: "hidden", padding: 0, cursor: "pointer" }}
-        onClick={() => setGlobeExpanded(true)}
       >
         <Suspense fallback={<div style={{ width: "100%", minHeight: 320, background: "#010f18" }} />}>
-          <GlobeCanvas style={{ width: "100%", height: "100%", minHeight: 320, borderRadius: "inherit" }} />
+          <PulseMap style={{ width: "100%", height: "100%", minHeight: 320, borderRadius: "inherit" }} radioPlayer={radioPlayer} />
         </Suspense>
         <div
+          onClick={() => setGlobeExpanded(true)}
           style={{
             position: "absolute", top: 12, right: 12, zIndex: 10,
             width: 32, height: 32, borderRadius: 10,
@@ -2443,7 +2433,7 @@ function DiscoverScreen() {
           <div style={{ height: 60, flexShrink: 0, background: "linear-gradient(to bottom, #06091a 0%, #030510 60%, #020308 100%)" }} />
           <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
             <Suspense fallback={<div style={{ width: "100%", height: "100%", background: "#020308" }} />}>
-              <GlobeCanvas style={{ width: "100%", height: "100%" }} fullscreen />
+              <PulseMap style={{ width: "100%", height: "100%" }} fullscreen radioPlayer={radioPlayer} />
             </Suspense>
           </div>
           <div style={{ height: 60, flexShrink: 0, background: "linear-gradient(to top, #06091a 0%, #030510 60%, #020308 100%)" }} />
@@ -3135,6 +3125,30 @@ const TABS = [
 ];
 
 // ── APP SHELL ─────────────────────────────────────────────
+function RadioMiniPlayer({ radioPlayer }) {
+  const { station, status, togglePlay, stop } = radioPlayer;
+  if (!station) return null;
+  return (
+    <div className="radio-mini-inner">
+      <div className="radio-mini-live">
+        {status === "playing" && <span className="radio-live-dot" />}
+        {status === "loading" && <span className="radio-loading-dot" />}
+        {status === "error" && <span className="radio-error-dot" />}
+      </div>
+      <div className="radio-mini-info">
+        <div className="radio-mini-name">{station.name}</div>
+        <div className="radio-mini-country">{status === "error" ? "Stream unavailable" : station.country}</div>
+      </div>
+      <button className="radio-mini-btn" onClick={togglePlay} aria-label={status === "playing" ? "Pause" : "Play"}>
+        {status === "playing" ? <Icon.Pause size={16} color="#FDF2E8" /> : <Icon.Play size={16} color="#FDF2E8" />}
+      </button>
+      <button className="radio-mini-btn" onClick={stop} aria-label="Stop">
+        <Icon.X size={16} color="rgba(253,242,232,0.5)" />
+      </button>
+    </div>
+  );
+}
+
 export default function MorningScrollApp() {
   const [tab, setTab] = useState("home");
   const [wordleOpen, setWordleOpen] = useState(false);
@@ -3142,6 +3156,7 @@ export default function MorningScrollApp() {
   const screenRef = useRef(null);
   const gyro = useGyroscope();
   const colorTemp = useColorTemp();
+  const radioPlayer = useRadioPlayer();
 
   // Living sunrise is pure CSS — no JS state needed (see .phone animation)
 
@@ -3180,9 +3195,16 @@ export default function MorningScrollApp() {
           <div className="screen rubber-scroll" ref={screenRef}>
             {tab === "home" && <HomeScreen onOpenWordle={() => setWordleOpen(true)} />}
             {tab === "feed" && <FeedScreen />}
-            {tab === "discover" && <DiscoverScreen />}
+            {tab === "discover" && <DiscoverScreen radioPlayer={radioPlayer} />}
             {tab === "settings" && <SettingsScreen />}
           </div>
+
+          {/* Radio Mini Player */}
+          {radioPlayer.station && tab !== "discover" && (
+            <div className="radio-mini-player">
+              <RadioMiniPlayer radioPlayer={radioPlayer} />
+            </div>
+          )}
 
           {/* Bottom Nav */}
           <div className="nav">

@@ -773,6 +773,45 @@ async function handleDaily(request, env, ctx) {
 const VIDEO_CHANNELS = {
   animals: [
     { channelId: "UCINb0wqPz-A0dV9nARjJlOQ", name: "The Dodo" },
+    { channelId: "UCwmZiChSryoWQCZMIQezgTg", name: "BBC Earth" },
+    { channelId: "UCPIvT-zcQl2H0vabdXJGcpg", name: "The Pet Collective" },
+    { channelId: "UCDPk9MG2RexnOMGTD-YnSnA", name: "Nat Geo Animals" },
+    { channelId: "UCkEBDbzLyH-LbB2FgMoSMaQ", name: "Animal Planet" },
+  ],
+  sports: [
+    { channelId: "UCWJ2lWNubArHWmf3FIHbfcQ", name: "NBA" },
+    { channelId: "UCG5qGWdu8nIRZqJ_GgDwQ-w", name: "Premier League" },
+    { channelId: "UCblfuW_4rakIf2h6aqANefA", name: "Red Bull" },
+    { channelId: "UC9-OpMMVoNP5o10_Iyq7Ndw", name: "Bleacher Report" },
+    { channelId: "UCqQo7ewe87aYAe7ub5UqXMw", name: "House of Highlights" },
+    { channelId: "UCET00YnetHT7tOpu12v8jxg", name: "CBS Sports Golazo" },
+    { channelId: "UCDVYQ4Zhbm3S2dlz7P1GBDg", name: "NFL" },
+    { channelId: "UCoLrcjPV5PbUrUyXq5mjc_A", name: "MLB" },
+    { channelId: "UChgDp_uE5PVqnpdV05xKOOA", name: "Chaz NBA" },
+    { channelId: "UCWQXiB9DidR74rOPeupt8nQ", name: "Made the Cut" },
+  ],
+  food: [
+    { channelId: "UCJFp8uSYCjXOMnkUyb3CQ3Q", name: "Tasty" },
+    { channelId: "UCcAd5Np7fO8SeejB1FVKcYw", name: "Best Ever Food Review Show" },
+    { channelId: "UC8Y-jrV8oR3s2Ix4viDkZtA", name: "Food Network" },
+    { channelId: "UCRzPUBhXUZHclB7B5bURFXw", name: "Eater" },
+    { channelId: "UCaLfMkkHhSA_LaCta0BzyhQ", name: "Munchies" },
+  ],
+  art: [
+    { channelId: "UCmQThz1OLYt8mb2PU540LOA", name: "The Art Assignment" },
+    { channelId: "UCePDFpCr78_qmVtpoB1Axaw", name: "Great Art Explained" },
+    { channelId: "UCJkMlOu7faDgqh4PfzbpLdg", name: "Nerdwriter1" },
+    { channelId: "UCXD5-f9urX1Foas68AL_HHQ", name: "DW Arts" },
+    { channelId: "UC0k238zFx-Z8xFH0sxCrPJg", name: "Architectural Digest" },
+    { channelId: "UCDsElQQt_gCZ9LgnW-7v-cQ", name: "Kirsten Dirksen" },
+    { channelId: "UCJv7eTNf6v1M0g6cGE3v8lw", name: "H88" },
+  ],
+  nature: [
+    { channelId: "UCpVm7bg6pXKo1Pr6k5kxG9A", name: "National Geographic" },
+    { channelId: "UCbwC3_kqAafyOG69S6JmoVg", name: "Explore.org" },
+    { channelId: "UCnavGPxEijftXneFxk28srA", name: "Earth Touch" },
+    { channelId: "UCwtsR2eW0MIjEnmEG2ImTzw", name: "Our Planet" },
+    { channelId: "UCDDMpdWv1mGdx3ABJBgvidw", name: "Leaf of Life" },
   ],
 };
 

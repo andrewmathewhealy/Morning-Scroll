@@ -1,0 +1,379 @@
+/* ── PULSE MAP CONTAINER ── */
+.pulse-map-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #020308;
+  overflow: hidden;
+}
+
+/* ── CSS STARFIELD ── */
+.pulse-map-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.pulse-map-star {
+  position: absolute;
+  border-radius: 50%;
+  background: #8ECAE6;
+  animation: starTwinkle 3s ease-in-out infinite alternate;
+}
+@keyframes starTwinkle {
+  0% { opacity: 0.1; }
+  100% { opacity: 0.6; }
+}
+
+/* ── HINT OVERLAY ── */
+.pulse-map-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'DM Mono', 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: rgba(140, 180, 255, 0.3);
+  pointer-events: none;
+  text-transform: uppercase;
+  transition: opacity 1.5s;
+  z-index: 5;
+}
+
+/* ── STATION PICKER (bottom sheet) ── */
+.station-picker-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(8, 16, 32, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: journalFadeIn 0.35s ease;
+  touch-action: none;
+  transition: opacity 0.45s ease;
+}
+.station-picker-overlay.closing { opacity: 0; }
+
+.station-picker-sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: #0C1A35;
+  border-radius: 24px 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 60vh;
+  animation: journalSlideUp 0.35s cubic-bezier(0.36, 1.3, 0.64, 1);
+  transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.74, 0.05), opacity 0.4s ease;
+}
+.station-picker-sheet.closing {
+  transform: translateY(110%);
+  opacity: 0;
+}
+
+.station-picker-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(253, 242, 232, 0.2);
+  margin: 10px auto 8px;
+  flex-shrink: 0;
+  cursor: grab;
+}
+
+.station-picker-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 20px 12px;
+}
+.station-picker-title {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 15px;
+  color: #FDF2E8;
+  font-weight: 500;
+}
+
+/* ── LOADING ── */
+.station-picker-loading {
+  padding: 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.station-shimmer {
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, rgba(253,242,232,0.04) 25%, rgba(253,242,232,0.08) 50%, rgba(253,242,232,0.04) 75%);
+  background-size: 200% 100%;
+  animation: widgetShimmer 1.5s ease-in-out infinite;
+}
+
+/* ── EMPTY STATE ── */
+.station-picker-empty {
+  padding: 24px 20px 32px;
+  font-family: 'Satoshi', sans-serif;
+  font-size: 13px;
+  color: rgba(253, 242, 232, 0.45);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ── STATION LIST ── */
+.station-list {
+  padding: 0 20px 12px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.station-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(253, 242, 232, 0.04);
+  border: 1.5px solid rgba(253, 242, 232, 0.06);
+  cursor: pointer;
+  transition: all 0.18s;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  color: inherit;
+}
+.station-card:active {
+  background: rgba(253, 242, 232, 0.08);
+  border-color: rgba(255, 204, 0, 0.3);
+}
+.station-card.active {
+  border-color: rgba(255, 204, 0, 0.4);
+  background: rgba(255, 204, 0, 0.08);
+}
+
+.station-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(253, 242, 232, 0.06);
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.station-favicon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.station-favicon-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.station-card-info {
+  flex: 1;
+  min-width: 0;
+}
+.station-card-name {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 13.5px;
+  color: #FDF2E8;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.station-card-meta {
+  font-size: 11px;
+  color: rgba(253, 242, 232, 0.4);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.station-card-dot {
+  margin: 0 4px;
+  color: rgba(253, 242, 232, 0.25);
+}
+.station-card-tags {
+  color: rgba(253, 242, 232, 0.35);
+}
+
+.station-playing-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: #FFCC00;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.station-loading-badge {
+  font-size: 11px;
+  color: rgba(253, 242, 232, 0.4);
+  flex-shrink: 0;
+}
+
+/* ── LIVE DOT ── */
+.radio-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FFCC00;
+  animation: liveBadgePulse 3s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.radio-loading-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(253, 242, 232, 0.4);
+  animation: liveBadgePulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.radio-error-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e74c3c;
+  flex-shrink: 0;
+}
+
+/* ── NOW PLAYING (full mode inside picker) ── */
+.radio-now-playing {
+  padding: 14px 20px 24px;
+  border-top: 1px solid rgba(253, 242, 232, 0.08);
+  margin-top: 4px;
+}
+.radio-np-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.radio-np-label {
+  font-size: 10px;
+  color: rgba(253, 242, 232, 0.4);
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.radio-np-station {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 15px;
+  color: #FDF2E8;
+  font-weight: 500;
+}
+.radio-np-country {
+  font-size: 12px;
+  color: rgba(253, 242, 232, 0.4);
+  margin-top: 2px;
+}
+.radio-np-error {
+  font-size: 12px;
+  color: #e74c3c;
+  margin-top: 6px;
+}
+.radio-np-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.radio-np-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(253, 242, 232, 0.1);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.radio-np-btn:active { background: rgba(253, 242, 232, 0.18); }
+.radio-np-stop {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── MINI PLAYER BAR ── */
+.radio-mini-player {
+  height: 52px;
+  background: rgba(12, 26, 53, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(253, 242, 232, 0.08);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 15;
+  animation: radioFadeIn 0.3s ease;
+}
+@keyframes radioFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.radio-mini-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0 16px;
+}
+.radio-mini-live {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.radio-mini-info {
+  flex: 1;
+  min-width: 0;
+}
+.radio-mini-name {
+  font-family: 'Satoshi', sans-serif;
+  font-size: 13px;
+  color: #FDF2E8;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.radio-mini-country {
+  font-size: 10px;
+  color: rgba(253, 242, 232, 0.4);
+}
+.radio-mini-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(253, 242, 232, 0.08);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.radio-mini-btn:active { background: rgba(253, 242, 232, 0.15); }
