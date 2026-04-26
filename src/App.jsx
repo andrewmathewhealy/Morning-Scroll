@@ -2362,20 +2362,7 @@ function PollCard() {
   );
 }
 
-// ── COMPACT AP HEADLINE (for Home scroll) ────────────────
-function CompactAPHeadline() {
-  const { loading, data } = useDailyBrief();
-  if (loading) return <div className="compact-ap skeleton" style={{ height: 48 }} />;
-  if (!data?.ap_headline?.title) return null;
-  return (
-    <a href={data.ap_headline.link} target="_blank" rel="noopener noreferrer" className="compact-ap tappable-card">
-      <div className="compact-ap-label"><span className="cosmic-ap-label-ap">AP</span> News</div>
-      <div className="compact-ap-title">{data.ap_headline.title}</div>
-    </a>
-  );
-}
-
-// ── DISCOVER SCREEN (globe, observer, live streams) ──────
+// ── DISCOVER SCREEN (live streams) ──────
 function DiscoverScreen() {
   const [openStream, setOpenStream] = useState(null);
   const allStreams = useMemo(
@@ -2400,13 +2387,7 @@ function DiscoverScreen() {
         <div className="community-subtitle">The world right now</div>
       </div>
 
-      <div className="fade-up fade-up-2">
-        <ErrorBoundary label="CosmicBriefCard">
-          <CosmicBriefCard />
-        </ErrorBoundary>
-      </div>
-
-      <div className="fade-up fade-up-4" style={{ marginTop: 20 }}>
+      <div className="fade-up fade-up-2" style={{ marginTop: 20 }}>
         {!liveCategories && (
           <div style={{ padding: "0 20px", fontSize: 11, color: "rgba(253,242,232,0.4)", letterSpacing: 0.5 }}>
             Checking live streams…
@@ -2444,134 +2425,6 @@ function DiscoverScreen() {
     </div>
   );
 }
-
-function useDailyBrief() {
-  const [state, setState] = useState({ loading: true, data: null, error: null });
-  useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    const cacheKey = `daily-brief-${today}`;
-    try {
-      const cached = JSON.parse(localStorage.getItem(cacheKey));
-      if (cached) { setState({ loading: false, data: cached, error: null }); return; }
-    } catch {}
-    (async () => {
-      try {
-        // Check Firestore for a manually-set dispatch first
-        try {
-          const manualSnap = await getDoc(doc(db, "aloofObserver", today));
-          const manual = manualSnap.data();
-          if (manual?.manual && manual?.observerHeadline) {
-            const data = {
-              apod: null,
-              ap_headline: {
-                title: manual.apTitle || null,
-                link: manual.apLink || null,
-                image: manual.imageUrl || null,
-              },
-              cosmic_brief: {
-                headline: manual.observerHeadline,
-                article: manual.observerArticle || "",
-              },
-            };
-            try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch {}
-            setState({ loading: false, data, error: null });
-            return;
-          }
-        } catch {}
-
-        const res = await fetch(`${WORKER_URL}/api/daily`);
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
-        try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch {}
-        setState({ loading: false, data, error: null });
-      } catch (err) {
-        setState({ loading: false, data: null, error: err.message });
-      }
-    })();
-  }, []);
-  return state;
-}
-
-function CosmicBriefCard() {
-  const { loading, data, error } = useDailyBrief();
-  const [expanded, setExpanded] = useState(false);
-
-  if (loading) return (
-    <div className="art-card widget-shimmer" style={{ minHeight: 280 }}>
-      <div className="art-image" />
-      <div className="art-info">
-        <div className="skeleton" style={{ width: '70%', height: 14 }} />
-        <div className="skeleton" style={{ width: '90%', height: 10, marginTop: 8 }} />
-        <div className="skeleton" style={{ width: '85%', height: 10, marginTop: 4 }} />
-      </div>
-    </div>
-  );
-
-  if (error || !data) return (
-    <div className="art-card" style={{ padding: 24, textAlign: "center", color: "rgba(8,16,32,0.5)", fontSize: 13 }}>
-      The Aloof Observer is unavailable right now.
-    </div>
-  );
-
-  const { ap_headline, cosmic_brief } = data;
-
-  return (
-    <div className="art-card">
-      <div className="cosmic-ap-section">
-        {ap_headline?.image && (
-          <div className="art-image" style={{ background: "#0a1a24" }}>
-            <img src={ap_headline.image} alt={ap_headline.title} />
-          </div>
-        )}
-        {ap_headline?.title && (
-          <div className="cosmic-ap-headline">
-            <div className="cosmic-ap-label"><span className="cosmic-ap-label-ap">AP</span> News</div>
-            <a
-              href={ap_headline.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="cosmic-ap-title"
-            >{ap_headline.title}</a>
-          </div>
-        )}
-      </div>
-      <div className="cosmic-observer-section">
-        <div className="cosmic-label">
-          <div className="cosmic-label-rules cosmic-label-rules-top">
-            <div className="cosmic-rule-line" />
-            <div className="cosmic-rule-line" />
-          </div>
-          <span className="cosmic-label-mark-wrap">
-            <span className="cosmic-label-asterisks">{"*\n* *"}</span>
-          </span>
-          the aloof observer
-          <div className="cosmic-label-rules cosmic-label-rules-bot">
-            <div className="cosmic-rule-line" />
-            <div className="cosmic-rule-line" />
-          </div>
-        </div>
-        <div className="observer-headline">
-          {cosmic_brief?.headline}
-        </div>
-        {cosmic_brief?.article && (
-          expanded ? (
-            <div className="observer-article" style={{ marginTop: 10, fontSize: 14, lineHeight: 1.6, color: "#0C1A35", animation: "fadeUp 0.3s ease forwards" }}>
-              {cosmic_brief.article}
-            </div>
-          ) : (
-            <button
-              className="observer-read-more"
-              onClick={() => setExpanded(true)}
-            >
-              Read more <span style={{ display: "inline-block", fontSize: 10, marginLeft: 4, transition: "transform 0.2s" }}>▼</span>
-            </button>
-          )
-        )}
-      </div>
-    </div>
-  );
-}
-
 
 // ── YOUTUBE HOOKS & COMPONENTS ────────────────────────────
 function useYouTubeChannels(user) {
@@ -2996,7 +2849,6 @@ function SettingsScreen() {
 
       <span className="section-label fade-up fade-up-4">Widgets</span>
       {[
-        { Ico: Icon.Image, label: "Photo Memory", value: "On this day · 2 years back" },
         { Ico: Icon.Moon, label: "Moon Phase", value: "Visible on Home tab" },
       ].map((s, i) => (
         <div className="setting-row fade-up fade-up-4" key={i}>
