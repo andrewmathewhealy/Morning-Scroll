@@ -20,6 +20,7 @@ import ScoresSection from "./components/Sports/ScoresSection.jsx";
 import FeedScreen from "./components/Feed/FeedScreen.jsx";
 import { YouTubeFeedSection, YouTubeSettingsSection } from "./components/YouTube/YouTube.jsx";
 import { LIVE_STREAM_CATEGORIES, LIVE_CAT_COLORS, useLiveStatus, LiveStreamCard, LiveStreamPlayer } from "./components/LiveStreams/LiveStreams.jsx";
+import MorningGame, { PopOverlay, OneLine, Stack } from "./components/MorningGame/MorningGame.jsx";
 
 // ── ERROR BOUNDARY ────────────────────────────────────────
 class ErrorBoundary extends Component {
@@ -225,7 +226,11 @@ function HomeScreen({ onOpenWordle, radioPlayer }) {
         </div>
       </div>
 
-      <div className="spring-in spring-in-3 depth-mid" style={{ paddingTop: 14 }}>
+      <div className="section-pad spring-in spring-in-3 depth-mid">
+        <ErrorBoundary label="MorningGame"><MorningGame forceGame="oneline" /></ErrorBoundary>
+      </div>
+
+      <div className="spring-in spring-in-4 depth-mid" style={{ paddingTop: 14 }}>
         <div className="globe-hero" style={{ overflow: "hidden", padding: 0, cursor: "pointer" }}>
           <Suspense fallback={<div style={{ width: "100%", minHeight: 320, background: "#010f18" }} />}>
             <PulseMap style={{ width: "100%", height: "100%", minHeight: 320, borderRadius: "inherit" }} radioPlayer={radioPlayer} />
@@ -233,11 +238,11 @@ function HomeScreen({ onOpenWordle, radioPlayer }) {
         </div>
       </div>
 
-      <div className="section-pad spring-in spring-in-4 depth-mid">
+      <div className="section-pad spring-in spring-in-5 depth-mid">
         <ErrorBoundary label="PollCard"><PollCard /></ErrorBoundary>
       </div>
 
-      <div className="section-pad spring-in spring-in-5 depth-mid">
+      <div className="section-pad spring-in spring-in-6 depth-mid">
         <JournalWidget />
       </div>
 
@@ -297,7 +302,17 @@ function DiscoverScreen() {
         <div className="community-subtitle">The world right now</div>
       </div>
 
-      <div className="fade-up fade-up-2" style={{ marginTop: 20 }}>
+      <div className="section-pad fade-up fade-up-2">
+        <div style={{ color: "#FDF2E8", fontSize: 13, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>One Line</div>
+        <div className="mg-card"><OneLine onComplete={() => {}} /></div>
+      </div>
+
+      <div className="section-pad fade-up fade-up-3">
+        <div style={{ color: "#FDF2E8", fontSize: 13, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Stack</div>
+        <div className="mg-card"><Stack onComplete={() => {}} /></div>
+      </div>
+
+      <div className="fade-up fade-up-4" style={{ marginTop: 20 }}>
         {!liveCategories && (
           <div style={{ padding: "0 20px", fontSize: 11, color: "rgba(253,242,232,0.4)", letterSpacing: 0.5 }}>
             Checking live streams…
@@ -551,6 +566,8 @@ export default function MorningScrollApp() {
               <WordleGame />
             </div>
           )}
+
+          <PopOverlay />
         </div>
       </div>
     </>
