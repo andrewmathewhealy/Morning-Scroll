@@ -1342,7 +1342,7 @@ function DiarySheet({ user, onClose, closing = false }) {
   );
 }
 
-function HomeScreen({ onOpenWordle }) {
+function HomeScreen({ onOpenWordle, radioPlayer }) {
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }).toLowerCase();
@@ -1366,16 +1366,20 @@ function HomeScreen({ onOpenWordle }) {
         </div>
       </div>
 
-      <div className="section-pad spring-in spring-in-3 depth-mid">
-        <ErrorBoundary label="CompactAP"><CompactAPHeadline /></ErrorBoundary>
+      <div className="spring-in spring-in-3 depth-mid" style={{ paddingTop: 14 }}>
+        <div className="globe-hero" style={{ overflow: "hidden", padding: 0, cursor: "pointer" }}>
+          <Suspense fallback={<div style={{ width: "100%", minHeight: 320, background: "#010f18" }} />}>
+            <PulseMap style={{ width: "100%", height: "100%", minHeight: 320, borderRadius: "inherit" }} radioPlayer={radioPlayer} />
+          </Suspense>
+        </div>
       </div>
 
       <div className="section-pad spring-in spring-in-4 depth-mid">
-        <JournalWidget />
+        <ErrorBoundary label="PollCard"><PollCard /></ErrorBoundary>
       </div>
 
       <div className="section-pad spring-in spring-in-5 depth-mid">
-        <ErrorBoundary label="PollCard"><PollCard /></ErrorBoundary>
+        <JournalWidget />
       </div>
 
       <div className="spring-in spring-in-6 depth-mid">
@@ -2372,8 +2376,7 @@ function CompactAPHeadline() {
 }
 
 // ── DISCOVER SCREEN (globe, observer, live streams) ──────
-function DiscoverScreen({ radioPlayer }) {
-  const [globeExpanded, setGlobeExpanded] = useState(false);
+function DiscoverScreen() {
   const [openStream, setOpenStream] = useState(null);
   const allStreams = useMemo(
     () => Object.values(LIVE_STREAM_CATEGORIES).flat(),
@@ -2397,67 +2400,7 @@ function DiscoverScreen({ radioPlayer }) {
         <div className="community-subtitle">The world right now</div>
       </div>
 
-      <div
-        className="globe-hero fade-up fade-up-2"
-        style={{ overflow: "hidden", padding: 0, cursor: "pointer" }}
-      >
-        <Suspense fallback={<div style={{ width: "100%", minHeight: 320, background: "#010f18" }} />}>
-          <PulseMap style={{ width: "100%", height: "100%", minHeight: 320, borderRadius: "inherit" }} radioPlayer={radioPlayer} />
-        </Suspense>
-        <div
-          onClick={() => setGlobeExpanded(true)}
-          style={{
-            position: "absolute", top: 12, right: 12, zIndex: 10,
-            width: 32, height: 32, borderRadius: 10,
-            background: "rgba(0,0,0,0.45)", backdropFilter: "blur(8px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", border: "1px solid rgba(140,180,255,0.15)",
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="rgba(160,200,255,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="10,1 15,1 15,6" />
-            <polyline points="6,15 1,15 1,10" />
-            <line x1="15" y1="1" x2="10" y2="6" />
-            <line x1="1" y1="15" x2="6" y2="10" />
-          </svg>
-        </div>
-      </div>
-
-      {globeExpanded && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
-          zIndex: 9999, background: "#020308",
-          animation: "globeOverlayIn 0.35s ease-out both",
-          display: "flex", flexDirection: "column",
-        }}>
-          <div style={{ height: 60, flexShrink: 0, background: "linear-gradient(to bottom, #06091a 0%, #030510 60%, #020308 100%)" }} />
-          <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
-            <Suspense fallback={<div style={{ width: "100%", height: "100%", background: "#020308" }} />}>
-              <PulseMap style={{ width: "100%", height: "100%" }} fullscreen radioPlayer={radioPlayer} />
-            </Suspense>
-          </div>
-          <div style={{ height: 60, flexShrink: 0, background: "linear-gradient(to top, #06091a 0%, #030510 60%, #020308 100%)" }} />
-          <div
-            onClick={() => setGlobeExpanded(false)}
-            style={{
-              position: "absolute", top: 16, right: 16, zIndex: 10,
-              width: 36, height: 36, borderRadius: 12,
-              background: "rgba(6,9,26,0.65)", backdropFilter: "blur(10px)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", border: "1px solid rgba(140,180,255,0.12)",
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="rgba(160,200,255,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="4,1 1,1 1,4" />
-              <polyline points="12,15 15,15 15,12" />
-              <line x1="1" y1="1" x2="6" y2="6" />
-              <line x1="15" y1="15" x2="10" y2="10" />
-            </svg>
-          </div>
-        </div>
-      )}
-
-      <div className="fade-up fade-up-3">
+      <div className="fade-up fade-up-2">
         <ErrorBoundary label="CosmicBriefCard">
           <CosmicBriefCard />
         </ErrorBoundary>
@@ -3193,9 +3136,9 @@ export default function MorningScrollApp() {
 
           {/* Main Screen */}
           <div className="screen rubber-scroll" ref={screenRef}>
-            {tab === "home" && <HomeScreen onOpenWordle={() => setWordleOpen(true)} />}
+            {tab === "home" && <HomeScreen onOpenWordle={() => setWordleOpen(true)} radioPlayer={radioPlayer} />}
             {tab === "feed" && <FeedScreen />}
-            {tab === "discover" && <DiscoverScreen radioPlayer={radioPlayer} />}
+            {tab === "discover" && <DiscoverScreen />}
             {tab === "settings" && <SettingsScreen />}
           </div>
 
