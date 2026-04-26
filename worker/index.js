@@ -7,6 +7,11 @@ const ALLOWED_ORIGINS = new Set([
   "http://127.0.0.1:5173",
 ]);
 
+function isLocalNetwork(origin) {
+  if (!origin) return false;
+  return /^https?:\/\/(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|localhost|127\.0\.0\.1)/.test(origin);
+}
+
 // Reflected back on responses. The actual security gate is isAllowedOrigin()
 // below — these headers just unblock the browser for legitimate callers.
 const CORS_HEADERS = {
@@ -17,10 +22,8 @@ const CORS_HEADERS = {
 
 function isAllowedOrigin(request) {
   const origin = request.headers.get("Origin");
-  // No Origin header = non-browser request (curl, server-to-server). Block
-  // these too — legitimate clients always send Origin.
   if (!origin) return false;
-  return ALLOWED_ORIGINS.has(origin);
+  return ALLOWED_ORIGINS.has(origin) || isLocalNetwork(origin);
 }
 
 const JOURNAL_PROMPT_INSTRUCTIONS = `Generate one morning journal prompt. One sentence, no explanation.
@@ -591,74 +594,53 @@ const VIDEO_CHANNELS = {
 };
 
 const VIDEOS_CACHE_KEY = "videos_feed";
-const VIDEOS_CACHE_TTL = 86400; // 24 hours in seconds
+const VIDEOS_CACHE_TTL = 86400; // 24 hours
 
-// Fetch videos for a single channel. Returns an array of video objects.
-// If no videos in the last 24h, falls back to the 3 most recent uploads.
-async function fetchChannelVideos(channelId, channelName, apiKey) {
-  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+// Fetch videos for a single channel via FREE YouTube RSS (no API key, no quota).
+async function fetchChannelVideosRSS(channelId, channelName) {
+  try {
+    const res = await fetch(
+      `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`,
+      { headers: { "User-Agent": "MorningScroll/1.0" } }
+    );
+    if (!res.ok) { console.error(`RSS error for ${channelName}: ${res.status}`); return []; }
+    const xml = await res.text();
 
-  const url = new URL("https://www.googleapis.com/youtube/v3/search");
-  url.searchParams.set("part", "snippet");
-  url.searchParams.set("channelId", channelId);
-  url.searchParams.set("maxResults", "10");
-  url.searchParams.set("order", "date");
-  url.searchParams.set("type", "video");
-  url.searchParams.set("publishedAfter", twentyFourHoursAgo);
-  url.searchParams.set("key", apiKey);
-
-  const res = await fetch(url.toString());
-  if (!res.ok) {
-    console.error(`YouTube API error for ${channelName}: ${res.status}`);
+    const videos = [];
+    const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
+    let match;
+    while ((match = entryRegex.exec(xml)) !== null && videos.length < 5) {
+      const entry = match[1];
+      const videoId = entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/)?.[1];
+      const title = entry.match(/<title>(.*?)<\/title>/)?.[1];
+      const published = entry.match(/<published>(.*?)<\/published>/)?.[1];
+      if (videoId && title) {
+        videos.push({
+          video_id: videoId,
+          title: title.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#39;/g, "'").replace(/&quot;/g, '"'),
+          thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+          channel: channelName,
+          published_at: published,
+          embed_url: `https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0`,
+        });
+      }
+    }
+    return videos;
+  } catch (err) {
+    console.error(`RSS fetch failed for ${channelName}:`, err.message);
     return [];
   }
-
-  let data = await res.json();
-  let items = data.items || [];
-
-  // Fallback: if no videos in last 24h, fetch the 3 most recent (no date filter)
-  if (items.length === 0) {
-    const fallbackUrl = new URL("https://www.googleapis.com/youtube/v3/search");
-    fallbackUrl.searchParams.set("part", "snippet");
-    fallbackUrl.searchParams.set("channelId", channelId);
-    fallbackUrl.searchParams.set("maxResults", "3");
-    fallbackUrl.searchParams.set("order", "date");
-    fallbackUrl.searchParams.set("type", "video");
-    fallbackUrl.searchParams.set("key", apiKey);
-
-    const fallbackRes = await fetch(fallbackUrl.toString());
-    if (fallbackRes.ok) {
-      data = await fallbackRes.json();
-      items = data.items || [];
-    }
-  }
-
-  return items.map(item => ({
-    video_id: item.id.videoId,
-    title: item.snippet.title,
-    thumbnail: `https://i.ytimg.com/vi/${item.id.videoId}/maxresdefault.jpg`,
-    channel: item.snippet.channelTitle,
-    published_at: item.snippet.publishedAt,
-    embed_url: `https://www.youtube.com/embed/${item.id.videoId}?playsinline=1&rel=0`,
-  }));
 }
 
-// Fetch recent videos from the YouTube Data API for all curated channels.
-// Channels are fetched in parallel (Promise.all) for speed.
-async function fetchVideosFeed(env) {
-  const apiKey = env.YOUTUBE_API_KEY;
-  if (!apiKey) throw new Error("YOUTUBE_API_KEY not configured");
-
+// Fetch all curated channels via RSS. Free, no quota, no API key needed.
+async function fetchVideosFeed() {
   const feed = {};
 
   for (const [category, channels] of Object.entries(VIDEO_CHANNELS)) {
-    // Fetch all channels in this category in parallel
     const results = await Promise.all(
-      channels.map(ch => fetchChannelVideos(ch.channelId, ch.name, apiKey))
+      channels.map(ch => fetchChannelVideosRSS(ch.channelId, ch.name))
     );
-
     const categoryVideos = results.flat();
-    // Sort newest first
     categoryVideos.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
     feed[category] = categoryVideos;
   }
@@ -666,10 +648,10 @@ async function fetchVideosFeed(env) {
   return { ...feed, cached_at: new Date().toISOString() };
 }
 
-// Called by cron trigger — fetches fresh data and writes to KV
+// Called by cron trigger (daily at 6am UTC) — the ONLY thing that writes to KV.
 async function refreshVideosFeed(env) {
   try {
-    const feed = await fetchVideosFeed(env);
+    const feed = await fetchVideosFeed();
     await env.FEED_CACHE.put(VIDEOS_CACHE_KEY, JSON.stringify(feed), {
       expirationTtl: VIDEOS_CACHE_TTL,
     });
@@ -679,10 +661,10 @@ async function refreshVideosFeed(env) {
   }
 }
 
-// Serves /api/videos — reads from KV, falls back to live fetch if cache is empty
+// Serves /api/videos — READ-ONLY from KV. Never calls YouTube directly.
+// If KV is empty (first deploy), triggers a one-time seed and caches it.
 async function handleVideosFeed(request, env) {
   try {
-    // Try KV cache first
     const cached = await env.FEED_CACHE.get(VIDEOS_CACHE_KEY);
     if (cached) {
       return new Response(cached, {
@@ -691,16 +673,14 @@ async function handleVideosFeed(request, env) {
       });
     }
 
-    // Cache miss (first deploy, or KV expired) — fetch live and populate cache
-    const feed = await fetchVideosFeed(env);
+    // KV empty (first deploy only) — seed it once, then cron takes over
+    const feed = await fetchVideosFeed();
     const body = JSON.stringify(feed);
-
-    // Store in KV for next request (non-blocking)
-    env.FEED_CACHE.put(VIDEOS_CACHE_KEY, body, { expirationTtl: VIDEOS_CACHE_TTL });
+    await env.FEED_CACHE.put(VIDEOS_CACHE_KEY, body, { expirationTtl: VIDEOS_CACHE_TTL });
 
     return new Response(body, {
       status: 200,
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json", "X-Cache": "MISS" },
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json", "X-Cache": "SEED" },
     });
   } catch (err) {
     return json({ error: "Failed to fetch video feed", detail: err.message }, 500);

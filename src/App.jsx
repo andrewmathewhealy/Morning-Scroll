@@ -521,7 +521,7 @@ export default function MorningScrollApp() {
           </filter>
         </defs>
       </svg>
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", background: "#0a1628", padding: "20px" }}>
+      <div className="phone-wrapper">
         <div className="phone" id="phone-shell" style={{ ...getBgStyle(), '--gyro-x': gyro.x, '--gyro-y': gyro.y, filter: colorTemp }}>
           <div className="status-bar">
             <div className="status-time">{clockTime}</div>

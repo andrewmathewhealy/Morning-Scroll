@@ -32,7 +32,7 @@ const WEATHER_MAP = {
   'freezing-rain':         { label: 'Freezing Rain',       icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1a2535 0%, #2d4055 50%, #4a6a85 100%)', effect: 'rain' },
 };
 
-const DEFAULT_WEATHER = { label: 'Loading\u2026', icon: () => Icon.Sun, bg: 'linear-gradient(135deg, #0C1A35 0%, #219EBC 100%)', effect: null };
+const DEFAULT_WEATHER = { label: 'Loading…', icon: () => Icon.Sun, bg: 'linear-gradient(135deg, #0C1A35 0%, #219EBC 100%)', effect: null };
 
 // ── WEATHER ATMOSPHERIC EFFECTS ──────────────────────────
 function WeatherEffect({ effect }) {
@@ -195,7 +195,7 @@ function MoonWidget({ moonphase }) {
     <div className="moon-widget widget-shimmer">
       <Icon.Moon size={38} color="#0C1A35" />
       <div className="moon-pct">--</div>
-      <div className="moon-phase">Loading\u2026</div>
+      <div className="moon-phase">Loading…</div>
     </div>
   );
   const { name, file, pct, illum, glowX } = getMoonInfo(moonphase);

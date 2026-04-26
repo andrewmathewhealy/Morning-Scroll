@@ -252,13 +252,14 @@ function VideoPlayer({ video, poster, autoplay = false, fullscreen = false, star
 function useVideoFeed() {
   const [state, setState] = useState({ loading: true, feed: null, error: null });
   useEffect(() => {
-    const cacheKey = "videos_feed_v1";
+    const cacheKey = "videos_feed_v2";
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        // Use cache if less than 1 hour old
-        if (parsed.cached_at && Date.now() - new Date(parsed.cached_at).getTime() < 3600000) {
+        // Use cache if less than 1 hour old AND has actual videos
+        const hasVideos = Object.values(parsed).some(v => Array.isArray(v) && v.length > 0);
+        if (hasVideos && parsed.cached_at && Date.now() - new Date(parsed.cached_at).getTime() < 3600000) {
           setState({ loading: false, feed: parsed, error: null });
           return;
         }
