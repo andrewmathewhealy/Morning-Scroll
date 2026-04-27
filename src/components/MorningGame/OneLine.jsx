@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useMemo } from "react";
 import { useGameAudio } from "./useGameAudio.js";
 import { useHaptics } from "./useHaptics.js";
+import "./oneline.css";
 
 // Shapes as dotted outlines — normalized 0-1 coordinates, closed paths
 const SHAPES = [
@@ -89,7 +90,7 @@ export default function OneLine({ onComplete }) {
       // Audio tick
       const now = Date.now();
       if (now - audioRef.current > 120) {
-        audio.playPop(Math.floor((newCovered.size / dottedPoints.length) * 9));
+        audio.playTrace(Math.floor((newCovered.size / dottedPoints.length) * 11));
         audioRef.current = now;
       }
 

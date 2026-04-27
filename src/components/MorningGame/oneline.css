@@ -1,0 +1,16 @@
+.mg-oneline-container {
+  position: relative; width: 100%; height: 240px;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.mg-oneline-svg { width: 100%; height: 100%; touch-action: none; }
+.mg-oneline-start { animation: mgPulse 1.5s ease-in-out infinite; }
+@keyframes mgPulse { 0%,100% { r: 3; opacity: 0.7; } 50% { r: 4.5; opacity: 1; } }
+.mg-oneline-complete {
+  animation: mgFlash 0.4s ease;
+  filter: drop-shadow(0 0 4px rgba(228,189,88,0.5));
+}
+@keyframes mgFlash { 0%,100% { opacity: 1; } 50% { opacity: 0.4; stroke-width: 4; } }
+.mg-oneline-hint {
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+  font-size: 11px; color: rgba(12,26,53,0.3); font-family: 'Satoshi', sans-serif; letter-spacing: 0.5px;
+}

@@ -1,7 +1,13 @@
 import { useRef, useCallback } from "react";
 
-// Warm pentatonic — lower octave, more soothing
-const PENTATONIC = [262, 294, 330, 392, 440, 523, 587, 659, 784, 880];
+// C Major Pentatonic — 2 octaves, 12 notes
+const MORNING_SCALE = [
+  261.63, 293.66, 329.63, 392.00, 440.00, 523.25,
+  587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66,
+];
+
+// 5 evenly-spaced notes for Stack (indices 0, 2, 5, 8, 10)
+const STACK_NOTES = [261.63, 329.63, 523.25, 783.99, 1046.50];
 
 export function useGameAudio() {
   const ctxRef = useRef(null);
@@ -15,78 +21,121 @@ export function useGameAudio() {
     return ctx;
   }, []);
 
-  // Soft, warm tone — slow attack, long gentle decay
-  const playNote = useCallback((freq, duration = 0.6) => {
+  // Core FM synthesis pluck — minimal techno style
+  const playTechnoPluck = useCallback((frequency, time = 0, opts = {}) => {
     try {
       const ctx = getCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      // Soft sine with gentle harmonics
-      osc.type = "sine";
-      osc.frequency.value = freq;
-      // Slow attack (50ms), gentle peak, long fade
-      gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + duration);
-    } catch {}
-  }, [getCtx]);
+      const now = ctx.currentTime + time;
+      const vol = opts.volume ?? 1;
+      const subBoost = opts.subBoost ?? 1;
 
-  const playChord = useCallback((freqs, duration = 0.8) => {
-    try {
-      const ctx = getCtx();
-      freqs.forEach(freq => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + duration);
+      // === CARRIER (the tone you hear) ===
+      const carrier = ctx.createOscillator();
+      carrier.type = "sine";
+      carrier.frequency.value = frequency;
+
+      // Slight detune for stereo width
+      const carrierDetune = ctx.createOscillator();
+      carrierDetune.type = "sine";
+      carrierDetune.frequency.value = frequency;
+      carrierDetune.detune.value = 3;
+
+      // === MODULATOR (bright attack → warm settle) ===
+      const modulator = ctx.createOscillator();
+      modulator.type = "sine";
+      modulator.frequency.value = frequency * 2; // 2:1 ratio
+
+      const modGain = ctx.createGain();
+      modGain.gain.setValueAtTime(frequency * 1.5, now);
+      modGain.gain.exponentialRampToValueAtTime(1, now + 0.08);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      modGain.connect(carrierDetune.frequency);
+
+      // === SUB BASS (physical weight) ===
+      const sub = ctx.createOscillator();
+      sub.type = "sine";
+      sub.frequency.value = frequency / 2;
+
+      const subGain = ctx.createGain();
+      subGain.gain.setValueAtTime(0.08 * subBoost * vol, now);
+      subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+      // === CARRIER ENVELOPE (snappy 0.4s) ===
+      const carrierGain = ctx.createGain();
+      carrierGain.gain.setValueAtTime(0.25 * vol, now);
+      carrierGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+      const carrierDetuneGain = ctx.createGain();
+      carrierDetuneGain.gain.setValueAtTime(0.15 * vol, now);
+      carrierDetuneGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+      // === CLICK TRANSIENT (percussive tap) ===
+      const clickOsc = ctx.createOscillator();
+      clickOsc.type = "square";
+      clickOsc.frequency.value = frequency * 6;
+
+      const clickGain = ctx.createGain();
+      clickGain.gain.setValueAtTime(0.04 * vol, now);
+      clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+
+      // === CONNECT ===
+      carrier.connect(carrierGain).connect(ctx.destination);
+      carrierDetune.connect(carrierDetuneGain).connect(ctx.destination);
+      sub.connect(subGain).connect(ctx.destination);
+      clickOsc.connect(clickGain).connect(ctx.destination);
+
+      // === START/STOP ===
+      [carrier, carrierDetune, modulator, sub, clickOsc].forEach(osc => {
+        osc.start(now);
+        osc.stop(now + 0.6);
       });
     } catch {}
   }, [getCtx]);
 
-  // Gentle chime for tracing progress — quiet, warm
+  // Ascending note for Pop/Stars/Leaves/Ripples
   const playPop = useCallback((index) => {
-    const note = PENTATONIC[Math.min(index, PENTATONIC.length - 1)];
-    playNote(note, 0.5);
-  }, [playNote]);
+    const note = MORNING_SCALE[Math.min(index, MORNING_SCALE.length - 1)];
+    playTechnoPluck(note);
+  }, [playTechnoPluck]);
 
-  // Soft wooden tap for stack drops
-  const playDrop = useCallback((index) => {
-    try {
-      const ctx = getCtx();
-      const freq = 250 + index * 50;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.25);
-    } catch {}
-  }, [getCtx]);
+  // Quieter note for rapid tracing (OneLine)
+  const playTrace = useCallback((index) => {
+    const note = MORNING_SCALE[Math.min(index, MORNING_SCALE.length - 1)];
+    playTechnoPluck(note, 0, { volume: 0.7 });
+  }, [playTechnoPluck]);
+
+  // Stack/block drop — 5 evenly-spaced notes
+  const playDrop = useCallback((index, perfect = false) => {
+    const note = STACK_NOTES[Math.min(index, STACK_NOTES.length - 1)];
+    playTechnoPluck(note, 0, {
+      volume: perfect ? 1 : 0.6,
+      subBoost: perfect ? 1.5 : 1,
+    });
+  }, [playTechnoPluck]);
 
   const playShimmer = useCallback(() => {
-    playNote(659, 0.6);  // E5
-    playNote(784, 0.5);  // G5
-  }, [playNote]);
+    playTechnoPluck(659.25, 0, { volume: 0.5 });
+    playTechnoPluck(783.99, 0.03, { volume: 0.5 });
+  }, [playTechnoPluck]);
 
-  // Warm resolved chord — like a deep breath
+  // Completion chord — confident, tight stagger (30ms)
   const playCompletion = useCallback(() => {
-    playChord([262, 330, 392, 523], 1.0); // C major with octave
-  }, [playChord]);
+    playTechnoPluck(523.25, 0);          // C5
+    playTechnoPluck(659.25, 0.03);       // E5
+    playTechnoPluck(783.99, 0.06);       // G5
+    playTechnoPluck(1046.50, 0.09);      // C6 sparkle
+  }, [playTechnoPluck]);
 
-  return { playNote, playChord, playPop, playDrop, playShimmer, playCompletion };
+  // Generic note/chord for backward compat
+  const playNote = useCallback((freq) => {
+    playTechnoPluck(freq);
+  }, [playTechnoPluck]);
+
+  const playChord = useCallback((freqs) => {
+    freqs.forEach((f, i) => playTechnoPluck(f, i * 0.03));
+  }, [playTechnoPluck]);
+
+  return { playPop, playTrace, playDrop, playShimmer, playCompletion, playNote, playChord, playTechnoPluck };
 }

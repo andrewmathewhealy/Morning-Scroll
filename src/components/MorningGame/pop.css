@@ -1,0 +1,27 @@
+.mg-pop-overlay {
+  position: absolute; inset: 0; z-index: 9990;
+  overflow: hidden; pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.mg-pop-overlay.mg-pop-fadeout { opacity: 0; }
+.mg-bubble {
+  position: absolute; border-radius: 50%; pointer-events: auto;
+  cursor: pointer; transition: transform 0.1s; z-index: 2;
+}
+.mg-bubble:active { transform: scale(1.1); }
+.mg-bubble-inner {
+  width: 100%; height: 100%; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, hsla(var(--bubble-hue),60%,85%,0.6), hsla(var(--bubble-hue),50%,70%,0.3));
+  border: 1px solid hsla(var(--bubble-hue),60%,90%,0.4);
+  box-shadow: inset 0 -4px 8px hsla(var(--bubble-hue),40%,60%,0.15), 0 0 12px hsla(var(--bubble-hue),50%,80%,0.2);
+}
+.mg-pop-burst { position: absolute; z-index: 3; pointer-events: none; }
+.mg-pop-particle {
+  position: absolute; width: 4px; height: 4px; border-radius: 50%;
+  background: rgba(228,189,88,0.6);
+  animation: mgPopParticle 0.35s ease-out forwards;
+}
+@keyframes mgPopParticle {
+  0% { transform: translate(0,0) scale(1); opacity: 0.8; }
+  100% { transform: translate(calc(cos(var(--angle))*var(--dist)), calc(sin(var(--angle))*var(--dist))) scale(0); opacity: 0; }
+}

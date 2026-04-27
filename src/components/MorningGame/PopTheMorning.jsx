@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useGameAudio } from "./useGameAudio.js";
 import { useHaptics } from "./useHaptics.js";
+import "./pop.css";
 
 const BUBBLE_COUNT = 11;
 

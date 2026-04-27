@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useGameAudio } from "./useGameAudio.js";
 import { useHaptics } from "./useHaptics.js";
+import "./stack.css";
 
 const BLOCK_COLORS = ["#F4B183", "#E8907A", "#E07272", "#D45B8A", "#C04DA0"];
 const BLOCK_COUNT = 5;
@@ -77,9 +78,8 @@ export default function Stack({ onComplete }) {
     setDropping({ x: sliding.x, quality, index: currentBlock });
     setSliding(null);
 
-    audio.playDrop(currentBlock);
+    audio.playDrop(currentBlock, quality === "perfect");
     haptics.tap();
-    if (quality === "perfect") audio.playShimmer();
 
     // After drop animation completes
     setTimeout(() => {

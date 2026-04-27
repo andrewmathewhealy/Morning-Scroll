@@ -1,0 +1,27 @@
+.mg-stars-overlay {
+  position: absolute; inset: 0; z-index: 9990;
+  overflow: hidden; pointer-events: auto; cursor: crosshair;
+  transition: opacity 0.8s ease;
+}
+.mg-stars-overlay.mg-stars-fadeout { opacity: 0; pointer-events: none; }
+.mg-stars-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.mg-constellation-line { animation: mgLineIn 0.4s ease both; }
+@keyframes mgLineIn { from { opacity: 0; } to { opacity: 1; } }
+.mg-placed-star {
+  position: absolute; transform: translate(-50%,-50%); pointer-events: none;
+  animation: mgStarAppear 0.3s cubic-bezier(0.34,1.3,0.64,1) both;
+}
+@keyframes mgStarAppear { from{transform:translate(-50%,-50%) scale(0);opacity:0} to{transform:translate(-50%,-50%) scale(1);opacity:1} }
+.mg-star-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(253,242,232,0.9); position: relative; z-index: 2; }
+.mg-star-glow {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 20px; height: 20px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(228,189,88,0.3) 0%, transparent 70%); z-index: 1;
+}
+.mg-star-pulse { animation: mgStarPulse 1.2s ease-in-out infinite; }
+@keyframes mgStarPulse { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.4)} }
+.mg-stars-hint {
+  position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+  font-size: 11px; color: rgba(253,242,232,0.35); font-family: 'Satoshi', sans-serif;
+  letter-spacing: 0.5px; pointer-events: none;
+}
