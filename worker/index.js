@@ -615,6 +615,8 @@ async function fetchChannelVideosRSS(channelId, channelName) {
       const videoId = entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/)?.[1];
       const title = entry.match(/<title>(.*?)<\/title>/)?.[1];
       const published = entry.match(/<published>(.*?)<\/published>/)?.[1];
+      const linkHref = entry.match(/<link[^>]+href="([^"]+)"/)?.[1] || "";
+      const isShort = linkHref.includes("/shorts/");
       if (videoId && title && published) {
         // Only include videos from the last 48 hours
         const publishedTime = new Date(published).getTime();
@@ -627,6 +629,7 @@ async function fetchChannelVideosRSS(channelId, channelName) {
             channel: channelName,
             published_at: published,
             embed_url: `https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0`,
+            is_short: isShort,
           });
         }
       }

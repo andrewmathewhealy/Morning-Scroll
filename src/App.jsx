@@ -19,8 +19,7 @@ import OnThisDayWidget from "./components/OnThisDay/OnThisDayWidget.jsx";
 import ScoresSection from "./components/Sports/ScoresSection.jsx";
 import FeedScreen from "./components/Feed/FeedScreen.jsx";
 import { YouTubeFeedSection, YouTubeSettingsSection } from "./components/YouTube/YouTube.jsx";
-import { LIVE_STREAM_CATEGORIES, LIVE_CAT_COLORS, useLiveStatus, LiveStreamCard, LiveStreamPlayer } from "./components/LiveStreams/LiveStreams.jsx";
-import MorningGame, { GameOverlay, OneLine, Stack, Ripples, BrickBreaker } from "./components/MorningGame/MorningGame.jsx";
+import { BrickBreaker } from "./components/MorningGame/MorningGame.jsx";
 import MindScreen from "./components/Mind/MindScreen.jsx";
 
 // ── ERROR BOUNDARY ────────────────────────────────────────
@@ -278,88 +277,6 @@ function HomeScreen({ onOpenWordle, radioPlayer }) {
   );
 }
 
-// ── DISCOVER SCREEN (live streams) ──────
-function DiscoverScreen() {
-  const [openStream, setOpenStream] = useState(null);
-  const allStreams = useMemo(
-    () => Object.values(LIVE_STREAM_CATEGORIES).flat(),
-    []
-  );
-  const liveStatus = useLiveStatus(allStreams);
-  const liveCategories = useMemo(() => {
-    if (!liveStatus) return null;
-    const out = {};
-    for (const [cat, streams] of Object.entries(LIVE_STREAM_CATEGORIES)) {
-      const live = streams.filter(s => liveStatus[s.videoId]?.live);
-      if (live.length) out[cat] = live;
-    }
-    return out;
-  }, [liveStatus]);
-
-  return (
-    <div className="community-bg">
-      <div className="community-header fade-up fade-up-1">
-        <div className="community-title">Discover</div>
-        <div className="community-subtitle">The world right now</div>
-      </div>
-
-      <div className="section-pad fade-up fade-up-2">
-        <div style={{ color: "#FDF2E8", fontSize: 13, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>One Line</div>
-        <div className="mg-card"><OneLine onComplete={() => {}} /></div>
-      </div>
-
-      <div className="section-pad fade-up fade-up-3">
-        <div style={{ color: "#FDF2E8", fontSize: 13, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Stack</div>
-        <div className="mg-card"><Stack onComplete={() => {}} /></div>
-      </div>
-
-      <div className="section-pad fade-up fade-up-4">
-        <BrickBreaker />
-      </div>
-
-      <div className="section-pad fade-up fade-up-5">
-        <div style={{ color: "#FDF2E8", fontSize: 13, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Ripples</div>
-        <div style={{ color: "rgba(253,242,232,0.4)", fontSize: 12, marginBottom: 10 }}>Tap anywhere on the screen to test (overlay game)</div>
-      </div>
-
-      <div className="fade-up fade-up-6" style={{ marginTop: 20 }}>
-        {!liveCategories && (
-          <div style={{ padding: "0 20px", fontSize: 11, color: "rgba(253,242,232,0.4)", letterSpacing: 0.5 }}>
-            Checking live streams…
-          </div>
-        )}
-        {liveCategories && Object.entries(liveCategories).map(([cat, streams]) => (
-          <div key={cat} style={{ marginBottom: 14 }}>
-            <div style={{ padding: "0 20px", marginBottom: 8 }}>
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                background: "rgba(2,48,71,0.7)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-                padding: "5px 12px 5px 10px", borderRadius: 999,
-                border: "1px solid rgba(253,242,232,0.1)",
-              }}>
-                <span style={{ width: 6, height: 6, borderRadius: 2, background: LIVE_CAT_COLORS[cat] }} />
-                <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", color: "#FDF2E8" }}>{cat}</span>
-              </div>
-            </div>
-            <div style={{
-              display: "flex", gap: 10, overflowX: "auto",
-              padding: "4px 20px 8px 20px",
-              scrollSnapType: "x mandatory",
-              scrollPaddingLeft: 20, scrollbarWidth: "none",
-            }}>
-              {streams.map(s => (
-                <LiveStreamCard key={s.id} stream={s} onOpen={setOpenStream} />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {openStream && <LiveStreamPlayer stream={openStream} onClose={() => setOpenStream(null)} />}
-    </div>
-  );
-}
-
 // ── SETTINGS SCREEN ───────────────────────────────────────
 function Accordion({ title, count, total, accentColor, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -474,7 +391,6 @@ const TABS = [
   { id: "home",     label: "Home",     ActiveIcon: p => <Icon.Home     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Home     {...p} color="rgba(12,26,53,0.5)" /> },
   { id: "feed",     label: "Feed",     ActiveIcon: p => <Icon.Feed     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Feed     {...p} color="rgba(12,26,53,0.5)" /> },
   { id: "mind",     label: "Mind",     ActiveIcon: p => <Icon.Mind     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Mind     {...p} color="rgba(12,26,53,0.5)" /> },
-  { id: "discover", label: "Discover", ActiveIcon: p => <Icon.Globe    {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Globe    {...p} color="rgba(12,26,53,0.5)" /> },
   { id: "settings", label: "Settings", ActiveIcon: p => <Icon.Settings {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Settings {...p} color="rgba(12,26,53,0.5)" /> },
 ];
 
@@ -546,11 +462,10 @@ export default function MorningScrollApp() {
             {tab === "home" && <HomeScreen onOpenWordle={() => setWordleOpen(true)} radioPlayer={radioPlayer} />}
             {tab === "feed" && <FeedScreen />}
             {tab === "mind" && <MindScreen />}
-            {tab === "discover" && <DiscoverScreen />}
             {tab === "settings" && <SettingsScreen />}
           </div>
 
-          {radioPlayer.station && tab !== "discover" && (
+          {radioPlayer.station && (
             <div className="radio-mini-player">
               <RadioMiniPlayer radioPlayer={radioPlayer} />
             </div>
@@ -579,7 +494,6 @@ export default function MorningScrollApp() {
             </div>
           )}
 
-          <GameOverlay />
         </div>
       </div>
     </>

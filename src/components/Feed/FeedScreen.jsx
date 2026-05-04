@@ -335,6 +335,7 @@ function VideoCard({ video, isVisible, unlocked, onUnlock }) {
   const playerRef = useRef(null);
   const [ready, setReady] = useState(false);
   const [created, setCreated] = useState(false);
+  const isShort = video.is_short;
 
   // Create player once when unlocked — never destroy it, just play/pause
   useEffect(() => {
@@ -384,11 +385,18 @@ function VideoCard({ video, isVisible, unlocked, onUnlock }) {
   }, [isVisible, ready]);
 
   return (
-    <div className="vfeed-card-v" onClick={() => !unlocked && onUnlock()}>
-      <div className="vfeed-thumb-wrap">
+    <div className={`vfeed-card-v ${isShort ? "vfeed-card-short" : "vfeed-card-long"}`} onClick={() => !unlocked && onUnlock()}>
+      <div className={`vfeed-thumb-wrap ${isShort ? "vfeed-thumb-short" : "vfeed-thumb-long"}`}>
         <img className="vfeed-thumb" src={video.thumbnail} alt="" />
-        {!unlocked && <div className="vfeed-play"><Icon.Play size={28} color="#fff" /></div>}
+        {!unlocked && (
+          <div className="vfeed-play">
+            <Icon.Play size={isShort ? 24 : 32} color="#fff" />
+          </div>
+        )}
         {unlocked && <div ref={containerRef} className="vfeed-yt-container" />}
+        {isShort && (
+          <div className="vfeed-short-badge">SHORT</div>
+        )}
       </div>
       <div className="vfeed-info">
         <div className="vfeed-title">{video.title}</div>
