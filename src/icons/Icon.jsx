@@ -166,4 +166,11 @@ Home: ({ size = 22, color = "rgba(2,48,71,0.4)" }) => (
       <circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14"/>
     </svg>
   ),
+  Mind: ({ size = 22, color = "rgba(2,48,71,0.4)" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.2 4.7-3 6v2a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2c-1.8-1.3-3-3.5-3-6a7 7 0 0 1 7-7z"/>
+      <line x1="10" y1="21" x2="14" y2="21"/>
+      <path d="M12 6v4"/><path d="M9.5 8.5L12 10l2.5-1.5"/>
+    </svg>
+  ),
 };

@@ -537,6 +537,8 @@
   @keyframes accordionOpen { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
   .accordion-body-animate { animation: accordionOpen 0.2s ease forwards; }
 
+  @keyframes mindPulse { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.8); opacity: 0.5; } }
+
 /* ── VIDEO FEED ─────────────────────────────────────────── */
 
 /* Category tabs */

@@ -9,6 +9,11 @@ const MORNING_SCALE = [
 // 5 evenly-spaced notes for Stack (indices 0, 2, 5, 8, 10)
 const STACK_NOTES = [261.63, 329.63, 523.25, 783.99, 1046.50];
 
+// Binaural beat offsets (Hz difference between ears)
+// Alpha range (8-13 Hz) — relaxed morning alertness
+const BEAT_HZ = 10;          // 10 Hz alpha wave
+const COMPLETION_BEAT_HZ = 7; // 7 Hz theta — dreamy reward feeling
+
 export function useGameAudio() {
   const ctxRef = useRef(null);
 
@@ -21,75 +26,79 @@ export function useGameAudio() {
     return ctx;
   }, []);
 
-  // Core FM synthesis pluck — minimal techno style
-  const playTechnoPluck = useCallback((frequency, time = 0, opts = {}) => {
+  // Core binaural beat tone — plays slightly different freq in each ear
+  const playBinaural = useCallback((frequency, time = 0, opts = {}) => {
     try {
       const ctx = getCtx();
       const now = ctx.currentTime + time;
       const vol = opts.volume ?? 1;
-      const subBoost = opts.subBoost ?? 1;
+      const beatHz = opts.beatHz ?? BEAT_HZ;
+      const duration = opts.duration ?? 0.6;
+      const attack = opts.attack ?? 0.02;
 
-      // === CARRIER (the tone you hear) ===
-      const carrier = ctx.createOscillator();
-      carrier.type = "sine";
-      carrier.frequency.value = frequency;
+      // Left ear — base frequency
+      const oscL = ctx.createOscillator();
+      oscL.type = "sine";
+      oscL.frequency.value = frequency;
 
-      // Slight detune for stereo width
-      const carrierDetune = ctx.createOscillator();
-      carrierDetune.type = "sine";
-      carrierDetune.frequency.value = frequency;
-      carrierDetune.detune.value = 3;
+      const gainL = ctx.createGain();
+      gainL.gain.setValueAtTime(0.001, now);
+      gainL.gain.exponentialRampToValueAtTime(0.2 * vol, now + attack);
+      gainL.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-      // === MODULATOR (bright attack → warm settle) ===
-      const modulator = ctx.createOscillator();
-      modulator.type = "sine";
-      modulator.frequency.value = frequency * 2; // 2:1 ratio
+      const panL = ctx.createStereoPanner();
+      panL.pan.value = -1; // full left
 
-      const modGain = ctx.createGain();
-      modGain.gain.setValueAtTime(frequency * 1.5, now);
-      modGain.gain.exponentialRampToValueAtTime(1, now + 0.08);
+      oscL.connect(gainL).connect(panL).connect(ctx.destination);
 
-      modulator.connect(modGain);
-      modGain.connect(carrier.frequency);
-      modGain.connect(carrierDetune.frequency);
+      // Right ear — base frequency + beat offset
+      const oscR = ctx.createOscillator();
+      oscR.type = "sine";
+      oscR.frequency.value = frequency + beatHz;
 
-      // === SUB BASS (physical weight) ===
-      const sub = ctx.createOscillator();
-      sub.type = "sine";
-      sub.frequency.value = frequency / 2;
+      const gainR = ctx.createGain();
+      gainR.gain.setValueAtTime(0.001, now);
+      gainR.gain.exponentialRampToValueAtTime(0.2 * vol, now + attack);
+      gainR.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-      const subGain = ctx.createGain();
-      subGain.gain.setValueAtTime(0.08 * subBoost * vol, now);
-      subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      const panR = ctx.createStereoPanner();
+      panR.pan.value = 1; // full right
 
-      // === CARRIER ENVELOPE (snappy 0.4s) ===
-      const carrierGain = ctx.createGain();
-      carrierGain.gain.setValueAtTime(0.25 * vol, now);
-      carrierGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      oscR.connect(gainR).connect(panR).connect(ctx.destination);
 
-      const carrierDetuneGain = ctx.createGain();
-      carrierDetuneGain.gain.setValueAtTime(0.15 * vol, now);
-      carrierDetuneGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      // Soft harmonic layer (one octave up, quieter) — adds warmth
+      const oscHarmL = ctx.createOscillator();
+      oscHarmL.type = "sine";
+      oscHarmL.frequency.value = frequency * 2;
 
-      // === CLICK TRANSIENT (percussive tap) ===
-      const clickOsc = ctx.createOscillator();
-      clickOsc.type = "square";
-      clickOsc.frequency.value = frequency * 6;
+      const harmGainL = ctx.createGain();
+      harmGainL.gain.setValueAtTime(0.001, now);
+      harmGainL.gain.exponentialRampToValueAtTime(0.05 * vol, now + attack);
+      harmGainL.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.7);
 
-      const clickGain = ctx.createGain();
-      clickGain.gain.setValueAtTime(0.04 * vol, now);
-      clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.015);
+      const harmPanL = ctx.createStereoPanner();
+      harmPanL.pan.value = -1;
 
-      // === CONNECT ===
-      carrier.connect(carrierGain).connect(ctx.destination);
-      carrierDetune.connect(carrierDetuneGain).connect(ctx.destination);
-      sub.connect(subGain).connect(ctx.destination);
-      clickOsc.connect(clickGain).connect(ctx.destination);
+      oscHarmL.connect(harmGainL).connect(harmPanL).connect(ctx.destination);
 
-      // === START/STOP ===
-      [carrier, carrierDetune, modulator, sub, clickOsc].forEach(osc => {
+      const oscHarmR = ctx.createOscillator();
+      oscHarmR.type = "sine";
+      oscHarmR.frequency.value = frequency * 2 + beatHz;
+
+      const harmGainR = ctx.createGain();
+      harmGainR.gain.setValueAtTime(0.001, now);
+      harmGainR.gain.exponentialRampToValueAtTime(0.05 * vol, now + attack);
+      harmGainR.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.7);
+
+      const harmPanR = ctx.createStereoPanner();
+      harmPanR.pan.value = 1;
+
+      oscHarmR.connect(harmGainR).connect(harmPanR).connect(ctx.destination);
+
+      // Start/stop all
+      [oscL, oscR, oscHarmL, oscHarmR].forEach(osc => {
         osc.start(now);
-        osc.stop(now + 0.6);
+        osc.stop(now + duration + 0.05);
       });
     } catch {}
   }, [getCtx]);
@@ -97,45 +106,46 @@ export function useGameAudio() {
   // Ascending note for Pop/Stars/Leaves/Ripples
   const playPop = useCallback((index) => {
     const note = MORNING_SCALE[Math.min(index, MORNING_SCALE.length - 1)];
-    playTechnoPluck(note);
-  }, [playTechnoPluck]);
+    playBinaural(note, 0, { duration: 0.5 });
+  }, [playBinaural]);
 
   // Quieter note for rapid tracing (OneLine)
   const playTrace = useCallback((index) => {
     const note = MORNING_SCALE[Math.min(index, MORNING_SCALE.length - 1)];
-    playTechnoPluck(note, 0, { volume: 0.7 });
-  }, [playTechnoPluck]);
+    playBinaural(note, 0, { volume: 0.6, duration: 0.35 });
+  }, [playBinaural]);
 
   // Stack/block drop — 5 evenly-spaced notes
   const playDrop = useCallback((index, perfect = false) => {
     const note = STACK_NOTES[Math.min(index, STACK_NOTES.length - 1)];
-    playTechnoPluck(note, 0, {
+    playBinaural(note, 0, {
       volume: perfect ? 1 : 0.6,
-      subBoost: perfect ? 1.5 : 1,
+      duration: perfect ? 0.8 : 0.5,
+      beatHz: perfect ? 7 : BEAT_HZ, // theta on perfect for extra reward
     });
-  }, [playTechnoPluck]);
+  }, [playBinaural]);
 
   const playShimmer = useCallback(() => {
-    playTechnoPluck(659.25, 0, { volume: 0.5 });
-    playTechnoPluck(783.99, 0.03, { volume: 0.5 });
-  }, [playTechnoPluck]);
+    playBinaural(659.25, 0, { volume: 0.5, duration: 0.7 });
+    playBinaural(783.99, 0.05, { volume: 0.5, duration: 0.7 });
+  }, [playBinaural]);
 
-  // Completion chord — confident, tight stagger (30ms)
+  // Completion chord — layered binaural tones with theta beat
   const playCompletion = useCallback(() => {
-    playTechnoPluck(523.25, 0);          // C5
-    playTechnoPluck(659.25, 0.03);       // E5
-    playTechnoPluck(783.99, 0.06);       // G5
-    playTechnoPluck(1046.50, 0.09);      // C6 sparkle
-  }, [playTechnoPluck]);
+    playBinaural(523.25, 0, { beatHz: COMPLETION_BEAT_HZ, duration: 1.2 });
+    playBinaural(659.25, 0.05, { beatHz: COMPLETION_BEAT_HZ, duration: 1.1 });
+    playBinaural(783.99, 0.10, { beatHz: COMPLETION_BEAT_HZ, duration: 1.0 });
+    playBinaural(1046.50, 0.15, { beatHz: COMPLETION_BEAT_HZ, duration: 0.9 });
+  }, [playBinaural]);
 
   // Generic note/chord for backward compat
   const playNote = useCallback((freq) => {
-    playTechnoPluck(freq);
-  }, [playTechnoPluck]);
+    playBinaural(freq);
+  }, [playBinaural]);
 
   const playChord = useCallback((freqs) => {
-    freqs.forEach((f, i) => playTechnoPluck(f, i * 0.03));
-  }, [playTechnoPluck]);
+    freqs.forEach((f, i) => playBinaural(f, i * 0.05));
+  }, [playBinaural]);
 
-  return { playPop, playTrace, playDrop, playShimmer, playCompletion, playNote, playChord, playTechnoPluck };
+  return { playPop, playTrace, playDrop, playShimmer, playCompletion, playNote, playChord, playBinaural };
 }

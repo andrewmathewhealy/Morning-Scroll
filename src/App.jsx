@@ -21,6 +21,7 @@ import FeedScreen from "./components/Feed/FeedScreen.jsx";
 import { YouTubeFeedSection, YouTubeSettingsSection } from "./components/YouTube/YouTube.jsx";
 import { LIVE_STREAM_CATEGORIES, LIVE_CAT_COLORS, useLiveStatus, LiveStreamCard, LiveStreamPlayer } from "./components/LiveStreams/LiveStreams.jsx";
 import MorningGame, { GameOverlay, OneLine, Stack, Ripples } from "./components/MorningGame/MorningGame.jsx";
+import MindScreen from "./components/Mind/MindScreen.jsx";
 
 // ── ERROR BOUNDARY ────────────────────────────────────────
 class ErrorBoundary extends Component {
@@ -468,6 +469,7 @@ const getBgStyle = () => ({
 const TABS = [
   { id: "home",     label: "Home",     ActiveIcon: p => <Icon.Home     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Home     {...p} color="rgba(12,26,53,0.5)" /> },
   { id: "feed",     label: "Feed",     ActiveIcon: p => <Icon.Feed     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Feed     {...p} color="rgba(12,26,53,0.5)" /> },
+  { id: "mind",     label: "Mind",     ActiveIcon: p => <Icon.Mind     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Mind     {...p} color="rgba(12,26,53,0.5)" /> },
   { id: "discover", label: "Discover", ActiveIcon: p => <Icon.Globe    {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Globe    {...p} color="rgba(12,26,53,0.5)" /> },
   { id: "settings", label: "Settings", ActiveIcon: p => <Icon.Settings {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Settings {...p} color="rgba(12,26,53,0.5)" /> },
 ];
@@ -539,6 +541,7 @@ export default function MorningScrollApp() {
           <div className="screen rubber-scroll" ref={screenRef}>
             {tab === "home" && <HomeScreen onOpenWordle={() => setWordleOpen(true)} radioPlayer={radioPlayer} />}
             {tab === "feed" && <FeedScreen />}
+            {tab === "mind" && <MindScreen />}
             {tab === "discover" && <DiscoverScreen />}
             {tab === "settings" && <SettingsScreen />}
           </div>
