@@ -402,14 +402,36 @@ function VideoCard({ video, isVisible, unlocked, onUnlock }) {
   );
 }
 
+const INITIAL_LOAD = 7;
+const LOAD_MORE = 7;
+
 function FeedScreen() {
   const { loading, feed, error } = useVideoFeed();
   const [activeTab, setActiveTab] = useState("animals");
   const [unlocked, setUnlocked] = useState(false);
+  const [showCount, setShowCount] = useState(INITIAL_LOAD);
   const listRef = useRef(null);
+  const sentinelRef = useRef(null);
 
   const videos = feed?.[activeTab] || [];
-  const visibleIndex = useVisibleIndex(listRef, videos.length);
+  const displayedVideos = videos.slice(0, showCount);
+  const hasMore = showCount < videos.length;
+  const visibleIndex = useVisibleIndex(listRef, displayedVideos.length);
+
+  // Reset count when switching tabs
+  useEffect(() => { setShowCount(INITIAL_LOAD); }, [activeTab]);
+
+  // Infinite scroll — load more when sentinel enters viewport
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !hasMore) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setShowCount(c => c + LOAD_MORE); },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, showCount]);
 
   return (
     <div className="community-bg">
@@ -454,11 +476,12 @@ function FeedScreen() {
           </div>
         )}
 
-        {videos.map((v, i) => (
+        {displayedVideos.map((v, i) => (
           <div key={v.video_id} data-idx={i}>
             <VideoCard video={v} isVisible={i === visibleIndex} unlocked={unlocked} onUnlock={() => setUnlocked(true)} />
           </div>
         ))}
+        {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
       </div>
     </div>
   );
