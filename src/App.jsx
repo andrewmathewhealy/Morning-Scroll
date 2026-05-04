@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense, Component } from "react";
 const PulseMap = lazy(() => import("./components/PulseMap/PulseMap.jsx"));
+const SunriseGlobe = lazy(() => import("./components/PulseMap/SunriseGlobe.jsx"));
 import "./styles/app.css";
 import "./styles/wordle.css";
 import { Icon } from "./icons/Icon.jsx";
@@ -201,6 +202,105 @@ function Toggle({ on, onToggle }) {
   );
 }
 
+// ── GLOBE SECTION (Radio / Sunrise tabs) ─────────────────
+function GlobeSection({ radioPlayer }) {
+  const [globeMode, setGlobeMode] = useState("sunrise");
+  const [fullscreen, setFullscreen] = useState(false);
+
+  const globeContent = (
+    <div
+      className={fullscreen ? undefined : "globe-hero"}
+      style={fullscreen
+        ? { position: "fixed", inset: 0, zIndex: 9999, background: "#010f18" }
+        : { overflow: "hidden", padding: 0, cursor: "pointer", position: "relative" }
+      }
+    >
+      {/* Tab switcher — inside the globe */}
+      <div style={{
+        position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)",
+        zIndex: 10, display: "flex", alignItems: "center", gap: 0,
+        background: "rgba(0,0,0,0.45)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+        borderRadius: 20, padding: "5px 4px",
+      }}>
+        <span
+          onClick={(e) => { e.stopPropagation(); setGlobeMode("sunrise"); }}
+          style={{
+            padding: "3px 14px", cursor: "pointer",
+            fontSize: 11, fontWeight: 600, fontFamily: "'Satoshi', sans-serif",
+            color: globeMode === "sunrise" ? "#FDF2E8" : "rgba(253,242,232,0.4)",
+            transition: "color 0.2s",
+          }}
+        >
+          Sunrise
+        </span>
+        <span style={{ width: 1, height: 12, background: "rgba(253,242,232,0.2)" }} />
+        <span
+          onClick={(e) => { e.stopPropagation(); setGlobeMode("radio"); }}
+          style={{
+            padding: "3px 14px", cursor: "pointer",
+            fontSize: 11, fontWeight: 600, fontFamily: "'Satoshi', sans-serif",
+            color: globeMode === "radio" ? "#FDF2E8" : "rgba(253,242,232,0.4)",
+            transition: "color 0.2s",
+          }}
+        >
+          Radio
+        </span>
+      </div>
+
+      {/* Fullscreen close button */}
+      {fullscreen && (
+        <div
+          onClick={() => setFullscreen(false)}
+          style={{
+            position: "absolute", top: 14, right: 14, zIndex: 11,
+            background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)",
+            borderRadius: 20, padding: "6px 14px", cursor: "pointer",
+            fontSize: 11, fontWeight: 600, color: "#FDF2E8",
+          }}
+        >
+          Close
+        </div>
+      )}
+
+      {/* Expand button (non-fullscreen only) */}
+      {!fullscreen && (
+        <div
+          onClick={(e) => { e.stopPropagation(); setFullscreen(true); }}
+          style={{
+            position: "absolute", bottom: 10, right: 10, zIndex: 10,
+            background: "rgba(0,0,0,0.45)", backdropFilter: "blur(6px)",
+            borderRadius: 14, padding: "5px 10px", cursor: "pointer",
+            fontSize: 10, fontWeight: 600, color: "rgba(253,242,232,0.6)",
+            display: "flex", alignItems: "center", gap: 4,
+          }}
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" />
+            <line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" />
+          </svg>
+          Expand
+        </div>
+      )}
+
+      <Suspense fallback={<div style={{ width: "100%", height: "100%", minHeight: fullscreen ? "100vh" : 320, background: "#010f18" }} />}>
+        {globeMode === "radio" ? (
+          <PulseMap style={{ width: "100%", height: "100%", minHeight: fullscreen ? "100vh" : 320, borderRadius: fullscreen ? 0 : "inherit" }} fullscreen={fullscreen} radioPlayer={radioPlayer} />
+        ) : (
+          <SunriseGlobe style={{ width: "100%", height: "100%", minHeight: fullscreen ? "100vh" : 320, borderRadius: fullscreen ? 0 : "inherit" }} />
+        )}
+      </Suspense>
+    </div>
+  );
+
+  if (fullscreen) return globeContent;
+
+  return (
+    <div className="spring-in spring-in-4 depth-mid" style={{ paddingTop: 14 }}>
+      {globeContent}
+    </div>
+  );
+}
+
 // ── HOME SCREEN ───────────────────────────────────────────
 function HomeScreen({ onOpenWordle, radioPlayer }) {
   const now = new Date();
@@ -230,13 +330,7 @@ function HomeScreen({ onOpenWordle, radioPlayer }) {
         <ErrorBoundary label="BrickBreaker"><BrickBreaker /></ErrorBoundary>
       </div>
 
-      <div className="spring-in spring-in-4 depth-mid" style={{ paddingTop: 14 }}>
-        <div className="globe-hero" style={{ overflow: "hidden", padding: 0, cursor: "pointer" }}>
-          <Suspense fallback={<div style={{ width: "100%", minHeight: 320, background: "#010f18" }} />}>
-            <PulseMap style={{ width: "100%", height: "100%", minHeight: 320, borderRadius: "inherit" }} radioPlayer={radioPlayer} />
-          </Suspense>
-        </div>
-      </div>
+      <GlobeSection radioPlayer={radioPlayer} />
 
       <div className="section-pad spring-in spring-in-5 depth-mid">
         <ErrorBoundary label="PollCard"><PollCard /></ErrorBoundary>
