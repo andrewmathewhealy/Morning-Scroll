@@ -345,13 +345,14 @@ export default function BrickBreaker() {
       </div>
 
       <div style={{
-        background: "rgba(180,226,238,0.6)",
-        backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
         borderRadius: 20,
         border: "1.5px solid #0C1A35",
         boxShadow: "0 4px 16px rgba(0,20,60,0.1), 0 1px 3px rgba(8,20,50,0.04)",
         overflow: "hidden",
         position: "relative",
+        backgroundImage: "url(/brickbreaker-bg.png)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}>
         <canvas
           ref={canvasRef}
@@ -360,15 +361,16 @@ export default function BrickBreaker() {
             height: 260,
             display: "block",
             touchAction: "none",
+            position: "relative",
+            zIndex: 1,
           }}
         />
 
         {/* Idle overlay — board visible behind a light frosted layer */}
         {phase === "idle" && (
           <div style={{
-            position: "absolute", inset: 0,
+            position: "absolute", inset: 0, zIndex: 2,
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            background: "rgba(180,226,238,0.5)",
           }}>
             <div
               className="tappable"
@@ -388,7 +390,7 @@ export default function BrickBreaker() {
         {/* Won / Lost overlays */}
         {(phase === "won" || phase === "lost") && (
           <div style={{
-            position: "absolute", inset: 0,
+            position: "absolute", inset: 0, zIndex: 2,
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
             background: "rgba(180,226,238,0.6)",
             backdropFilter: "blur(4px)",
@@ -396,8 +398,8 @@ export default function BrickBreaker() {
           }}>
             {phase === "won" && (
               <>
-                <div style={{ fontSize: 22, fontWeight: 700, color: "#0C1A35", fontFamily: "'Fraunces', serif" }}>Cleared!</div>
-                <div style={{ fontSize: 12, color: "rgba(2,48,71,0.5)" }}>All {total} bricks destroyed</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: "#0C1A35", fontFamily: "'Fraunces', serif" }}>Hubbahdghtht!</div>
+                <div style={{ fontSize: 12, color: "rgba(2,48,71,0.5)" }}>You are going to CONQUER the day!</div>
               </>
             )}
             {phase === "lost" && (

@@ -8,28 +8,28 @@ import { WORKER_URL } from "../../config.js";
 //   icon      → Lucide icon component
 //   bg        → CSS gradient for the widget background
 const WEATHER_MAP = {
-  'clear-day':             { label: 'Clear Skies',         icon: () => Icon.Sun,           bg: 'linear-gradient(135deg, #c47a20 0%, #e8a840 40%, #f5c862 100%)', effect: 'sunny' },
-  'clear-night':           { label: 'Clear Night',         icon: () => Icon.Moon,          bg: 'linear-gradient(135deg, #081020 0%, #0C1A35 50%, #142848 100%)', effect: 'stars' },
-  'partly-cloudy-day':     { label: 'Partly Cloudy',       icon: () => Icon.Cloud,         bg: 'linear-gradient(135deg, #4a7a9a 0%, #7a9ab0 50%, #c4a35a 100%)', effect: 'sunny' },
-  'partly-cloudy-night':   { label: 'Partly Cloudy Night', icon: () => Icon.Cloud,         bg: 'linear-gradient(135deg, #0C1A35 0%, #1a3255 50%, #2a4a7a 100%)', effect: 'stars' },
-  'cloudy':                { label: 'Overcast',            icon: () => Icon.Cloud,         bg: 'linear-gradient(135deg, #3a4a5a 0%, #5a6a78 50%, #7a8890 100%)', effect: null },
-  'fog':                   { label: 'Foggy',               icon: () => Icon.Wind,          bg: 'linear-gradient(135deg, #4a5568 0%, #718096 50%, #a0aec0 100%)', effect: null },
-  'wind':                  { label: 'Windy',               icon: () => Icon.Wind,          bg: 'linear-gradient(135deg, #2d4a6e 0%, #4a7a9b 50%, #7fb3cc 100%)', effect: null },
-  'rain':                  { label: 'Rainy',               icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1a2535 0%, #2a3d55 50%, #3a5570 100%)', effect: 'rain' },
-  'showers-day':           { label: 'Rain Showers',        icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a7a 50%, #5a8fa8 100%)', effect: 'rain' },
-  'showers-night':         { label: 'Overnight Showers',   icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #0d1f35 0%, #1a3050 50%, #2d4f6e 100%)', effect: 'rain' },
-  'thunder-rain':          { label: 'Thunderstorms',       icon: () => Icon.CloudLightning, bg: 'linear-gradient(135deg, #0d0d1f 0%, #16213e 50%, #0f3460 100%)', effect: 'rain' },
-  'thunder-showers-day':   { label: 'Stormy',              icon: () => Icon.CloudLightning, bg: 'linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 50%, #4a3a6e 100%)', effect: 'rain' },
-  'thunder-showers-night': { label: 'Stormy Night',        icon: () => Icon.CloudLightning, bg: 'linear-gradient(135deg, #0d0d1f 0%, #1a1a35 50%, #2d2040 100%)', effect: 'rain' },
-  'snow':                  { label: 'Snowing',             icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #c8dce8 0%, #a0b8cc 50%, #7a98b0 100%)', effect: 'snow' },
-  'snow-showers-day':      { label: 'Snow Showers',        icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #b0c8d8 0%, #8aa8c0 50%, #6a8aa5 100%)', effect: 'snow' },
-  'snow-showers-night':    { label: 'Overnight Snow',      icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #0d1a2e 0%, #1a2e45 50%, #3a5570 100%)', effect: 'snow' },
-  'sleet':                 { label: 'Sleet',               icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #2a3d55 0%, #455e75 50%, #7a9ab0 100%)', effect: 'snow' },
-  'hail':                  { label: 'Hail',                icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #1f3040 0%, #354f65 50%, #6a8fa8 100%)', effect: 'snow' },
-  'tornado':               { label: 'Tornado Warning',     icon: () => Icon.Wind,          bg: 'linear-gradient(135deg, #1a0a0a 0%, #3d1515 50%, #6e2020 100%)', effect: null },
-  'drizzle':               { label: 'Light Drizzle',       icon: () => Icon.CloudDrizzle,  bg: 'linear-gradient(135deg, #243b55 0%, #3d5c78 50%, #6a8fa8 100%)', effect: 'drizzle' },
-  'freezing-drizzle':      { label: 'Freezing Drizzle',    icon: () => Icon.CloudDrizzle,  bg: 'linear-gradient(135deg, #1e3040 0%, #304f65 50%, #6080a0 100%)', effect: 'drizzle' },
-  'freezing-rain':         { label: 'Freezing Rain',       icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1a2535 0%, #2d4055 50%, #4a6a85 100%)', effect: 'rain' },
+  'clear-day':             { label: 'Clear Skies',         icon: () => Icon.Sun,           bg: 'linear-gradient(135deg, #c47a20 0%, #e8a840 40%, #f5c862 100%)', effect: 'sunny', tone: 'night', image: '/weather/clear-day.png' },
+  'clear-night':           { label: 'Clear Night',         icon: () => Icon.Moon,          bg: 'linear-gradient(135deg, #081020 0%, #0C1A35 50%, #142848 100%)', effect: 'stars', tone: 'night', image: '/weather/clear-day.png', overlay: 'rgba(12,26,53,0.55)' },
+  'partly-cloudy-day':     { label: 'Partly Cloudy',       icon: () => Icon.Cloud,         bg: 'linear-gradient(135deg, #4a7a9a 0%, #7a9ab0 50%, #c4a35a 100%)', effect: 'sunny', tone: 'night', image: '/weather/partly-cloudy-day.png' },
+  'partly-cloudy-night':   { label: 'Partly Cloudy Night', icon: () => Icon.Cloud,         bg: 'linear-gradient(135deg, #0C1A35 0%, #1a3255 50%, #2a4a7a 100%)', effect: 'stars', tone: 'night', image: '/weather/partly-cloudy-day.png', overlay: 'rgba(12,26,53,0.55)' },
+  'cloudy':                { label: 'Overcast',            icon: () => Icon.Cloud,         bg: 'linear-gradient(135deg, #3a4a5a 0%, #5a6a78 50%, #7a8890 100%)', effect: null, tone: 'night', image: '/weather/overcast.png', overlay: 'rgba(80,80,80,0.4)' },
+  'fog':                   { label: 'Foggy',               icon: () => Icon.Wind,          bg: 'linear-gradient(135deg, #4a5568 0%, #718096 50%, #a0aec0 100%)', effect: null, tone: 'night', image: '/weather/overcast.png', overlay: 'rgba(80,80,80,0.5)' },
+  'wind':                  { label: 'Windy',               icon: () => Icon.Wind,          bg: 'linear-gradient(135deg, #2d4a6e 0%, #4a7a9b 50%, #7fb3cc 100%)', effect: null, tone: 'night', image: '/weather/overcast.png', overlay: 'rgba(80,80,80,0.35)' },
+  'rain':                  { label: 'Rainy',               icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1a2535 0%, #2a3d55 50%, #3a5570 100%)', effect: 'rain', tone: 'night', image: '/weather/rain.png' },
+  'showers-day':           { label: 'Rain Showers',        icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1e3a5f 0%, #2d5a7a 50%, #5a8fa8 100%)', effect: 'rain', tone: 'night', image: '/weather/rain.png' },
+  'showers-night':         { label: 'Overnight Showers',   icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #0d1f35 0%, #1a3050 50%, #2d4f6e 100%)', effect: 'rain', tone: 'night', image: '/weather/rain.png', overlay: 'rgba(12,26,53,0.4)' },
+  'thunder-rain':          { label: 'Thunderstorms',       icon: () => Icon.CloudLightning, bg: 'linear-gradient(135deg, #0d0d1f 0%, #16213e 50%, #0f3460 100%)', effect: 'rain', tone: 'night', image: '/weather/stormy.png', overlay: 'rgba(80,80,80,0.4)' },
+  'thunder-showers-day':   { label: 'Stormy',              icon: () => Icon.CloudLightning, bg: 'linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 50%, #4a3a6e 100%)', effect: 'rain', tone: 'night', image: '/weather/stormy.png', overlay: 'rgba(80,80,80,0.4)' },
+  'thunder-showers-night': { label: 'Stormy Night',        icon: () => Icon.CloudLightning, bg: 'linear-gradient(135deg, #0d0d1f 0%, #1a1a35 50%, #2d2040 100%)', effect: 'rain', tone: 'night', image: '/weather/stormy.png', overlay: 'rgba(12,26,53,0.55)' },
+  'snow':                  { label: 'Snowing',             icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #c8dce8 0%, #a0b8cc 50%, #7a98b0 100%)', effect: 'snow', tone: 'night', image: '/weather/snow.png' },
+  'snow-showers-day':      { label: 'Snow Showers',        icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #b0c8d8 0%, #8aa8c0 50%, #6a8aa5 100%)', effect: 'snow', tone: 'night', image: '/weather/snow.png' },
+  'snow-showers-night':    { label: 'Overnight Snow',      icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #0d1a2e 0%, #1a2e45 50%, #3a5570 100%)', effect: 'snow', tone: 'night', image: '/weather/snow.png', overlay: 'rgba(12,26,53,0.4)' },
+  'sleet':                 { label: 'Sleet',               icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #2a3d55 0%, #455e75 50%, #7a9ab0 100%)', effect: 'snow', tone: 'night', image: '/weather/snow.png' },
+  'hail':                  { label: 'Hail',                icon: () => Icon.CloudSnow,     bg: 'linear-gradient(135deg, #1f3040 0%, #354f65 50%, #6a8fa8 100%)', effect: 'snow', tone: 'night', image: '/weather/snow.png' },
+  'tornado':               { label: 'Tornado Warning',     icon: () => Icon.Wind,          bg: 'linear-gradient(135deg, #1a0a0a 0%, #3d1515 50%, #6e2020 100%)', effect: null, tone: 'night', image: '/weather/stormy.png', overlay: 'rgba(80,80,80,0.5)' },
+  'drizzle':               { label: 'Light Drizzle',       icon: () => Icon.CloudDrizzle,  bg: 'linear-gradient(135deg, #243b55 0%, #3d5c78 50%, #6a8fa8 100%)', effect: 'drizzle', tone: 'night', image: '/weather/rain.png' },
+  'freezing-drizzle':      { label: 'Freezing Drizzle',    icon: () => Icon.CloudDrizzle,  bg: 'linear-gradient(135deg, #1e3040 0%, #304f65 50%, #6080a0 100%)', effect: 'drizzle', tone: 'night', image: '/weather/rain.png' },
+  'freezing-rain':         { label: 'Freezing Rain',       icon: () => Icon.CloudRain,     bg: 'linear-gradient(135deg, #1a2535 0%, #2d4055 50%, #4a6a85 100%)', effect: 'rain', tone: 'night', image: '/weather/rain.png' },
 };
 
 const DEFAULT_WEATHER = { label: 'Loading…', icon: () => Icon.Sun, bg: 'linear-gradient(135deg, #0C1A35 0%, #219EBC 100%)', effect: null };
@@ -307,14 +307,31 @@ export function WeatherWidget() {
     </div>
   );
 
+  const isDay = cfg.tone === 'day';
+  const textColor = isDay ? '#0C1A35' : '#FDF2E8';
+  const borderColor = isDay ? 'rgba(12,26,53,0.15)' : 'rgba(253,242,232,0.8)';
+
   return (
     <div className="weather-widget" style={{ background: cfg.bg }}>
+      {cfg.image && (
+        <img src={cfg.image} alt="" style={{
+          position: 'absolute', inset: -1, width: 'calc(100% + 2px)', height: 'calc(100% + 2px)',
+          objectFit: 'cover', objectPosition: cfg.imagePosition || 'center top', borderRadius: 'inherit',
+          zIndex: 0,
+        }} />
+      )}
+      {cfg.overlay && (
+        <div style={{
+          position: 'absolute', inset: 0, borderRadius: 'inherit',
+          background: cfg.overlay, zIndex: 0,
+        }} />
+      )}
       <WeatherEffect effect={cfg.effect} />
-      <div className="weather-icon-wrap" style={{ position: 'relative', zIndex: 1 }}><WeatherIcon size={28} /></div>
-      <div className="weather-temp">{data.temp}°F</div>
-      <div className="weather-condition">{cfg.label}</div>
+      <div className="weather-icon-wrap" style={{ position: 'relative', zIndex: 1 }}><WeatherIcon size={28} color={textColor} /></div>
+      <div className="weather-temp" style={{ color: textColor }}>{data.temp}°F</div>
+      <div className="weather-condition" style={{ color: textColor }}>{cfg.label}</div>
       {data.hours?.length > 0 && (
-        <div className="weather-forecast">
+        <div className="weather-forecast" style={{ borderTopColor: borderColor }}>
           {data.hours.map((h, i) => {
             const hourCfg = getWeatherConfig(h.icon);
             const HourIcon = hourCfg.icon();
@@ -322,9 +339,9 @@ export function WeatherWidget() {
             const label = hour === 0 ? '12am' : hour < 12 ? `${hour}am` : hour === 12 ? '12pm' : `${hour - 12}pm`;
             return (
               <div className="weather-hour" key={i}>
-                <div className="weather-hour-time">{label}</div>
-                <HourIcon size={14} color="#FDF2E8" />
-                <div className="weather-hour-temp">{h.temp}°</div>
+                <div className="weather-hour-time" style={{ color: textColor }}>{label}</div>
+                <HourIcon size={14} color={textColor} />
+                <div className="weather-hour-temp" style={{ color: textColor }}>{h.temp}°</div>
               </div>
             );
           })}
