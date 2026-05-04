@@ -609,16 +609,16 @@ async function fetchChannelVideosRSS(channelId, channelName) {
     const videos = [];
     const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
     let match;
-    while ((match = entryRegex.exec(xml)) !== null && videos.length < 5) {
+    while ((match = entryRegex.exec(xml)) !== null && videos.length < 8) {
       const entry = match[1];
       const videoId = entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/)?.[1];
       const title = entry.match(/<title>(.*?)<\/title>/)?.[1];
       const published = entry.match(/<published>(.*?)<\/published>/)?.[1];
       if (videoId && title && published) {
-        // Only include videos from the last 24 hours
+        // Only include videos from the last 48 hours
         const publishedTime = new Date(published).getTime();
-        const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000;
-        if (publishedTime >= twentyFourHoursAgo) {
+        const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000;
+        if (publishedTime >= fortyEightHoursAgo) {
           videos.push({
             video_id: videoId,
             title: title.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#39;/g, "'").replace(/&quot;/g, '"'),
