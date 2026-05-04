@@ -16,6 +16,6 @@ compatibility_date = "2024-01-01"
 binding = "FEED_CACHE"
 id = "71fcbbfa90c6401f90926dfa7016ef3b"
 
-# Cron trigger: refresh video feed daily at 6am UTC
+# Cron trigger: refresh video feed every 4 hours
 [triggers]
-crons = ["0 6 * * *"]
+crons = ["0 */4 * * *"]

@@ -124,7 +124,7 @@ export default {
     if (path === "/youtube")            return withEdgeCache(request, ctx, () => handleYouTube(request, env, url),          10800);          // 3 hours
     if (path === "/youtube/channel")    return withEdgeCache(request, ctx, () => handleYouTubeChannel(request, env, url),   86400);          // 1 day
     if (path === "/youtube/live-status")return withEdgeCache(request, ctx, () => handleYouTubeLiveStatus(request, env, url),300);            // 5 min
-    if (path === "/api/videos")         return handleVideosFeed(request, env);
+    if (path === "/api/videos")         return handleVideosFeed(request, env, ctx);
 
     return json({ error: "Not found" }, 404);
   },
@@ -595,6 +595,7 @@ const VIDEO_CHANNELS = {
 
 const VIDEOS_CACHE_KEY = "videos_feed";
 const VIDEOS_CACHE_TTL = 86400; // 24 hours
+const VIDEOS_STALE_MS = 4 * 60 * 60 * 1000; // 4 hours — refresh if older
 
 // Fetch videos for a single channel via FREE YouTube RSS (no API key, no quota).
 async function fetchChannelVideosRSS(channelId, channelName) {
@@ -666,12 +667,22 @@ async function refreshVideosFeed(env) {
   }
 }
 
-// Serves /api/videos — READ-ONLY from KV. Never calls YouTube directly.
-// If KV is empty (first deploy), triggers a one-time seed and caches it.
-async function handleVideosFeed(request, env) {
+// Serves /api/videos — reads from KV, self-heals if cache is stale.
+// Cron is the primary refresh mechanism; this is the fallback.
+async function handleVideosFeed(request, env, ctx) {
   try {
     const cached = await env.FEED_CACHE.get(VIDEOS_CACHE_KEY);
     if (cached) {
+      // Check if cache is stale — if so, refresh in the background
+      try {
+        const parsed = JSON.parse(cached);
+        const age = Date.now() - new Date(parsed.cached_at).getTime();
+        if (age > VIDEOS_STALE_MS) {
+          // Serve stale data immediately, refresh behind the scenes
+          const refresh = refreshVideosFeed(env);
+          if (ctx?.waitUntil) ctx.waitUntil(refresh);
+        }
+      } catch {}
       return new Response(cached, {
         status: 200,
         headers: { ...CORS_HEADERS, "Content-Type": "application/json", "X-Cache": "HIT" },
