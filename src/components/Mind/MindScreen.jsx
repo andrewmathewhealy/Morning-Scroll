@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import Soundscapes from "./Soundscapes.jsx";
+import WimHof from "./WimHof.jsx";
 
 const PRESETS = [
   { label: "Focus",   beatHz: 12,  baseHz: 200, desc: "Alpha 12 Hz", color: "#8ECAE6" },
@@ -10,7 +12,6 @@ const PRESETS = [
 const TIMERS = [null, 60, 180, 300, 600];
 const TIMER_LABELS = ["Free", "1 min", "3 min", "5 min", "10 min"];
 
-// Frosted white card style matching the rest of the app
 const CARD = {
   background: "rgba(255,255,255,0.62)",
   backdropFilter: "blur(8px)",
@@ -138,12 +139,15 @@ export default function MindScreen() {
       <div className="home-header spring-in spring-in-1 depth-top">
         <div>
           <div className="home-greeting">Mind</div>
-          <div className="home-date">Binaural beats for focus & calm</div>
+          <div className="home-date">Focus, breathe, and listen</div>
         </div>
       </div>
 
-      {/* Visualizer card */}
+      {/* ── BINAURAL BEATS ── */}
       <div className="section-pad spring-in spring-in-2">
+        <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+          Binaural Beats
+        </div>
         <div style={{ ...CARD, padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center" }}>
           <div style={{ fontSize: 11, color: "rgba(2,48,71,0.45)", letterSpacing: 0.3, marginBottom: 16 }}>
             Headphones recommended for binaural effect
@@ -192,73 +196,74 @@ export default function MindScreen() {
               )}
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Preset cards */}
-      <div className="section-pad spring-in spring-in-3" style={{ paddingTop: 10 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          {PRESETS.map((p, i) => {
-            const isActive = activePreset === i && playing;
-            return (
-              <div
-                key={p.label}
-                onClick={() => handlePresetTap(p, i)}
-                className="tappable"
-                style={{
-                  ...CARD,
-                  padding: "14px 14px",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease",
-                  border: isActive ? `1.5px solid ${p.color}` : CARD.border,
-                  boxShadow: isActive
-                    ? `0 4px 16px rgba(0,20,60,0.1), 0 0 0 1px ${p.color}44`
-                    : CARD.boxShadow,
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <div style={{
-                    width: 8, height: 8, borderRadius: "50%",
-                    background: isActive ? p.color : "rgba(12,26,53,0.2)",
-                    boxShadow: isActive ? `0 0 8px ${p.color}` : "none",
+          {/* Preset grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%" }}>
+            {PRESETS.map((p, i) => {
+              const isActive = activePreset === i && playing;
+              return (
+                <div
+                  key={p.label}
+                  onClick={() => handlePresetTap(p, i)}
+                  className="tappable"
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    cursor: "pointer",
                     transition: "all 0.3s ease",
-                  }} />
-                  <div style={{ fontSize: 15, fontWeight: 600, color: "#0C1A35", fontFamily: "'Satoshi', sans-serif" }}>{p.label}</div>
+                    background: isActive ? `${p.color}20` : "rgba(12,26,53,0.04)",
+                    border: isActive ? `1.5px solid ${p.color}` : "1.5px solid rgba(12,26,53,0.08)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                    <div style={{
+                      width: 7, height: 7, borderRadius: "50%",
+                      background: isActive ? p.color : "rgba(12,26,53,0.2)",
+                      boxShadow: isActive ? `0 0 6px ${p.color}` : "none",
+                      transition: "all 0.3s ease",
+                    }} />
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#0C1A35", fontFamily: "'Satoshi', sans-serif" }}>{p.label}</div>
+                  </div>
+                  <div style={{ fontSize: 10, color: "rgba(2,48,71,0.5)" }}>{p.desc}</div>
                 </div>
-                <div style={{ fontSize: 11, color: "rgba(2,48,71,0.55)" }}>{p.desc}</div>
-                <div style={{ fontSize: 10, color: "rgba(2,48,71,0.35)", marginTop: 3 }}>
-                  {p.baseHz} Hz base
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+              );
+            })}
+          </div>
 
-      {/* Timer selector */}
-      <div className="section-pad spring-in spring-in-4" style={{ paddingTop: 10 }}>
-        <div style={{ ...CARD, padding: "14px 16px" }}>
-          <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", marginBottom: 8, fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase" }}>Timer</div>
-          <div style={{ display: "flex", gap: 6 }}>
-            {TIMERS.map((t, i) => (
-              <div
-                key={i}
-                className="tappable"
-                onClick={() => setTimerIdx(i)}
-                style={{
-                  flex: 1, textAlign: "center", padding: "8px 0", borderRadius: 10,
-                  fontSize: 12, fontWeight: 500, cursor: "pointer",
-                  background: timerIdx === i ? "rgba(12,26,53,0.1)" : "rgba(8,16,32,0.03)",
-                  color: timerIdx === i ? "#0C1A35" : "rgba(2,48,71,0.4)",
-                  border: timerIdx === i ? "1.5px solid rgba(12,26,53,0.18)" : "1.5px solid transparent",
-                  transition: "all 0.2s ease",
-                }}
-              >
-                {TIMER_LABELS[i]}
-              </div>
-            ))}
+          {/* Timer selector */}
+          <div style={{ width: "100%", marginTop: 12 }}>
+            <div style={{ fontSize: 10, color: "rgba(2,48,71,0.4)", marginBottom: 6, fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase" }}>Timer</div>
+            <div style={{ display: "flex", gap: 5 }}>
+              {TIMERS.map((t, i) => (
+                <div
+                  key={i}
+                  className="tappable"
+                  onClick={() => setTimerIdx(i)}
+                  style={{
+                    flex: 1, textAlign: "center", padding: "6px 0", borderRadius: 8,
+                    fontSize: 11, fontWeight: 500, cursor: "pointer",
+                    background: timerIdx === i ? "rgba(12,26,53,0.1)" : "rgba(8,16,32,0.03)",
+                    color: timerIdx === i ? "#0C1A35" : "rgba(2,48,71,0.4)",
+                    border: timerIdx === i ? "1.5px solid rgba(12,26,53,0.18)" : "1.5px solid transparent",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  {TIMER_LABELS[i]}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* ── SOUNDSCAPES ── */}
+      <div className="section-pad spring-in spring-in-3" style={{ paddingTop: 18 }}>
+        <Soundscapes />
+      </div>
+
+      {/* ── BREATHWORK ── */}
+      <div className="section-pad spring-in spring-in-4" style={{ paddingTop: 18 }}>
+        <WimHof />
       </div>
     </div>
   );
