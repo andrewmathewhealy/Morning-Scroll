@@ -345,7 +345,7 @@ export default function BrickBreaker() {
       </div>
 
       <div style={{
-        background: "rgba(160,215,215,0.75)",
+        background: "rgba(157,218,240,0.75)",
         backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
         borderRadius: 20,
         border: "1.5px solid #0C1A35",
@@ -368,7 +368,7 @@ export default function BrickBreaker() {
           <div style={{
             position: "absolute", inset: 0,
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            background: "rgba(160,215,215,0.65)",
+            background: "rgba(157,218,240,0.65)",
           }}>
             <div
               className="tappable"
@@ -390,7 +390,7 @@ export default function BrickBreaker() {
           <div style={{
             position: "absolute", inset: 0,
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            background: "rgba(160,215,215,0.75)",
+            background: "rgba(157,218,240,0.75)",
             backdropFilter: "blur(4px)",
             gap: 8,
           }}>
