@@ -375,9 +375,9 @@ export default function BrickBreaker() {
               onClick={start}
               style={{
                 padding: "10px 28px", borderRadius: 14, cursor: "pointer",
-                background: "rgba(255,255,255,0.85)", backdropFilter: "blur(6px)",
-                border: "1.5px solid rgba(255,183,3,0.3)",
-                fontSize: 14, fontWeight: 600, color: "#0C1A35",
+                background: "#0C1A35",
+                border: "1.5px solid #0C1A35",
+                fontSize: 14, fontWeight: 600, color: "#FDF2E8",
               }}
             >
               Play
@@ -411,9 +411,9 @@ export default function BrickBreaker() {
               onClick={() => setPhase("idle")}
               style={{
                 padding: "10px 28px", borderRadius: 14, cursor: "pointer",
-                background: "linear-gradient(135deg, #FFB70318, #E8907A12)",
-                border: "1.5px solid rgba(255,183,3,0.3)",
-                fontSize: 14, fontWeight: 600, color: "#0C1A35",
+                background: "#0C1A35",
+                border: "1.5px solid #0C1A35",
+                fontSize: 14, fontWeight: 600, color: "#FDF2E8",
                 marginTop: 6,
               }}
             >
