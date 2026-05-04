@@ -196,13 +196,28 @@ export default function WimHof() {
     }, 500);
   }, [clearTimer]);
 
+  const [countdown, setCountdown] = useState(0);
+
   const handleStart = () => {
     setActive(true);
     setRound(1);
+    setPhase("countdown");
+    setCountdown(3);
     // Create audio context on user gesture
     getAudioCtx(audioRef);
     try { playBell(getAudioCtx(audioRef)); } catch {}
-    startBreathing();
+
+    let t = 3;
+    const tick = () => {
+      t--;
+      if (t <= 0) {
+        startBreathing();
+      } else {
+        setCountdown(t);
+        timerRef.current = setTimeout(tick, 1000);
+      }
+    };
+    timerRef.current = setTimeout(tick, 1000);
   };
 
   const handleRetentionTap = () => {
@@ -227,7 +242,12 @@ export default function WimHof() {
   let instruction = "";
   let subtext = "";
 
-  if (phase === "breathing") {
+  if (phase === "countdown") {
+    circleScale = 0.7;
+    circleColor = "#8ECAE6";
+    instruction = "Deep breath in...";
+    subtext = `${countdown}`;
+  } else if (phase === "breathing") {
     circleScale = inhaling ? 1 : 0.55;
     circleColor = inhaling ? "#8ECAE6" : "#A3B8D9";
     instruction = inhaling ? "Breathe in" : "Let go";
