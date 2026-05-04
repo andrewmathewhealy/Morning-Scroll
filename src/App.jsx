@@ -228,7 +228,7 @@ function HomeScreen({ onOpenWordle, radioPlayer }) {
       </div>
 
       <div className="section-pad spring-in spring-in-3 depth-mid">
-        <ErrorBoundary label="MorningGame"><MorningGame forceGame="oneline" /></ErrorBoundary>
+        <ErrorBoundary label="BrickBreaker"><BrickBreaker /></ErrorBoundary>
       </div>
 
       <div className="spring-in spring-in-4 depth-mid" style={{ paddingTop: 14 }}>
