@@ -3,6 +3,7 @@ import PopTheMorning from "./PopTheMorning.jsx";
 import OneLine from "./OneLine.jsx";
 import Stack from "./Stack.jsx";
 import Ripples from "./Ripples.jsx";
+import BrickBreaker from "./BrickBreaker.jsx";
 import Leaves from "./Leaves.jsx";
 import Stars from "./Stars.jsx";
 import CompletionOverlay from "./CompletionOverlay.jsx";
@@ -36,6 +37,7 @@ function isCompletedToday() {
 export { default as OneLine } from "./OneLine.jsx";
 export { default as Stack } from "./Stack.jsx";
 export { default as Ripples } from "./Ripples.jsx";
+export { default as BrickBreaker } from "./BrickBreaker.jsx";
 export { default as Leaves } from "./Leaves.jsx";
 export { default as Stars } from "./Stars.jsx";
 

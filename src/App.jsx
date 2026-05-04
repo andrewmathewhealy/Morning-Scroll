@@ -20,7 +20,7 @@ import ScoresSection from "./components/Sports/ScoresSection.jsx";
 import FeedScreen from "./components/Feed/FeedScreen.jsx";
 import { YouTubeFeedSection, YouTubeSettingsSection } from "./components/YouTube/YouTube.jsx";
 import { LIVE_STREAM_CATEGORIES, LIVE_CAT_COLORS, useLiveStatus, LiveStreamCard, LiveStreamPlayer } from "./components/LiveStreams/LiveStreams.jsx";
-import MorningGame, { GameOverlay, OneLine, Stack, Ripples } from "./components/MorningGame/MorningGame.jsx";
+import MorningGame, { GameOverlay, OneLine, Stack, Ripples, BrickBreaker } from "./components/MorningGame/MorningGame.jsx";
 import MindScreen from "./components/Mind/MindScreen.jsx";
 
 // ── ERROR BOUNDARY ────────────────────────────────────────
@@ -314,11 +314,15 @@ function DiscoverScreen() {
       </div>
 
       <div className="section-pad fade-up fade-up-4">
+        <BrickBreaker />
+      </div>
+
+      <div className="section-pad fade-up fade-up-5">
         <div style={{ color: "#FDF2E8", fontSize: 13, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Ripples</div>
         <div style={{ color: "rgba(253,242,232,0.4)", fontSize: 12, marginBottom: 10 }}>Tap anywhere on the screen to test (overlay game)</div>
       </div>
 
-      <div className="fade-up fade-up-5" style={{ marginTop: 20 }}>
+      <div className="fade-up fade-up-6" style={{ marginTop: 20 }}>
         {!liveCategories && (
           <div style={{ padding: "0 20px", fontSize: 11, color: "rgba(253,242,232,0.4)", letterSpacing: 0.5 }}>
             Checking live streams…
