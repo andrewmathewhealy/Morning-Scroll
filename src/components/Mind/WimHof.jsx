@@ -254,22 +254,37 @@ export default function WimHof() {
     subtext = `${TOTAL_ROUNDS} rounds finished`;
   }
 
+  // Colors for round dots
+  const ROUND_COLORS = ["#8ECAE6", "#C4A1FF", "#FFB703"];
+
   return (
     <div>
-      <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
-        Breathwork
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #FFB703, #C4A1FF)" }} />
+        <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
+          Breathwork
+        </div>
       </div>
 
-      <div style={{ ...CARD, padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ ...CARD, padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative", overflow: "hidden" }}>
+        {/* Background gradient wash that shifts with phase */}
+        {active && (
+          <div style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            background: `radial-gradient(ellipse at 50% 40%, ${circleColor}12, transparent 70%)`,
+            transition: "background 0.8s ease",
+          }} />
+        )}
+
         {!active ? (
           <>
-            <div style={{ fontSize: 17, fontWeight: 600, color: "#0C1A35", fontFamily: "'Satoshi', sans-serif", marginBottom: 6 }}>
+            <div style={{ fontSize: 17, fontWeight: 600, color: "#0C1A35", fontFamily: "'Satoshi', sans-serif", marginBottom: 6, position: "relative" }}>
               Wim Hof Method
             </div>
-            <div style={{ fontSize: 12, color: "rgba(2,48,71,0.55)", textAlign: "center", lineHeight: 1.6, maxWidth: 260, marginBottom: 4 }}>
+            <div style={{ fontSize: 12, color: "rgba(2,48,71,0.55)", textAlign: "center", lineHeight: 1.6, maxWidth: 260, marginBottom: 4, position: "relative" }}>
               {TOTAL_BREATHS} deep breaths, breath retention, recovery hold. {TOTAL_ROUNDS} rounds.
             </div>
-            <div style={{ fontSize: 11, color: "rgba(2,48,71,0.4)", textAlign: "center", lineHeight: 1.5, maxWidth: 260, marginBottom: 18 }}>
+            <div style={{ fontSize: 11, color: "rgba(2,48,71,0.4)", textAlign: "center", lineHeight: 1.5, maxWidth: 260, marginBottom: 18, position: "relative" }}>
               Lie down or sit comfortably. Breathe in through nose or mouth, pushing your belly outward.
             </div>
             <div
@@ -277,9 +292,11 @@ export default function WimHof() {
               onClick={handleStart}
               style={{
                 padding: "10px 32px", borderRadius: 14, cursor: "pointer",
-                background: "rgba(12,26,53,0.08)", border: "1.5px solid rgba(12,26,53,0.15)",
+                background: "linear-gradient(135deg, #8ECAE618, #C4A1FF12)",
+                border: "1.5px solid rgba(142,202,230,0.3)",
                 fontSize: 14, fontWeight: 600, color: "#0C1A35",
                 transition: "all 0.2s ease",
+                position: "relative",
               }}
             >
               Begin
@@ -287,50 +304,76 @@ export default function WimHof() {
           </>
         ) : (
           <>
-            {/* Round indicator */}
-            <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-              {Array.from({ length: TOTAL_ROUNDS }, (_, i) => (
-                <div key={i} style={{
-                  width: 8, height: 8, borderRadius: "50%",
-                  background: i < round ? "#0C1A35" : "rgba(12,26,53,0.15)",
-                  transition: "all 0.3s ease",
-                }} />
-              ))}
+            {/* Round indicator — colored dots */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 18, position: "relative" }}>
+              {Array.from({ length: TOTAL_ROUNDS }, (_, i) => {
+                const done = i < round;
+                const current = i === round - 1;
+                const dotColor = ROUND_COLORS[i];
+                return (
+                  <div key={i} style={{
+                    width: done ? 10 : 8, height: done ? 10 : 8, borderRadius: "50%",
+                    background: done ? dotColor : "rgba(12,26,53,0.1)",
+                    boxShadow: current ? `0 0 8px ${dotColor}, 0 0 16px ${dotColor}30` : "none",
+                    border: done ? `1px solid ${dotColor}60` : "1px solid transparent",
+                    transition: "all 0.4s ease",
+                  }} />
+                );
+              })}
             </div>
 
             {/* Breathing circle */}
-            <div
-              onClick={phase === "retention" ? handleRetentionTap : phase === "roundDone" ? handleNextRound : undefined}
-              style={{
-                width: 150, height: 150, borderRadius: "50%",
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                background: `${circleColor}20`,
-                border: `2px solid ${circleColor}`,
-                transform: `scale(${circleScale})`,
+            <div style={{ position: "relative" }}>
+              {/* Outer glow ring */}
+              <div style={{
+                position: "absolute", top: "50%", left: "50%",
+                width: 170, height: 170, borderRadius: "50%",
+                border: `1px solid ${circleColor}20`,
+                transform: `translate(-50%, -50%) scale(${circleScale})`,
                 transition: phase === "breathing"
-                  ? `transform ${inhaling ? INHALE_MS : EXHALE_MS}ms ease-in-out, background 0.5s ease, border-color 0.5s ease`
+                  ? `transform ${inhaling ? INHALE_MS : EXHALE_MS}ms ease-in-out, border-color 0.5s ease`
                   : "all 0.5s ease",
-                cursor: (phase === "retention" || phase === "roundDone") ? "pointer" : "default",
-              }}
-            >
-              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 600, color: "#0C1A35", textAlign: "center", padding: "0 10px" }}>
-                {instruction}
+                pointerEvents: "none",
+              }} />
+
+              <div
+                onClick={phase === "retention" ? handleRetentionTap : phase === "roundDone" ? handleNextRound : undefined}
+                style={{
+                  width: 150, height: 150, borderRadius: "50%",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  background: `radial-gradient(circle, ${circleColor}25, ${circleColor}10)`,
+                  border: `2px solid ${circleColor}`,
+                  boxShadow: `0 0 30px ${circleColor}20, inset 0 0 20px ${circleColor}10`,
+                  transform: `scale(${circleScale})`,
+                  transition: phase === "breathing"
+                    ? `transform ${inhaling ? INHALE_MS : EXHALE_MS}ms ease-in-out, background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease`
+                    : "all 0.5s ease",
+                  cursor: (phase === "retention" || phase === "roundDone") ? "pointer" : "default",
+                }}
+              >
+                <div style={{
+                  fontFamily: "'Fraunces', serif", fontSize: 18, fontWeight: 600,
+                  color: "#0C1A35", textAlign: "center", padding: "0 10px",
+                }}>
+                  {instruction}
+                </div>
               </div>
             </div>
 
-            <div style={{ fontSize: 12, color: "rgba(2,48,71,0.5)", marginTop: 14, textAlign: "center" }}>
+            <div style={{ fontSize: 12, color: circleColor, marginTop: 16, textAlign: "center", fontWeight: 500, position: "relative", transition: "color 0.5s ease" }}>
               {subtext}
             </div>
 
             {/* Stop/reset button */}
-            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+            <div style={{ display: "flex", gap: 10, marginTop: 16, position: "relative" }}>
               {phase === "done" ? (
                 <div
                   className="tappable"
                   onClick={reset}
                   style={{
                     padding: "8px 24px", borderRadius: 12, cursor: "pointer",
-                    background: "rgba(12,26,53,0.08)", border: "1.5px solid rgba(12,26,53,0.15)",
+                    background: "linear-gradient(135deg, #A3D9A518, #A3D9A508)",
+                    border: "1.5px solid #A3D9A540",
                     fontSize: 13, fontWeight: 500, color: "#0C1A35",
                   }}
                 >
@@ -343,7 +386,7 @@ export default function WimHof() {
                   style={{
                     padding: "8px 20px", borderRadius: 12, cursor: "pointer",
                     background: "rgba(12,26,53,0.04)", border: "1px solid rgba(12,26,53,0.1)",
-                    fontSize: 12, fontWeight: 500, color: "rgba(2,48,71,0.45)",
+                    fontSize: 12, fontWeight: 500, color: "rgba(2,48,71,0.4)",
                   }}
                 >
                   Stop

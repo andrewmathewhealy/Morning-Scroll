@@ -3,10 +3,10 @@ import Soundscapes from "./Soundscapes.jsx";
 import WimHof from "./WimHof.jsx";
 
 const PRESETS = [
-  { label: "Focus",   beatHz: 12,  baseHz: 200, desc: "Alpha 12 Hz", color: "#8ECAE6" },
-  { label: "Calm",    beatHz: 10,  baseHz: 180, desc: "Alpha 10 Hz", color: "#A3D9A5" },
-  { label: "Meditate",beatHz: 6,   baseHz: 150, desc: "Theta 6 Hz",  color: "#C4A1FF" },
-  { label: "Deep",    beatHz: 3,   baseHz: 120, desc: "Delta 3 Hz",  color: "#FFB703" },
+  { label: "Focus",   beatHz: 12,  baseHz: 200, desc: "Alpha 12 Hz", color: "#8ECAE6", gradient: "linear-gradient(135deg, #8ECAE620, #8ECAE608)" },
+  { label: "Calm",    beatHz: 10,  baseHz: 180, desc: "Alpha 10 Hz", color: "#A3D9A5", gradient: "linear-gradient(135deg, #A3D9A520, #A3D9A508)" },
+  { label: "Meditate",beatHz: 6,   baseHz: 150, desc: "Theta 6 Hz",  color: "#C4A1FF", gradient: "linear-gradient(135deg, #C4A1FF20, #C4A1FF08)" },
+  { label: "Deep",    beatHz: 3,   baseHz: 120, desc: "Delta 3 Hz",  color: "#FFB703", gradient: "linear-gradient(135deg, #FFB70320, #FFB70308)" },
 ];
 
 const TIMERS = [null, 60, 180, 300, 600];
@@ -145,17 +145,47 @@ export default function MindScreen() {
 
       {/* ── BINAURAL BEATS ── */}
       <div className="section-pad spring-in spring-in-2">
-        <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
-          Binaural Beats
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #8ECAE6, #C4A1FF)" }} />
+          <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
+            Binaural Beats
+          </div>
         </div>
-        <div style={{ ...CARD, padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <div style={{ fontSize: 11, color: "rgba(2,48,71,0.45)", letterSpacing: 0.3, marginBottom: 16 }}>
+        <div style={{
+          ...CARD,
+          padding: "24px 20px",
+          display: "flex", flexDirection: "column", alignItems: "center",
+          position: "relative", overflow: "hidden",
+        }}>
+          {/* Subtle colored gradient wash at top */}
+          <div style={{
+            position: "absolute", top: 0, left: 0, right: 0, height: 80,
+            background: playing
+              ? `linear-gradient(180deg, ${activeColor}15, transparent)`
+              : "linear-gradient(180deg, rgba(142,202,230,0.06), transparent)",
+            transition: "background 0.8s ease",
+            pointerEvents: "none",
+          }} />
+
+          <div style={{ fontSize: 11, color: "rgba(2,48,71,0.45)", letterSpacing: 0.3, marginBottom: 16, position: "relative" }}>
             Headphones recommended for binaural effect
           </div>
 
           <div style={{ position: "relative", width: 150, height: 150, marginBottom: 16 }}>
+            {/* Soft glow behind ring when playing */}
+            {playing && (
+              <div style={{
+                position: "absolute", top: "50%", left: "50%",
+                width: 100, height: 100, borderRadius: "50%",
+                background: `radial-gradient(circle, ${activeColor}25, transparent 70%)`,
+                transform: "translate(-50%, -50%)",
+                animation: "mindPulse 3s ease-in-out infinite",
+              }} />
+            )}
             <svg width={150} height={150} style={{ position: "absolute", top: 0, left: 0 }}>
-              <circle cx={75} cy={75} r={65} fill="none" stroke="rgba(12,26,53,0.08)" strokeWidth={4} />
+              <circle cx={75} cy={75} r={65} fill="none" stroke="rgba(12,26,53,0.06)" strokeWidth={3} />
+              {/* Subtle colored background ring */}
+              <circle cx={75} cy={75} r={65} fill="none" stroke={playing ? `${activeColor}20` : "rgba(142,202,230,0.08)"} strokeWidth={8} />
               {playing && timerDuration && (
                 <circle
                   cx={75} cy={75} r={65}
@@ -179,18 +209,18 @@ export default function MindScreen() {
                   <div style={{
                     width: 10, height: 10, borderRadius: "50%",
                     background: activeColor,
-                    boxShadow: `0 0 16px ${activeColor}`,
+                    boxShadow: `0 0 16px ${activeColor}, 0 0 40px ${activeColor}40`,
                     animation: "mindPulse 2s ease-in-out infinite",
                   }} />
                   <div style={{ fontFamily: "'Fraunces', serif", fontSize: 28, color: "#0C1A35", marginTop: 8, fontWeight: 600 }}>
                     {timerDuration ? fmtTime(timerDuration - elapsed) : fmtTime(elapsed)}
                   </div>
-                  <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: activeColor, marginTop: 2, fontWeight: 500 }}>
                     {activePreset !== null ? PRESETS[activePreset].desc : ""}
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: 13, color: "rgba(2,48,71,0.35)" }}>
+                <div style={{ fontSize: 13, color: "rgba(2,48,71,0.3)" }}>
                   Select a mode
                 </div>
               )}
@@ -198,7 +228,7 @@ export default function MindScreen() {
           </div>
 
           {/* Preset grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, width: "100%", position: "relative" }}>
             {PRESETS.map((p, i) => {
               const isActive = activePreset === i && playing;
               return (
@@ -211,27 +241,35 @@ export default function MindScreen() {
                     borderRadius: 12,
                     cursor: "pointer",
                     transition: "all 0.3s ease",
-                    background: isActive ? `${p.color}20` : "rgba(12,26,53,0.04)",
-                    border: isActive ? `1.5px solid ${p.color}` : "1.5px solid rgba(12,26,53,0.08)",
+                    background: isActive ? p.gradient : "rgba(12,26,53,0.03)",
+                    border: isActive ? `1.5px solid ${p.color}55` : "1.5px solid rgba(12,26,53,0.06)",
+                    position: "relative",
+                    overflow: "hidden",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                  {/* Colored left accent bar */}
+                  <div style={{
+                    position: "absolute", left: 0, top: 8, bottom: 8, width: 3, borderRadius: 2,
+                    background: isActive ? p.color : `${p.color}40`,
+                    transition: "all 0.3s ease",
+                  }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2, paddingLeft: 6 }}>
                     <div style={{
                       width: 7, height: 7, borderRadius: "50%",
-                      background: isActive ? p.color : "rgba(12,26,53,0.2)",
-                      boxShadow: isActive ? `0 0 6px ${p.color}` : "none",
+                      background: isActive ? p.color : `${p.color}50`,
+                      boxShadow: isActive ? `0 0 8px ${p.color}` : "none",
                       transition: "all 0.3s ease",
                     }} />
                     <div style={{ fontSize: 13, fontWeight: 600, color: "#0C1A35", fontFamily: "'Satoshi', sans-serif" }}>{p.label}</div>
                   </div>
-                  <div style={{ fontSize: 10, color: "rgba(2,48,71,0.5)" }}>{p.desc}</div>
+                  <div style={{ fontSize: 10, color: "rgba(2,48,71,0.45)", paddingLeft: 6 }}>{p.desc}</div>
                 </div>
               );
             })}
           </div>
 
           {/* Timer selector */}
-          <div style={{ width: "100%", marginTop: 12 }}>
+          <div style={{ width: "100%", marginTop: 14, position: "relative" }}>
             <div style={{ fontSize: 10, color: "rgba(2,48,71,0.4)", marginBottom: 6, fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase" }}>Timer</div>
             <div style={{ display: "flex", gap: 5 }}>
               {TIMERS.map((t, i) => (
@@ -242,9 +280,13 @@ export default function MindScreen() {
                   style={{
                     flex: 1, textAlign: "center", padding: "6px 0", borderRadius: 8,
                     fontSize: 11, fontWeight: 500, cursor: "pointer",
-                    background: timerIdx === i ? "rgba(12,26,53,0.1)" : "rgba(8,16,32,0.03)",
-                    color: timerIdx === i ? "#0C1A35" : "rgba(2,48,71,0.4)",
-                    border: timerIdx === i ? "1.5px solid rgba(12,26,53,0.18)" : "1.5px solid transparent",
+                    background: timerIdx === i
+                      ? (playing ? `${activeColor}18` : "rgba(12,26,53,0.08)")
+                      : "rgba(8,16,32,0.02)",
+                    color: timerIdx === i ? "#0C1A35" : "rgba(2,48,71,0.35)",
+                    border: timerIdx === i
+                      ? (playing ? `1.5px solid ${activeColor}40` : "1.5px solid rgba(12,26,53,0.15)")
+                      : "1.5px solid transparent",
                     transition: "all 0.2s ease",
                   }}
                 >

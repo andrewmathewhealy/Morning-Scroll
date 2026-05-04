@@ -336,8 +336,11 @@ export default function Soundscapes() {
 
   return (
     <div>
-      <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
-        Soundscapes
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #A3D9A5, #8ECAE6)" }} />
+        <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
+          Soundscapes
+        </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {SOUNDS.map(s => {
@@ -349,36 +352,64 @@ export default function Soundscapes() {
               className="tappable"
               style={{
                 ...CARD,
-                padding: "14px 16px",
+                padding: 0,
                 display: "flex",
-                alignItems: "center",
-                gap: 12,
+                alignItems: "stretch",
                 cursor: "pointer",
                 transition: "all 0.3s ease",
-                border: isActive ? `1.5px solid ${s.color}` : CARD.border,
-                boxShadow: isActive ? `0 4px 16px rgba(0,20,60,0.1), 0 0 0 1px ${s.color}44` : CARD.boxShadow,
+                border: isActive ? `1.5px solid ${s.color}55` : CARD.border,
+                boxShadow: isActive ? `0 4px 16px rgba(0,20,60,0.1), 0 0 0 1px ${s.color}30` : CARD.boxShadow,
+                overflow: "hidden",
+                position: "relative",
               }}
             >
+              {/* Colored left edge strip */}
               <div style={{
-                width: 36, height: 36, borderRadius: 12,
-                background: isActive ? `${s.color}30` : "rgba(12,26,53,0.05)",
-                display: "flex", alignItems: "center", justifyContent: "center",
+                width: 4, flexShrink: 0,
+                background: isActive
+                  ? `linear-gradient(180deg, ${s.color}, ${s.color}80)`
+                  : `linear-gradient(180deg, ${s.color}35, ${s.color}15)`,
                 transition: "all 0.3s ease",
-              }}>
+              }} />
+
+              {/* Content */}
+              <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12, padding: "12px 14px" }}>
                 <div style={{
-                  width: 8, height: 8, borderRadius: "50%",
-                  background: isActive ? s.color : "rgba(12,26,53,0.2)",
-                  boxShadow: isActive ? `0 0 8px ${s.color}` : "none",
-                  animation: isActive ? "mindPulse 2s ease-in-out infinite" : "none",
+                  width: 38, height: 38, borderRadius: 12, flexShrink: 0,
+                  background: isActive
+                    ? `linear-gradient(135deg, ${s.color}35, ${s.color}15)`
+                    : `linear-gradient(135deg, ${s.color}12, ${s.color}06)`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.3s ease",
-                }} />
+                  border: `1px solid ${isActive ? `${s.color}40` : `${s.color}15`}`,
+                }}>
+                  <div style={{
+                    width: 8, height: 8, borderRadius: "50%",
+                    background: isActive ? s.color : `${s.color}60`,
+                    boxShadow: isActive ? `0 0 10px ${s.color}, 0 0 20px ${s.color}40` : "none",
+                    animation: isActive ? "mindPulse 2s ease-in-out infinite" : "none",
+                    transition: "all 0.3s ease",
+                  }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#0C1A35", fontFamily: "'Satoshi', sans-serif" }}>{s.label}</div>
+                  <div style={{ fontSize: 11, color: isActive ? s.color : "rgba(2,48,71,0.45)", fontWeight: isActive ? 500 : 400, transition: "all 0.3s ease" }}>{s.desc}</div>
+                </div>
+                {isActive && (
+                  <div style={{
+                    fontSize: 10, color: s.color, fontWeight: 600, letterSpacing: 0.5,
+                    padding: "3px 8px", borderRadius: 6,
+                    background: `${s.color}15`, border: `1px solid ${s.color}30`,
+                  }}>Playing</div>
+                )}
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#0C1A35", fontFamily: "'Satoshi', sans-serif" }}>{s.label}</div>
-                <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)" }}>{s.desc}</div>
-              </div>
+
+              {/* Active glow wash */}
               {isActive && (
-                <div style={{ fontSize: 11, color: s.color, fontWeight: 600 }}>Playing</div>
+                <div style={{
+                  position: "absolute", inset: 0, pointerEvents: "none",
+                  background: `linear-gradient(90deg, ${s.color}08, transparent 60%)`,
+                }} />
               )}
             </div>
           );
