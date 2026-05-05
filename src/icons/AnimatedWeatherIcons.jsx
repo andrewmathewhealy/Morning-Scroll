@@ -21,7 +21,7 @@ function injectStyle() {
 }
 
 // Sun — rays fade in/out in a circular sequence
-export function AnimSun({ size = 28, color = "#EAF4FB" }) {
+export function AnimSun({ size = 28, color = "#FDF2E8" }) {
   injectStyle();
   const rays = [
     { x1: 12, y1: 2, x2: 12, y2: 4 },
@@ -44,7 +44,7 @@ export function AnimSun({ size = 28, color = "#EAF4FB" }) {
 }
 
 // Cloud — gentle side-to-side drift
-export function AnimCloud({ size = 22, color = "#EAF4FB" }) {
+export function AnimCloud({ size = 22, color = "#FDF2E8" }) {
   injectStyle();
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -54,7 +54,7 @@ export function AnimCloud({ size = 22, color = "#EAF4FB" }) {
 }
 
 // Cloud Rain — cloud drifts, drops stagger down
-export function AnimCloudRain({ size = 22, color = "#EAF4FB" }) {
+export function AnimCloudRain({ size = 22, color = "#FDF2E8" }) {
   injectStyle();
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -67,7 +67,7 @@ export function AnimCloudRain({ size = 22, color = "#EAF4FB" }) {
 }
 
 // Cloud Snow — cloud drifts, flakes drift and rotate
-export function AnimCloudSnow({ size = 22, color = "#EAF4FB" }) {
+export function AnimCloudSnow({ size = 22, color = "#FDF2E8" }) {
   injectStyle();
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -80,7 +80,7 @@ export function AnimCloudSnow({ size = 22, color = "#EAF4FB" }) {
 }
 
 // Cloud Lightning — cloud drifts, bolt flickers
-export function AnimCloudLightning({ size = 22, color = "#EAF4FB" }) {
+export function AnimCloudLightning({ size = 22, color = "#FDF2E8" }) {
   injectStyle();
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -91,7 +91,7 @@ export function AnimCloudLightning({ size = 22, color = "#EAF4FB" }) {
 }
 
 // Cloud Drizzle — cloud drifts, drops stagger
-export function AnimCloudDrizzle({ size = 22, color = "#EAF4FB" }) {
+export function AnimCloudDrizzle({ size = 22, color = "#FDF2E8" }) {
   injectStyle();
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -104,7 +104,7 @@ export function AnimCloudDrizzle({ size = 22, color = "#EAF4FB" }) {
 }
 
 // Wind — gusts shift in and out
-export function AnimWind({ size = 22, color = "#EAF4FB" }) {
+export function AnimWind({ size = 22, color = "#FDF2E8" }) {
   injectStyle();
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -116,7 +116,7 @@ export function AnimWind({ size = 22, color = "#EAF4FB" }) {
 }
 
 // Moon — gentle glow pulse
-export function AnimMoon({ size = 36, color = "#023047" }) {
+export function AnimMoon({ size = 36, color = "#0C1A35" }) {
   injectStyle();
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

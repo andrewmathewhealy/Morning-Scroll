@@ -338,7 +338,7 @@ export default function Soundscapes() {
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #C0C080, #B8DDE8)" }} />
-        <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
+        <div style={{ fontSize: 11, color: "rgba(12,26,53,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
           Soundscapes
         </div>
       </div>
@@ -393,7 +393,7 @@ export default function Soundscapes() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#0C1A35", fontFamily: "'Satoshi', sans-serif" }}>{s.label}</div>
-                  <div style={{ fontSize: 11, color: isActive ? s.color : "rgba(2,48,71,0.45)", fontWeight: isActive ? 500 : 400, transition: "all 0.3s ease" }}>{s.desc}</div>
+                  <div style={{ fontSize: 11, color: isActive ? s.color : "rgba(12,26,53,0.45)", fontWeight: isActive ? 500 : 400, transition: "all 0.3s ease" }}>{s.desc}</div>
                 </div>
                 {isActive && (
                   <div style={{

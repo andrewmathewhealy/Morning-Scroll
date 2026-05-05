@@ -58,7 +58,7 @@ function OnThisDayWidget() {
           )}
         </>
       )}
-      {!loading && error && <div className="otd-text" style={{ color: 'rgba(2,48,71,0.55)' }}>{error}</div>}
+      {!loading && error && <div className="otd-text" style={{ color: 'rgba(12,26,53,0.55)' }}>{error}</div>}
     </div>
   );
 }

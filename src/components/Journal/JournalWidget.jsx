@@ -170,7 +170,7 @@ function JournalWidget() {
       {/* Inline card — collapsed view */}
       <div className="journal-card" onClick={() => { if (user) setExpanded(true); }}>
         <div className="journal-header">
-          <Icon.Feather size={14} color="#2E6FF2" />
+          <Icon.Feather size={14} color="#D898AC" />
           <div className="journal-label">Morning Journal</div>
         </div>
         <div className="journal-prompt">{prompt}</div>
@@ -178,7 +178,7 @@ function JournalWidget() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ color: 'rgba(8,16,32,0.3)', fontStyle: 'italic', fontSize: 12 }}>Tap to write...</div>
             <button className="journal-history-btn" onClick={(e) => { e.stopPropagation(); setDiaryOpen(true); }}>
-              <Icon.BookOpen size={13} color="#2E6FF2" /> Past entries
+              <Icon.BookOpen size={13} color="#D898AC" /> Past entries
             </button>
           </div>
         ) : loginMode ? (
@@ -206,7 +206,7 @@ function JournalWidget() {
               onTouchEnd={handleTouchEnd}
             />
             <div className="journal-header">
-              <Icon.Feather size={14} color="#2E6FF2" />
+              <Icon.Feather size={14} color="#D898AC" />
               <div className="journal-label">Morning Journal</div>
             </div>
             <div className="journal-prompt">{prompt}</div>
@@ -219,7 +219,7 @@ function JournalWidget() {
             />
             <div className="journal-actions">
               <button className="journal-history-btn" onClick={() => setDiaryOpen(true)}>
-                <Icon.BookOpen size={13} color="#2E6FF2" /> Past entries
+                <Icon.BookOpen size={13} color="#D898AC" /> Past entries
               </button>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 {saved && <span className="journal-saved">Saved</span>}

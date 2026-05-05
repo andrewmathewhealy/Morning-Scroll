@@ -171,8 +171,8 @@ function ScoresSection() {
       display: "flex", alignItems: "center", gap: 8,
       padding: "0 20px", marginBottom: 10,
     }}>
-      <span style={{ width: 8, height: 8, borderRadius: 2, background: "#FF6B6B" }} />
-      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: "rgba(2,48,71,0.6)" }}>Scores</span>
+      <span style={{ width: 8, height: 8, borderRadius: 2, background: "#D898AC" }} />
+      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2, textTransform: "uppercase", color: "rgba(12,26,53,0.6)" }}>Scores</span>
     </div>
   );
 
@@ -189,7 +189,7 @@ function ScoresSection() {
       {header}
       <div className="scores-row" style={rowStyle}>
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="widget-shimmer" style={{ flex: "0 0 220px", height: 110, borderRadius: 14, background: "rgba(2,48,71,0.06)", scrollSnapAlign: "start" }} />
+          <div key={i} className="widget-shimmer" style={{ flex: "0 0 220px", height: 110, borderRadius: 14, background: "rgba(12,26,53,0.06)", scrollSnapAlign: "start" }} />
         ))}
       </div>
     </div>
@@ -198,7 +198,7 @@ function ScoresSection() {
   if (error || !data || allGames.length === 0) return (
     <div style={{ marginTop: 4, marginBottom: 14 }}>
       {header}
-      <div style={{ padding: "0 22px", fontSize: 12, color: "rgba(2,48,71,0.45)" }}>
+      <div style={{ padding: "0 22px", fontSize: 12, color: "rgba(12,26,53,0.45)" }}>
         {error || "No games scheduled right now"}
       </div>
     </div>

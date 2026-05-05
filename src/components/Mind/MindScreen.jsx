@@ -147,7 +147,7 @@ export default function MindScreen() {
       <div className="section-pad spring-in spring-in-2">
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #B8DDE8, #C8B8D8)" }} />
-          <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
+          <div style={{ fontSize: 11, color: "rgba(12,26,53,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
             Binaural Beats
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function MindScreen() {
             pointerEvents: "none",
           }} />
 
-          <div style={{ fontSize: 11, color: "rgba(2,48,71,0.45)", letterSpacing: 0.3, marginBottom: 16, position: "relative" }}>
+          <div style={{ fontSize: 11, color: "rgba(12,26,53,0.45)", letterSpacing: 0.3, marginBottom: 16, position: "relative" }}>
             Headphones recommended for binaural effect
           </div>
 
@@ -220,7 +220,7 @@ export default function MindScreen() {
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: 13, color: "rgba(2,48,71,0.3)" }}>
+                <div style={{ fontSize: 13, color: "rgba(12,26,53,0.3)" }}>
                   Select a mode
                 </div>
               )}
@@ -250,7 +250,7 @@ export default function MindScreen() {
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: "#0C1A35", fontFamily: "'Satoshi', sans-serif" }}>{p.label}</div>
                   </div>
-                  <div style={{ fontSize: 10, color: "rgba(2,48,71,0.6)" }}>{p.desc}</div>
+                  <div style={{ fontSize: 10, color: "rgba(12,26,53,0.6)" }}>{p.desc}</div>
                 </div>
               );
             })}
@@ -258,7 +258,7 @@ export default function MindScreen() {
 
           {/* Timer selector */}
           <div style={{ width: "100%", marginTop: 14, position: "relative" }}>
-            <div style={{ fontSize: 10, color: "rgba(2,48,71,0.4)", marginBottom: 6, fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase" }}>Timer</div>
+            <div style={{ fontSize: 10, color: "rgba(12,26,53,0.4)", marginBottom: 6, fontWeight: 600, letterSpacing: 0.5, textTransform: "uppercase" }}>Timer</div>
             <div style={{ display: "flex", gap: 5 }}>
               {TIMERS.map((t, i) => (
                 <div
@@ -271,7 +271,7 @@ export default function MindScreen() {
                     background: timerIdx === i
                       ? (playing ? `${activeColor}18` : "rgba(12,26,53,0.08)")
                       : "rgba(8,16,32,0.02)",
-                    color: timerIdx === i ? "#0C1A35" : "rgba(2,48,71,0.35)",
+                    color: timerIdx === i ? "#0C1A35" : "rgba(12,26,53,0.35)",
                     border: timerIdx === i
                       ? (playing ? `1.5px solid ${activeColor}40` : "1.5px solid rgba(12,26,53,0.15)")
                       : "1.5px solid transparent",

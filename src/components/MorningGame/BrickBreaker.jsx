@@ -136,12 +136,12 @@ export default function BrickBreaker() {
       ctx.fill();
     }
 
-    ctx.fillStyle = "#0C1A35";
+    ctx.fillStyle = "#FDF2E8";
     ctx.beginPath();
     ctx.roundRect(paddle.x, paddleY, PADDLE_W, PADDLE_H, 6);
     ctx.fill();
 
-    ctx.fillStyle = "#0C1A35";
+    ctx.fillStyle = "#FDF2E8";
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI * 2);
     ctx.fill();
@@ -271,13 +271,13 @@ export default function BrickBreaker() {
       }
 
       // Paddle
-      ctx.fillStyle = "#0C1A35";
+      ctx.fillStyle = "#FDF2E8";
       ctx.beginPath();
       ctx.roundRect(paddle.x, paddleY, PADDLE_W, PADDLE_H, 6);
       ctx.fill();
 
       // Ball
-      ctx.fillStyle = "#0C1A35";
+      ctx.fillStyle = "#FDF2E8";
       ctx.beginPath();
       ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI * 2);
       ctx.fill();
@@ -347,7 +347,7 @@ export default function BrickBreaker() {
 
       <div style={{
         borderRadius: 20,
-        border: "1.5px solid #0C1A35",
+        border: "1.5px solid #FDF2E8",
         boxShadow: "0 4px 16px rgba(0,20,60,0.1), 0 1px 3px rgba(8,20,50,0.04)",
         overflow: "hidden",
         position: "relative",
@@ -378,9 +378,9 @@ export default function BrickBreaker() {
               onClick={start}
               style={{
                 padding: "10px 28px", borderRadius: 14, cursor: "pointer",
-                background: "#0C1A35",
-                border: "1.5px solid #0C1A35",
-                fontSize: 14, fontWeight: 600, color: "#FDF2E8",
+                background: "#FDF2E8",
+                border: "1.5px solid #FDF2E8",
+                fontSize: 14, fontWeight: 600, color: "#0C1A35",
               }}
             >
               Play
@@ -399,14 +399,14 @@ export default function BrickBreaker() {
           }}>
             {phase === "won" && (
               <>
-                <div style={{ fontSize: 22, fontWeight: 700, color: "#0C1A35", fontFamily: "'Fraunces', serif" }}>Hubbahdghtht!</div>
-                <div style={{ fontSize: 12, color: "rgba(2,48,71,0.5)" }}>You are going to CONQUER the day!</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: "#FDF2E8", fontFamily: "'Fraunces', serif" }}>Hubbahdghtht!</div>
+                <div style={{ fontSize: 12, color: "rgba(12,26,53,0.5)" }}>You are going to CONQUER the day!</div>
               </>
             )}
             {phase === "lost" && (
               <>
-                <div style={{ fontSize: 22, fontWeight: 700, color: "#0C1A35", fontFamily: "'Fraunces', serif" }}>{score}/{total}</div>
-                <div style={{ fontSize: 12, color: "rgba(2,48,71,0.5)" }}>So close!</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: "#FDF2E8", fontFamily: "'Fraunces', serif" }}>{score}/{total}</div>
+                <div style={{ fontSize: 12, color: "rgba(12,26,53,0.5)" }}>So close!</div>
               </>
             )}
             <div
@@ -414,9 +414,9 @@ export default function BrickBreaker() {
               onClick={() => setPhase("idle")}
               style={{
                 padding: "10px 28px", borderRadius: 14, cursor: "pointer",
-                background: "#0C1A35",
-                border: "1.5px solid #0C1A35",
-                fontSize: 14, fontWeight: 600, color: "#FDF2E8",
+                background: "#FDF2E8",
+                border: "1.5px solid #FDF2E8",
+                fontSize: 14, fontWeight: 600, color: "#0C1A35",
                 marginTop: 6,
               }}
             >

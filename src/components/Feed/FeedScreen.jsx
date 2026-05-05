@@ -485,19 +485,19 @@ function FeedScreen() {
           Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="widget-shimmer" style={{
               height: 200, borderRadius: 16, marginBottom: 12,
-              background: "rgba(2,48,71,0.06)",
+              background: "rgba(12,26,53,0.06)",
             }} />
           ))
         )}
 
         {error && (
-          <div style={{ padding: "20px 0", fontSize: 13, color: "rgba(2,48,71,0.5)", textAlign: "center" }}>
+          <div style={{ padding: "20px 0", fontSize: 13, color: "rgba(12,26,53,0.5)", textAlign: "center" }}>
             Unable to load videos right now.
           </div>
         )}
 
         {!loading && !error && videos.length === 0 && (
-          <div style={{ padding: "40px 0", fontSize: 13, color: "rgba(2,48,71,0.45)", textAlign: "center" }}>
+          <div style={{ padding: "40px 0", fontSize: 13, color: "rgba(12,26,53,0.45)", textAlign: "center" }}>
             No videos yet for {FEED_TAB_LABELS[activeTab]}.
           </div>
         )}

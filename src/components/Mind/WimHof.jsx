@@ -281,7 +281,7 @@ export default function WimHof() {
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #F0A8A0, #C8B8D8)" }} />
-        <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
+        <div style={{ fontSize: 11, color: "rgba(12,26,53,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
           Breathwork
         </div>
       </div>
@@ -408,7 +408,7 @@ export default function WimHof() {
                   style={{
                     padding: "8px 20px", borderRadius: 12, cursor: "pointer",
                     background: "rgba(12,26,53,0.04)", border: "1px solid rgba(12,26,53,0.1)",
-                    fontSize: 12, fontWeight: 500, color: "rgba(2,48,71,0.4)",
+                    fontSize: 12, fontWeight: 500, color: "rgba(12,26,53,0.4)",
                   }}
                 >
                   Stop

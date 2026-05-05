@@ -211,7 +211,7 @@ function GlobeSection({ radioPlayer }) {
     <div
       className={fullscreen ? undefined : "globe-hero"}
       style={fullscreen
-        ? { position: "fixed", inset: 0, zIndex: 9999, background: "#010f18" }
+        ? { position: "fixed", inset: 0, zIndex: 9999, background: "#000" }
         : { overflow: "hidden", padding: 0, cursor: "pointer", position: "relative" }
       }
     >
@@ -282,7 +282,7 @@ function GlobeSection({ radioPlayer }) {
         </div>
       )}
 
-      <Suspense fallback={<div style={{ width: "100%", height: "100%", minHeight: fullscreen ? "100vh" : 320, background: "#010f18" }} />}>
+      <Suspense fallback={<div style={{ width: "100%", height: "100%", minHeight: fullscreen ? "100vh" : 320, background: "#000" }} />}>
         {globeMode === "radio" ? (
           <PulseMap style={{ width: "100%", height: "100%", minHeight: fullscreen ? "100vh" : 320, borderRadius: fullscreen ? 0 : "inherit" }} fullscreen={fullscreen} radioPlayer={radioPlayer} />
         ) : (
@@ -566,7 +566,7 @@ export default function MorningScrollApp() {
         <div className="phone" id="phone-shell" style={{ ...getBgStyle(bgTheme), '--gyro-x': gyro.x, '--gyro-y': gyro.y, filter: colorTemp }}>
           <div className="status-bar">
             <div className="status-time">{clockTime}</div>
-            <div style={{ width: 120, height: 30, background: "#0a1628", borderRadius: 15, position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)" }} />
+            <div style={{ width: 120, height: 30, background: "#0C1A35", borderRadius: 15, position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)" }} />
             <div style={{ display: "flex", gap: 2 }}>
               <span className="status-wifi" style={{ fontSize: 10 }}>●●● WiFi ▮▮▮</span>
             </div>

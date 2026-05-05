@@ -15,7 +15,7 @@ export default function CompletionOverlay({ onComplete }) {
           "rgba(228,189,88,0.6)",
           "rgba(240,208,128,0.65)",
           "rgba(253,242,232,0.7)",
-          "rgba(142,202,230,0.5)",
+          "rgba(160,204,200,0.5)",
         ][i % 5],
         delay: Math.random() * 0.15,
       };

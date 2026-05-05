@@ -33,7 +33,7 @@ const WEATHER_MAP = {
   'freezing-rain':         { label: 'Freezing Rain',       icon: () => AnimCloudRain,      bg: 'linear-gradient(135deg, #1a2535 0%, #2d4055 50%, #4a6a85 100%)', effect: 'rain', tone: 'night', image: '/weather/rain.png' },
 };
 
-const DEFAULT_WEATHER = { label: 'Loading…', icon: () => AnimSun, bg: 'linear-gradient(135deg, #0C1A35 0%, #219EBC 100%)', effect: null };
+const DEFAULT_WEATHER = { label: 'Loading…', icon: () => AnimSun, bg: 'linear-gradient(135deg, #0C1A35 0%, #A0CCC8 100%)', effect: null };
 
 // ── WEATHER ATMOSPHERIC EFFECTS ──────────────────────────
 function WeatherEffect({ effect }) {

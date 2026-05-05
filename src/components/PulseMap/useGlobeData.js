@@ -22,7 +22,7 @@ export function useGlobeData(selectedCoords, stations) {
       lat: parseFloat(s.geo_lat),
       lng: parseFloat(s.geo_long),
       size: 0.3 + (s.clickcount / maxClicks) * 0.5,
-      color: "#FFCC00",
+      color: "#F2B899",
       name: s.name,
     }));
   }, [stations]);

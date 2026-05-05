@@ -134,7 +134,7 @@ export default function PulseMap({ style, fullscreen = false, radioPlayer }) {
           ringMaxRadius="maxR"
           ringPropagationSpeed="propagationSpeed"
           ringRepeatPeriod="repeatPeriod"
-          ringColor={() => "rgba(255,204,0,0.6)"}
+          ringColor={() => "rgba(242,184,153,0.6)"}
         />
       )}
 

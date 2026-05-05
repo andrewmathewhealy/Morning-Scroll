@@ -86,9 +86,9 @@ function PollCard() {
                 <div className="poll-result-top">
                   <div className="poll-result-label">
                     {isChosen && <CheckIcon />}
-                    <span style={{ color: isChosen ? "#2E6FF2" : "#0C1A35", fontWeight: isChosen ? 600 : 500 }}>{opt.label}</span>
+                    <span style={{ color: isChosen ? "#D898AC" : "#0C1A35", fontWeight: isChosen ? 600 : 500 }}>{opt.label}</span>
                   </div>
-                  <div className="poll-result-pct" style={{ color: isWinner ? "#2E6FF2" : undefined }}>{pct}%</div>
+                  <div className="poll-result-pct" style={{ color: isWinner ? "#D898AC" : undefined }}>{pct}%</div>
                 </div>
                 <div className="poll-result-track">
                   <div className={`poll-result-fill ${isWinner ? "winner" : ""} ${isChosen && !isWinner ? "chosen" : ""}`}
@@ -105,7 +105,7 @@ function PollCard() {
 }
 
 // Inline check icon to avoid importing the full Icon module
-function CheckIcon({ size = 13, color = "#2E6FF2" }) {
+function CheckIcon({ size = 13, color = "#D898AC" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="20 6 9 17 4 12"/>

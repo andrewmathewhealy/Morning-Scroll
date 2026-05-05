@@ -68,7 +68,7 @@ function ArtOfTheDayCard() {
 }
 
 // Inline painting icon to avoid importing the full Icon module
-function PaintingIcon({ size = 56, color = "rgba(142,202,230,0.18)" }) {
+function PaintingIcon({ size = 56, color = "rgba(160,204,200,0.18)" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/>

@@ -36,10 +36,10 @@ const STYLES = `
   .login-input { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid rgba(253,242,232,0.2); background: rgba(253,242,232,0.06); color: #FDF2E8; font-size: 14px; font-family: 'Satoshi', sans-serif; outline: none; margin-bottom: 12px; }
   .login-input:focus { border-color: rgba(253,242,232,0.5); }
   .login-input::placeholder { color: rgba(253,242,232,0.3); }
-  .login-btn { width: 100%; padding: 12px; border-radius: 12px; border: none; background: #FDC148; color: #023047; font-size: 14px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
-  .login-btn:hover { background: #FFB432; }
+  .login-btn { width: 100%; padding: 12px; border-radius: 12px; border: none; background: #F2B899; color: #0C1A35; font-size: 14px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
+  .login-btn:hover { background: #D9A088; }
   .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .login-err { font-size: 12px; color: #FF6B6B; text-align: center; margin-top: 10px; }
+  .login-err { font-size: 12px; color: #D898AC; text-align: center; margin-top: 10px; }
 
   .form-section { background: rgba(253,242,232,0.06); border: 1.5px solid rgba(253,242,232,0.15); border-radius: 24px; padding: 24px; margin-bottom: 24px; }
   .form-section-title { font-size: 12px; color: rgba(253,242,232,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; }
@@ -55,14 +55,14 @@ const STYLES = `
     border: 2px dashed rgba(253,242,232,0.2); border-radius: 16px; padding: 32px; text-align: center;
     cursor: pointer; transition: all 0.2s; margin-bottom: 12px; position: relative;
   }
-  .dropzone:hover, .dropzone.drag-over { border-color: #FDC148; background: rgba(253,193,72,0.05); }
+  .dropzone:hover, .dropzone.drag-over { border-color: #F2B899; background: rgba(242,184,153,0.05); }
   .dropzone-text { font-size: 13px; color: rgba(253,242,232,0.4); }
   .dropzone-hint { font-size: 11px; color: rgba(253,242,232,0.25); margin-top: 4px; }
   .dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
   .dropzone-preview { width: 100%; max-height: 300px; object-fit: contain; border-radius: 12px; }
 
-  .save-btn { padding: 12px 32px; border-radius: 12px; border: none; background: #FDC148; color: #023047; font-size: 14px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
-  .save-btn:hover { background: #FFB432; }
+  .save-btn { padding: 12px 32px; border-radius: 12px; border: none; background: #F2B899; color: #0C1A35; font-size: 14px; font-weight: 600; font-family: 'Satoshi', sans-serif; cursor: pointer; }
+  .save-btn:hover { background: #D9A088; }
   .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .save-status { font-size: 12px; color: rgba(253,242,232,0.5); margin-left: 12px; }
   .save-row { display: flex; align-items: center; margin-top: 16px; }
@@ -71,14 +71,14 @@ const STYLES = `
   .queue-title { font-size: 12px; color: rgba(253,242,232,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
   .queue-empty { font-size: 13px; color: rgba(253,242,232,0.3); text-align: center; padding: 24px; }
   .queue-item { display: flex; align-items: center; gap: 14px; padding: 12px; background: rgba(253,242,232,0.04); border-radius: 14px; margin-bottom: 8px; border: 1px solid rgba(253,242,232,0.08); }
-  .queue-thumb { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: #023047; flex-shrink: 0; }
+  .queue-thumb { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: #0C1A35; flex-shrink: 0; }
   .queue-info { flex: 1; min-width: 0; }
-  .queue-date { font-size: 11px; color: #FDC148; font-weight: 600; font-family: 'Space Mono', monospace; }
+  .queue-date { font-size: 11px; color: #F2B899; font-weight: 600; font-family: 'Space Mono', monospace; }
   .queue-art-title { font-size: 14px; color: #FDF2E8; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .queue-art-meta { font-size: 11px; color: rgba(253,242,232,0.4); }
-  .queue-today { border-color: #FDC148; background: rgba(253,193,72,0.06); }
-  .queue-delete { font-size: 11px; color: #FF6B6B; background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.2); border-radius: 8px; padding: 4px 10px; cursor: pointer; flex-shrink: 0; }
-  .queue-delete:hover { background: rgba(255,107,107,0.2); }
+  .queue-today { border-color: #F2B899; background: rgba(242,184,153,0.06); }
+  .queue-delete { font-size: 11px; color: #D898AC; background: rgba(216,152,172,0.1); border: 1px solid rgba(216,152,172,0.2); border-radius: 8px; padding: 4px 10px; cursor: pointer; flex-shrink: 0; }
+  .queue-delete:hover { background: rgba(216,152,172,0.2); }
 
   .admin-tabs { display: flex; gap: 4px; margin-bottom: 28px; background: rgba(253,242,232,0.06); border-radius: 14px; padding: 4px; }
   .admin-tab { flex: 1; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; font-family: 'Satoshi', sans-serif; color: rgba(253,242,232,0.4); background: none; border: none; cursor: pointer; text-align: center; transition: all 0.2s; }
@@ -87,8 +87,8 @@ const STYLES = `
 
   .poll-option-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .poll-option-row .form-input { flex: 1; }
-  .poll-remove-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,107,107,0.2); background: rgba(255,107,107,0.1); color: #FF6B6B; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .poll-remove-btn:hover { background: rgba(255,107,107,0.2); }
+  .poll-remove-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(216,152,172,0.2); background: rgba(216,152,172,0.1); color: #D898AC; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .poll-remove-btn:hover { background: rgba(216,152,172,0.2); }
   .poll-add-btn { padding: 8px 16px; border-radius: 10px; border: 1.5px dashed rgba(253,242,232,0.2); background: none; color: rgba(253,242,232,0.4); font-size: 12px; font-weight: 500; font-family: 'Satoshi', sans-serif; cursor: pointer; width: 100%; margin-top: 4px; }
   .poll-add-btn:hover { border-color: rgba(253,242,232,0.4); color: rgba(253,242,232,0.6); }
   .poll-preview-card { background: rgba(253,242,232,0.55); border-radius: 24px; padding: 20px; border: 1.5px solid #FDF2E8; }
@@ -101,7 +101,7 @@ const STYLES = `
   .journal-preview-card { background: rgba(253,242,232,0.55); border-radius: 24px; padding: 20px; border: 1.5px solid #FDF2E8; }
   .journal-preview-prompt { font-family: 'Fraunces', serif; font-size: 17px; color: #0C1A35; line-height: 1.5; }
   .journal-badge { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; margin-left: 8px; }
-  .journal-badge.manual { background: rgba(253,193,72,0.2); color: #FDC148; }
+  .journal-badge.manual { background: rgba(242,184,153,0.2); color: #F2B899; }
   .journal-badge.auto { background: rgba(253,242,232,0.1); color: rgba(253,242,232,0.35); }
 
   .preview-section { margin-top: 24px; }
@@ -520,7 +520,7 @@ function JournalPromptEditor() {
                 type="checkbox"
                 checked={bulkSkipExisting}
                 onChange={(e) => setBulkSkipExisting(e.target.checked)}
-                style={{ accentColor: "#FDC148" }}
+                style={{ accentColor: "#F2B899" }}
               />
               Skip dates that already have a manual prompt
             </label>
@@ -803,7 +803,7 @@ function AdminDashboard() {
               {imagePreview ? (
                 <img src={imagePreview} alt={title} />
               ) : (
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(142,202,230,0.18)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(160,204,200,0.18)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/>
                 </svg>
               )}
