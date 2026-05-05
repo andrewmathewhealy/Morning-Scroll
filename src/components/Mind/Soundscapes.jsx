@@ -10,11 +10,11 @@ const CARD = {
 };
 
 const SOUNDS = [
-  { id: "ocean",  label: "Ocean Waves", desc: "Rolling surf",       color: "#8ECAE6" },
-  { id: "rain",   label: "Rain",        desc: "Gentle rainfall",    color: "#A3B8D9" },
-  { id: "birds",  label: "Birdsong",    desc: "Morning chorus",     color: "#A3D9A5" },
-  { id: "wind",   label: "Wind",        desc: "Soft breeze",        color: "#C4A1FF" },
-  { id: "fire",   label: "Fireplace",   desc: "Warm crackling",     color: "#FFB703" },
+  { id: "ocean",  label: "Ocean Waves", desc: "Rolling surf",       color: "#B8DDE8" },
+  { id: "rain",   label: "Rain",        desc: "Gentle rainfall",    color: "#F0A8A0" },
+  { id: "birds",  label: "Birdsong",    desc: "Morning chorus",     color: "#C0C080" },
+  { id: "wind",   label: "Wind",        desc: "Soft breeze",        color: "#C8B8D8" },
+  { id: "fire",   label: "Fireplace",   desc: "Warm crackling",     color: "#D898AC" },
 ];
 
 function createNoiseBuffer(ctx, duration = 4) {
@@ -337,7 +337,7 @@ export default function Soundscapes() {
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #A3D9A5, #8ECAE6)" }} />
+        <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #C0C080, #B8DDE8)" }} />
         <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
           Soundscapes
         </div>

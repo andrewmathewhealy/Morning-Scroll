@@ -16,10 +16,11 @@ const PADDLE_BOTTOM = 24;
 const ROW_HP = [3, 2, 1, 1];
 
 // Colors per HP level — brick fades as it gets weaker
+// Matched to brickbreaker-bg.png: peach sky, mauve mountains, lavender haze, teal water
 const BRICK_COLORS_BY_HP = {
-  3: ["#FFB703", "#FFCA4B", "#FFD97A", "#FFE5A0", "#FFEDBA", "#FFD97A", "#FFB703"],
-  2: ["#E8907A", "#F4A58C", "#F8B9A2", "#FACBB6", "#F8B9A2", "#F4A58C", "#E8907A"],
-  1: ["#C4A1FF", "#D1B5FF", "#DDC8FF", "#E8DAFF", "#DDC8FF", "#D1B5FF", "#C4A1FF"],
+  3: ["#F2B899", "#F5C5A8", "#F8D2B8", "#FADFC8", "#F8D2B8", "#F5C5A8", "#F2B899"],
+  2: ["#D898AC", "#E0A8BA", "#E8B8C8", "#F0C8D6", "#E8B8C8", "#E0A8BA", "#D898AC"],
+  1: ["#C4B0D8", "#D0BEE0", "#DCCCE8", "#E8DAF0", "#DCCCE8", "#D0BEE0", "#C4B0D8"],
 };
 
 // Base row colors (full HP appearance)
@@ -27,7 +28,7 @@ const BRICK_COLORS = [
   BRICK_COLORS_BY_HP[3],
   BRICK_COLORS_BY_HP[2],
   BRICK_COLORS_BY_HP[1],
-  ["#8ECAE6", "#A5D6EE", "#BCE2F4", "#D2EDFA", "#BCE2F4", "#A5D6EE", "#8ECAE6"],
+  ["#A0CCC8", "#B0D8D4", "#C0E4E0", "#D0EEEA", "#C0E4E0", "#B0D8D4", "#A0CCC8"],
 ];
 
 function brickColor(row, col, hp) {
@@ -333,7 +334,7 @@ export default function BrickBreaker() {
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #FFB703, #E8907A)" }} />
+        <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #F2B899, #D898AC)" }} />
         <div style={{ fontSize: 11, color: "rgba(253,242,232,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
           Brick Breaker
         </div>

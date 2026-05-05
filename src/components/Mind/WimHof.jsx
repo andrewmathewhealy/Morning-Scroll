@@ -1,9 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 
 const CARD = {
-  background: "rgba(255,255,255,0.62)",
-  backdropFilter: "blur(8px)",
-  WebkitBackdropFilter: "blur(8px)",
+  background: "rgba(255,255,255,0.25)",
+  backdropFilter: "blur(2px)",
+  WebkitBackdropFilter: "blur(2px)",
   borderRadius: 20,
   border: "1px solid rgba(255,255,255,0.25)",
   boxShadow: "0 4px 16px rgba(0,20,60,0.1), 0 1px 3px rgba(8,20,50,0.04)",
@@ -244,49 +244,49 @@ export default function WimHof() {
 
   if (phase === "countdown") {
     circleScale = 0.7;
-    circleColor = "#8ECAE6";
+    circleColor = "#B8DDE8";
     instruction = "Deep breath in...";
     subtext = `${countdown}`;
   } else if (phase === "breathing") {
     circleScale = inhaling ? 1 : 0.55;
-    circleColor = inhaling ? "#8ECAE6" : "#A3B8D9";
+    circleColor = inhaling ? "#B8DDE8" : "#C8B8D8";
     instruction = inhaling ? "Breathe in" : "Let go";
     subtext = `${breathCount} / ${TOTAL_BREATHS}`;
   } else if (phase === "retention") {
     circleScale = 0.45;
-    circleColor = "#C4A1FF";
+    circleColor = "#C8B8D8";
     instruction = "Hold";
     subtext = `${retentionTime}s — tap when you need to breathe`;
   } else if (phase === "recovery") {
     circleScale = recoveryInhaled ? 1 : 0.5;
-    circleColor = "#A3D9A5";
+    circleColor = "#C0C080";
     instruction = recoveryInhaled ? `Hold — ${recoveryTime}s` : "Big breath in";
     subtext = "Recovery breath";
   } else if (phase === "roundDone") {
     circleScale = 0.7;
-    circleColor = "#FFB703";
+    circleColor = "#D898AC";
     instruction = `Round ${round} complete`;
     subtext = "Tap to start next round";
   } else if (phase === "done") {
     circleScale = 0.8;
-    circleColor = "#A3D9A5";
+    circleColor = "#C0C080";
     instruction = "Complete";
     subtext = `${TOTAL_ROUNDS} rounds finished`;
   }
 
   // Colors for round dots
-  const ROUND_COLORS = ["#8ECAE6", "#C4A1FF", "#FFB703"];
+  const ROUND_COLORS = ["#B8DDE8", "#C8B8D8", "#D898AC"];
 
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #FFB703, #C4A1FF)" }} />
+        <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #F0A8A0, #C8B8D8)" }} />
         <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
           Breathwork
         </div>
       </div>
 
-      <div style={{ ...CARD, padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative", overflow: "hidden" }}>
+      <div style={{ ...CARD, padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative", overflow: "hidden", backgroundImage: "url(/wimhof-bg.png)", backgroundSize: "cover", backgroundPosition: "center bottom" }}>
         {/* Background gradient wash that shifts with phase */}
         {active && (
           <div style={{
@@ -298,13 +298,13 @@ export default function WimHof() {
 
         {!active ? (
           <>
-            <div style={{ fontSize: 17, fontWeight: 600, color: "#0C1A35", fontFamily: "'Satoshi', sans-serif", marginBottom: 6, position: "relative" }}>
+            <div style={{ fontSize: 17, fontWeight: 600, color: "#0C1A35", fontFamily: "'Satoshi', sans-serif", marginBottom: 6, position: "relative", textShadow: "0 1px 4px rgba(255,255,255,0.7)" }}>
               Wim Hof Method
             </div>
-            <div style={{ fontSize: 12, color: "rgba(2,48,71,0.55)", textAlign: "center", lineHeight: 1.6, maxWidth: 260, marginBottom: 4, position: "relative" }}>
+            <div style={{ fontSize: 12, color: "#0C1A35", textAlign: "center", lineHeight: 1.6, maxWidth: 260, marginBottom: 4, position: "relative", textShadow: "0 1px 3px rgba(255,255,255,0.6)" }}>
               {TOTAL_BREATHS} deep breaths, breath retention, recovery hold. {TOTAL_ROUNDS} rounds.
             </div>
-            <div style={{ fontSize: 11, color: "rgba(2,48,71,0.4)", textAlign: "center", lineHeight: 1.5, maxWidth: 260, marginBottom: 18, position: "relative" }}>
+            <div style={{ fontSize: 11, color: "#0C1A35", textAlign: "center", lineHeight: 1.5, maxWidth: 260, marginBottom: 18, position: "relative", textShadow: "0 1px 3px rgba(255,255,255,0.6)" }}>
               Lie down or sit comfortably. Breathe in through nose or mouth, pushing your belly outward.
             </div>
             <div
@@ -312,8 +312,8 @@ export default function WimHof() {
               onClick={handleStart}
               style={{
                 padding: "10px 32px", borderRadius: 14, cursor: "pointer",
-                background: "linear-gradient(135deg, #8ECAE618, #C4A1FF12)",
-                border: "1.5px solid rgba(142,202,230,0.3)",
+                background: "linear-gradient(135deg, #B8DDE818, #C8B8D812)",
+                border: "1.5px solid rgba(184,221,232,0.3)",
                 fontSize: 14, fontWeight: 600, color: "#0C1A35",
                 transition: "all 0.2s ease",
                 position: "relative",
@@ -392,8 +392,8 @@ export default function WimHof() {
                   onClick={reset}
                   style={{
                     padding: "8px 24px", borderRadius: 12, cursor: "pointer",
-                    background: "linear-gradient(135deg, #A3D9A518, #A3D9A508)",
-                    border: "1.5px solid #A3D9A540",
+                    background: "linear-gradient(135deg, #C0C08018, #C0C08008)",
+                    border: "1.5px solid #C0C08040",
                     fontSize: 13, fontWeight: 500, color: "#0C1A35",
                   }}
                 >

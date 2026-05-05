@@ -3,10 +3,10 @@ import Soundscapes from "./Soundscapes.jsx";
 import WimHof from "./WimHof.jsx";
 
 const PRESETS = [
-  { label: "Focus",   beatHz: 12,  baseHz: 200, desc: "Alpha 12 Hz", color: "#8ECAE6", gradient: "linear-gradient(135deg, #8ECAE620, #8ECAE608)" },
-  { label: "Calm",    beatHz: 10,  baseHz: 180, desc: "Alpha 10 Hz", color: "#A3D9A5", gradient: "linear-gradient(135deg, #A3D9A520, #A3D9A508)" },
-  { label: "Meditate",beatHz: 6,   baseHz: 150, desc: "Theta 6 Hz",  color: "#C4A1FF", gradient: "linear-gradient(135deg, #C4A1FF20, #C4A1FF08)" },
-  { label: "Deep",    beatHz: 3,   baseHz: 120, desc: "Delta 3 Hz",  color: "#FFB703", gradient: "linear-gradient(135deg, #FFB70320, #FFB70308)" },
+  { label: "Focus",   beatHz: 12,  baseHz: 200, desc: "Alpha 12 Hz", color: "#B8DDE8", gradient: "linear-gradient(135deg, #B8DDE820, #B8DDE808)" },
+  { label: "Calm",    beatHz: 10,  baseHz: 180, desc: "Alpha 10 Hz", color: "#C0C080", gradient: "linear-gradient(135deg, #C0C08020, #C0C08008)" },
+  { label: "Meditate",beatHz: 6,   baseHz: 150, desc: "Theta 6 Hz",  color: "#C8B8D8", gradient: "linear-gradient(135deg, #C8B8D820, #C8B8D808)" },
+  { label: "Deep",    beatHz: 3,   baseHz: 120, desc: "Delta 3 Hz",  color: "#D898AC", gradient: "linear-gradient(135deg, #D898AC20, #D898AC08)" },
 ];
 
 const TIMERS = [null, 60, 180, 300, 600];
@@ -132,7 +132,7 @@ export default function MindScreen() {
   };
 
   const progress = timerDuration ? Math.min(elapsed / timerDuration, 1) : 0;
-  const activeColor = activePreset !== null ? PRESETS[activePreset].color : "#8ECAE6";
+  const activeColor = activePreset !== null ? PRESETS[activePreset].color : "#B8DDE8";
 
   return (
     <div className="home-bg" style={{ paddingBottom: 40 }}>
@@ -146,7 +146,7 @@ export default function MindScreen() {
       {/* ── BINAURAL BEATS ── */}
       <div className="section-pad spring-in spring-in-2">
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-          <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #8ECAE6, #C4A1FF)" }} />
+          <div style={{ width: 3, height: 14, borderRadius: 2, background: "linear-gradient(180deg, #B8DDE8, #C8B8D8)" }} />
           <div style={{ fontSize: 11, color: "rgba(2,48,71,0.5)", fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" }}>
             Binaural Beats
           </div>
@@ -162,7 +162,7 @@ export default function MindScreen() {
             position: "absolute", top: 0, left: 0, right: 0, height: 80,
             background: playing
               ? `linear-gradient(180deg, ${activeColor}15, transparent)`
-              : "linear-gradient(180deg, rgba(142,202,230,0.06), transparent)",
+              : "linear-gradient(180deg, rgba(184,221,232,0.06), transparent)",
             transition: "background 0.8s ease",
             pointerEvents: "none",
           }} />
@@ -185,7 +185,7 @@ export default function MindScreen() {
             <svg width={150} height={150} style={{ position: "absolute", top: 0, left: 0 }}>
               <circle cx={75} cy={75} r={65} fill="none" stroke="rgba(12,26,53,0.06)" strokeWidth={3} />
               {/* Subtle colored background ring */}
-              <circle cx={75} cy={75} r={65} fill="none" stroke={playing ? `${activeColor}20` : "rgba(142,202,230,0.08)"} strokeWidth={8} />
+              <circle cx={75} cy={75} r={65} fill="none" stroke={playing ? `${activeColor}20` : "rgba(184,221,232,0.08)"} strokeWidth={8} />
               {playing && timerDuration && (
                 <circle
                   cx={75} cy={75} r={65}
@@ -241,28 +241,16 @@ export default function MindScreen() {
                     borderRadius: 12,
                     cursor: "pointer",
                     transition: "all 0.3s ease",
-                    background: isActive ? p.gradient : "rgba(12,26,53,0.03)",
-                    border: isActive ? `1.5px solid ${p.color}55` : "1.5px solid rgba(12,26,53,0.06)",
+                    background: isActive ? p.color : `${p.color}40`,
+                    border: isActive ? `1.5px solid ${p.color}` : `1.5px solid ${p.color}60`,
                     position: "relative",
                     overflow: "hidden",
                   }}
                 >
-                  {/* Colored left accent bar */}
-                  <div style={{
-                    position: "absolute", left: 0, top: 8, bottom: 8, width: 3, borderRadius: 2,
-                    background: isActive ? p.color : `${p.color}40`,
-                    transition: "all 0.3s ease",
-                  }} />
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2, paddingLeft: 6 }}>
-                    <div style={{
-                      width: 7, height: 7, borderRadius: "50%",
-                      background: isActive ? p.color : `${p.color}50`,
-                      boxShadow: isActive ? `0 0 8px ${p.color}` : "none",
-                      transition: "all 0.3s ease",
-                    }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: "#0C1A35", fontFamily: "'Satoshi', sans-serif" }}>{p.label}</div>
                   </div>
-                  <div style={{ fontSize: 10, color: "rgba(2,48,71,0.45)", paddingLeft: 6 }}>{p.desc}</div>
+                  <div style={{ fontSize: 10, color: "rgba(2,48,71,0.6)" }}>{p.desc}</div>
                 </div>
               );
             })}
