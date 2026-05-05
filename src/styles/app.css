@@ -544,7 +544,7 @@
 /* Category tabs */
 .vfeed-tabs {
   display: flex; gap: 8px; overflow-x: auto;
-  padding: 0 20px 14px;
+  padding: 6px 20px 14px;
   scrollbar-width: none;
 }
 .vfeed-tabs::-webkit-scrollbar { display: none; }
@@ -563,10 +563,6 @@
   white-space: nowrap;
 }
 .vfeed-tab:active { transform: scale(0.95); }
-.vfeed-tab-active {
-  background: #0C1A35; color: #FDF2E8;
-  border-color: #0C1A35;
-}
 
 /* Vertical video list */
 .vfeed-list { padding: 0 20px 20px; }

@@ -284,6 +284,13 @@ const FEED_TAB_LABELS = {
   food: "Food",
   art: "Art",
 };
+const FEED_TAB_COLORS = {
+  animals: { normal: "#F0A8A0", bold: "#D8706A" },
+  nature:  { normal: "#F2C4A8", bold: "#D89878" },
+  sports:  { normal: "#B8DDE8", bold: "#78BCD0" },
+  food:    { normal: "#D898AC", bold: "#C06A88" },
+  art:     { normal: "#C8B8D8", bold: "#A088C0" },
+};
 
 // Load YouTube IFrame API once globally
 let ytApiReady = false;
@@ -450,15 +457,26 @@ function FeedScreen() {
 
       {/* Category tabs */}
       <div className="vfeed-tabs">
-        {FEED_TABS.map(tab => (
-          <button
-            key={tab}
-            className={`vfeed-tab${activeTab === tab ? " vfeed-tab-active" : ""}`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {FEED_TAB_LABELS[tab]}
-          </button>
-        ))}
+        {FEED_TABS.map(tab => {
+          const isActive = activeTab === tab;
+          const color = FEED_TAB_COLORS[tab];
+          return (
+            <button
+              key={tab}
+              className="vfeed-tab"
+              onClick={() => setActiveTab(tab)}
+              style={{
+                background: isActive ? color.bold : color.normal,
+                color: isActive ? "#0C1A35" : "#FDF2E8",
+                borderColor: isActive ? color.bold : color.normal,
+                fontWeight: isActive ? 700 : 600,
+                boxShadow: isActive ? `0 0 0 2.5px #0C1A35` : "none",
+              }}
+            >
+              {FEED_TAB_LABELS[tab]}
+            </button>
+          );
+        })}
       </div>
 
       {/* Vertical video list */}
