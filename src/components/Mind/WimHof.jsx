@@ -287,8 +287,10 @@ export default function WimHof() {
       </div>
 
       <div style={{ ...CARD, padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative", overflow: "hidden" }}>
-        {/* Background image — desaturated & blurred so text pops */}
-        <div style={{ position: "absolute", inset: -8, backgroundImage: "url(/wimhof-bg.png)", backgroundSize: "cover", backgroundPosition: "center bottom", filter: "blur(4px) saturate(0.5)", pointerEvents: "none", zIndex: 0 }} />
+        {/* Background image — heavy blur for abstract color wash */}
+        <div style={{ position: "absolute", inset: -24, backgroundImage: "url(/wimhof-bg.png)", backgroundSize: "cover", backgroundPosition: "center bottom", filter: "blur(20px) saturate(0.45) brightness(1.35)", pointerEvents: "none", zIndex: 0 }} />
+        {/* Light overlay to lift text */}
+        <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.25)", pointerEvents: "none", zIndex: 0 }} />
         {/* Background gradient wash that shifts with phase */}
         {active && (
           <div style={{
@@ -300,25 +302,32 @@ export default function WimHof() {
 
         {!active ? (
           <>
-            <div style={{ fontSize: 17, fontWeight: 600, color: "#0C1A35", fontFamily: "'Satoshi', sans-serif", marginBottom: 6, position: "relative", textShadow: "0 1px 4px rgba(255,255,255,0.7)" }}>
+            {/* Subtle breathing animation hint */}
+            <div style={{ position: "relative", width: 32, height: 32, marginBottom: 12 }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: "50%",
+                border: "1.5px solid rgba(12,26,53,0.2)",
+                animation: "wimBreathHint 4s ease-in-out infinite",
+              }} />
+              <style>{`@keyframes wimBreathHint { 0%, 100% { transform: scale(0.85); opacity: 0.4; } 50% { transform: scale(1.15); opacity: 0.8; } }`}</style>
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "#0C1A35", fontFamily: "'Fraunces', serif", marginBottom: 8, position: "relative", letterSpacing: -0.3 }}>
               Wim Hof Method
             </div>
-            <div style={{ fontSize: 12, color: "#0C1A35", textAlign: "center", lineHeight: 1.6, maxWidth: 260, marginBottom: 4, position: "relative", textShadow: "0 1px 3px rgba(255,255,255,0.6)" }}>
-              {TOTAL_BREATHS} deep breaths, breath retention, recovery hold. {TOTAL_ROUNDS} rounds.
-            </div>
-            <div style={{ fontSize: 11, color: "#0C1A35", textAlign: "center", lineHeight: 1.5, maxWidth: 260, marginBottom: 18, position: "relative", textShadow: "0 1px 3px rgba(255,255,255,0.6)" }}>
-              Lie down or sit comfortably. Breathe in through nose or mouth, pushing your belly outward.
+            <div style={{ fontSize: 12, color: "rgba(12,26,53,0.6)", textAlign: "center", lineHeight: 1.6, maxWidth: 240, marginBottom: 20, position: "relative" }}>
+              {TOTAL_BREATHS} breaths &middot; {TOTAL_ROUNDS} rounds &middot; breath retention &amp; recovery
             </div>
             <div
               className="tappable"
               onClick={handleStart}
               style={{
-                padding: "10px 32px", borderRadius: 14, cursor: "pointer",
-                background: "linear-gradient(135deg, #B8DDE818, #C8B8D812)",
-                border: "1.5px solid rgba(184,221,232,0.3)",
+                padding: "11px 36px", borderRadius: 14, cursor: "pointer",
+                background: "#A0CCC8",
+                border: "none",
                 fontSize: 14, fontWeight: 600, color: "#0C1A35",
                 transition: "all 0.2s ease",
                 position: "relative",
+                boxShadow: "0 2px 8px rgba(160,204,200,0.4)",
               }}
             >
               Begin
