@@ -546,14 +546,21 @@
   flex: 0 0 auto;
   padding: 7px 16px;
   border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.25);
-  background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid transparent;
+  background: rgba(253,242,232,0.5);
   font-family: 'Satoshi', sans-serif;
-  font-size: 12px; font-weight: 600;
-  color: rgba(12,26,53,0.55);
+  font-size: 12px; font-weight: 500;
+  color: rgba(12,26,53,0.45);
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+}
+.vfeed-tab.active {
+  background: #FDF2E8;
+  color: #0C1A35;
+  font-weight: 700;
+  border-color: #A0CCC8;
+  box-shadow: 0 2px 8px rgba(160,204,200,0.3);
 }
 .vfeed-tab:active { transform: scale(0.95); }
 

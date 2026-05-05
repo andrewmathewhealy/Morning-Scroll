@@ -457,26 +457,15 @@ function FeedScreen() {
 
       {/* Category tabs */}
       <div className="vfeed-tabs">
-        {FEED_TABS.map(tab => {
-          const isActive = activeTab === tab;
-          const color = FEED_TAB_COLORS[tab];
-          return (
-            <button
-              key={tab}
-              className="vfeed-tab"
-              onClick={() => setActiveTab(tab)}
-              style={{
-                background: isActive ? color.bold : color.normal,
-                color: isActive ? "#0C1A35" : "#FDF2E8",
-                borderColor: isActive ? color.bold : color.normal,
-                fontWeight: isActive ? 700 : 600,
-                boxShadow: isActive ? `0 0 0 2.5px #0C1A35` : "none",
-              }}
-            >
-              {FEED_TAB_LABELS[tab]}
-            </button>
-          );
-        })}
+        {FEED_TABS.map(tab => (
+          <button
+            key={tab}
+            className={`vfeed-tab${activeTab === tab ? " active" : ""}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {FEED_TAB_LABELS[tab]}
+          </button>
+        ))}
       </div>
 
       {/* Vertical video list */}
