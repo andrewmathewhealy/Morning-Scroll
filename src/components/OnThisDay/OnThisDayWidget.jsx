@@ -48,7 +48,7 @@ function OnThisDayWidget() {
           <div className="otd-year">{event.year}</div>
           <div className="otd-meta">
             {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}, {event.year}
-            {event.location && <><span style={{color:'#8ECAE6'}}>·</span> {event.location}</>}
+            {event.location && <><span style={{color:'#B8DDE8'}}>·</span> {event.location}</>}
           </div>
           <div className="otd-text">{event.text}</div>
           {event.wiki_url && (

@@ -51,7 +51,7 @@ export default function StationPicker({
         />
 
         <div className="station-picker-header">
-          <Icon.Radio size={16} color="#8ECAE6" />
+          <Icon.Radio size={16} color="#B8DDE8" />
           <span className="station-picker-title">{country ? `Radio in ${country}` : "Nearby Stations"}</span>
         </div>
 

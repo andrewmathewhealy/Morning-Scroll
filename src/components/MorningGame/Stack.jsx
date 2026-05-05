@@ -3,7 +3,7 @@ import { useGameAudio } from "./useGameAudio.js";
 import { useHaptics } from "./useHaptics.js";
 import "./stack.css";
 
-const BLOCK_COLORS = ["#F4B183", "#E8907A", "#E07272", "#D45B8A", "#C04DA0"];
+const BLOCK_COLORS = ["#F0A8A0", "#D898AC", "#C8B8D8", "#B8DDE8", "#C0C080"];
 const BLOCK_COUNT = 5;
 const SPEEDS = [80, 100, 120, 140, 160];
 const BLOCK_HEIGHT = 32;

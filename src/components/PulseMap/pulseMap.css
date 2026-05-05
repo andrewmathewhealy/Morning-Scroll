@@ -17,7 +17,7 @@
 .pulse-map-star {
   position: absolute;
   border-radius: 50%;
-  background: #8ECAE6;
+  background: #B8DDE8;
   animation: starTwinkle 3s ease-in-out infinite alternate;
 }
 @keyframes starTwinkle {

@@ -154,7 +154,7 @@ export default function OneLine({ onComplete }) {
             cx={p[0] * 100}
             cy={p[1] * 100}
             r={covered.has(i) ? 0.6 : 1}
-            fill={covered.has(i) ? "rgba(228,189,88,0.3)" : "rgba(12,26,53,0.18)"}
+            fill={covered.has(i) ? "rgba(216,152,172,0.3)" : "rgba(12,26,53,0.18)"}
             transition="r 0.2s"
           />
         ))}
@@ -178,15 +178,15 @@ export default function OneLine({ onComplete }) {
             cx={dottedPoints[0][0] * 100}
             cy={dottedPoints[0][1] * 100}
             r="3.5"
-            fill="rgba(228,189,88,0.8)"
+            fill="rgba(216,152,172,0.8)"
             className="mg-oneline-start"
           />
         )}
 
         <defs>
           <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#E4BD58" />
-            <stop offset="100%" stopColor="#E08070" />
+            <stop offset="0%" stopColor="#D898AC" />
+            <stop offset="100%" stopColor="#F0A8A0" />
           </linearGradient>
         </defs>
       </svg>

@@ -219,7 +219,7 @@ export default function SunriseGlobe({ style }) {
   const cityPoints = useMemo(() =>
     CITIES.map(c => ({
       lat: c.lat, lng: c.lng, size: 0.25,
-      color: isDaytime(c.lat, c.lng, sunPos[0], sunPos[1]) ? "rgba(255,200,50,0.9)" : "rgba(100,160,255,0.7)",
+      color: isDaytime(c.lat, c.lng, sunPos[0], sunPos[1]) ? "rgba(216,152,172,0.9)" : "rgba(184,221,232,0.7)",
       name: c.name,
     })),
     [sunPos]
@@ -313,7 +313,7 @@ export default function SunriseGlobe({ style }) {
             </div>
             <div style={{
               fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 600,
-              color: isDaytime(selectedCity.lat, selectedCity.lng, sunPos[0], sunPos[1]) ? "#FFB703" : "#8ECAE6",
+              color: isDaytime(selectedCity.lat, selectedCity.lng, sunPos[0], sunPos[1]) ? "#D898AC" : "#B8DDE8",
             }}>
               {getLocalTime(selectedCity.tz)}
             </div>
