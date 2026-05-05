@@ -1,0 +1,13 @@
+{
+  "appId": "com.morningscroll.app",
+  "appName": "Morning Scroll",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#0C1A35",
+    "preferredContentMode": "mobile"
+  },
+  "server": {
+    "iosScheme": "https"
+  }
+}
