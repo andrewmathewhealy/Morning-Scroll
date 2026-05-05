@@ -389,7 +389,7 @@ function Accordion({ title, count, total, accentColor, children, defaultOpen = f
   );
 }
 
-function SettingsScreen() {
+function SettingsScreen({ bgTheme, onChangeBgTheme }) {
   const [toggles, setToggles] = useState({ slowScroll: false, notification: true, sleepData: false });
   const toggle = k => setToggles(t => ({ ...t, [k]: !t[k] }));
   const ytUser = useAuth();
@@ -404,6 +404,27 @@ function SettingsScreen() {
             <div className="profile-streak"><span>12-day</span> morning streak</div>
           </div>
         </div>
+      </div>
+
+      <span className="section-label fade-up fade-up-3">Background</span>
+      <div className="fade-up fade-up-3" style={{ display: "flex", gap: 12, padding: "0 20px", marginBottom: 16 }}>
+        {Object.entries(BG_THEMES).map(([key, { label, gradient }]) => (
+          <button
+            key={key}
+            onClick={() => onChangeBgTheme(key)}
+            style={{
+              flex: 1, height: 56, borderRadius: 14, border: bgTheme === key ? "2.5px solid #0C1A35" : "1.5px solid rgba(12,26,53,0.15)",
+              background: gradient, cursor: "pointer", position: "relative", overflow: "hidden",
+              boxShadow: bgTheme === key ? "0 2px 8px rgba(0,0,0,0.12)" : "none",
+              transition: "border 0.2s, box-shadow 0.2s",
+            }}
+          >
+            <span style={{
+              position: "absolute", bottom: 4, left: 0, right: 0, textAlign: "center",
+              fontSize: 9, fontWeight: 600, color: "#0C1A35", letterSpacing: 0.3, opacity: 0.7,
+            }}>{label}</span>
+          </button>
+        ))}
       </div>
 
       <span className="section-label fade-up fade-up-4">Feed Settings</span>
@@ -468,9 +489,13 @@ function SettingsScreen() {
 }
 
 // ── BACKGROUND GRADIENT ────────────────────────────────────
-const getBgStyle = () => ({
-  background: `linear-gradient(175deg, #A8B4D0 0%, #BFC8DE 20%, #D2D4E4 40%, #E4DDE6 60%, #F0E8E8 80%, #FDF2E8 100%)`,
-});
+const BG_THEMES = {
+  peach:    { label: "Peach",    swatch: "#F2B899", gradient: "linear-gradient(175deg, #D9A088 0%, #E4B8A0 20%, #EECEBC 40%, #F4DDD0 60%, #F8E8E0 80%, #FDF2E8 100%)" },
+  lavender: { label: "Lavender", swatch: "#A8B4D0", gradient: "linear-gradient(175deg, #A8B4D0 0%, #BFC8DE 20%, #D2D4E4 40%, #E4DDE6 60%, #F0E8E8 80%, #FDF2E8 100%)" },
+  rose:     { label: "Rose",     swatch: "#D898AC", gradient: "linear-gradient(175deg, #C0808E 0%, #D0A0AC 20%, #DEB8C2 40%, #E8CCD4 60%, #F0DDE0 80%, #FDF2E8 100%)" },
+  mint:     { label: "Mint",     swatch: "#A0CCC8", gradient: "linear-gradient(175deg, #88B8B4 0%, #A0CCC8 20%, #B8DCDA 40%, #D0E8E4 60%, #E4EEEA 80%, #FDF2E8 100%)" },
+};
+const getBgStyle = (theme) => ({ background: BG_THEMES[theme]?.gradient ?? BG_THEMES.peach.gradient });
 
 // ── NAV TABS ──────────────────────────────────────────────
 const TABS = [
@@ -509,10 +534,13 @@ export default function MorningScrollApp() {
   const [tab, setTab] = useState("home");
   const [wordleOpen, setWordleOpen] = useState(false);
   const [wordleClosing, setWordleClosing] = useState(false);
+  const [bgTheme, setBgTheme] = useState(() => localStorage.getItem("ms-bg-theme") || "peach");
   const screenRef = useRef(null);
   const gyro = useGyroscope();
   const colorTemp = useColorTemp();
   const radioPlayer = useRadioPlayer();
+
+  const changeBgTheme = (t) => { setBgTheme(t); localStorage.setItem("ms-bg-theme", t); };
 
   useEffect(() => { if (screenRef.current) screenRef.current.scrollTop = 0; }, [tab]);
 
@@ -535,7 +563,7 @@ export default function MorningScrollApp() {
         </defs>
       </svg>
       <div className="phone-wrapper">
-        <div className="phone" id="phone-shell" style={{ ...getBgStyle(), '--gyro-x': gyro.x, '--gyro-y': gyro.y, filter: colorTemp }}>
+        <div className="phone" id="phone-shell" style={{ ...getBgStyle(bgTheme), '--gyro-x': gyro.x, '--gyro-y': gyro.y, filter: colorTemp }}>
           <div className="status-bar">
             <div className="status-time">{clockTime}</div>
             <div style={{ width: 120, height: 30, background: "#0a1628", borderRadius: 15, position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)" }} />
@@ -548,7 +576,7 @@ export default function MorningScrollApp() {
             {tab === "home" && <HomeScreen onOpenWordle={() => setWordleOpen(true)} radioPlayer={radioPlayer} />}
             {tab === "feed" && <FeedScreen />}
             {tab === "mind" && <MindScreen />}
-            {tab === "settings" && <SettingsScreen />}
+            {tab === "settings" && <SettingsScreen bgTheme={bgTheme} onChangeBgTheme={changeBgTheme} />}
           </div>
 
           {radioPlayer.station && (
