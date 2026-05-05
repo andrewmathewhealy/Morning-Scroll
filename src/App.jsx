@@ -326,15 +326,11 @@ function HomeScreen({ onOpenWordle, radioPlayer }) {
         </div>
       </div>
 
-      <div className="section-pad spring-in spring-in-3 depth-mid">
-        <ErrorBoundary label="BrickBreaker"><BrickBreaker /></ErrorBoundary>
-      </div>
-
-      <GlobeSection radioPlayer={radioPlayer} />
-
       <div className="section-pad spring-in spring-in-5 depth-mid">
         <ErrorBoundary label="PollCard"><PollCard /></ErrorBoundary>
       </div>
+
+      <GlobeSection radioPlayer={radioPlayer} />
 
       <div className="section-pad spring-in spring-in-6 depth-mid">
         <JournalWidget />
@@ -346,6 +342,10 @@ function HomeScreen({ onOpenWordle, radioPlayer }) {
 
       <div className="section-pad spring-in spring-in-6 depth-mid">
         <ErrorBoundary label="OnThisDay"><OnThisDayWidget /></ErrorBoundary>
+      </div>
+
+      <div className="section-pad spring-in spring-in-3 depth-mid">
+        <ErrorBoundary label="BrickBreaker"><BrickBreaker /></ErrorBoundary>
       </div>
 
       <div className="section-pad spring-in spring-in-6 depth-mid">
