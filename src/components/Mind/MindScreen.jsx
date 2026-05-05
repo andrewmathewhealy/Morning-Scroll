@@ -172,6 +172,26 @@ export default function MindScreen() {
           </div>
 
           <div style={{ position: "relative", width: 150, height: 150, marginBottom: 16 }}>
+            {/* Sound wave rings emanating from circle */}
+            <style>{`
+              @keyframes waveRing {
+                0%   { transform: translate(-50%, -50%) scale(1); opacity: 0.45; }
+                100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+              }
+            `}</style>
+            {[0, 1, 2].map(i => (
+              <div key={i} style={{
+                position: "absolute", top: "50%", left: "50%",
+                width: 130, height: 130, borderRadius: "50%",
+                border: `1.5px solid ${playing ? activeColor : "rgba(12,26,53,0.08)"}`,
+                transform: "translate(-50%, -50%) scale(1)",
+                opacity: 0,
+                animation: playing
+                  ? `waveRing ${activePreset !== null ? Math.max(1.2, 6 / PRESETS[activePreset].beatHz) : 3}s ease-out ${i * (activePreset !== null ? Math.max(0.4, 2 / PRESETS[activePreset].beatHz) : 1)}s infinite`
+                  : `waveRing 4s ease-out ${i * 1.33}s infinite`,
+                pointerEvents: "none",
+              }} />
+            ))}
             {/* Soft glow behind ring when playing */}
             {playing && (
               <div style={{
