@@ -286,7 +286,9 @@ export default function WimHof() {
         </div>
       </div>
 
-      <div style={{ ...CARD, padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative", overflow: "hidden", backgroundImage: "url(/wimhof-bg.png)", backgroundSize: "cover", backgroundPosition: "center bottom" }}>
+      <div style={{ ...CARD, padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative", overflow: "hidden" }}>
+        {/* Background image — desaturated & blurred so text pops */}
+        <div style={{ position: "absolute", inset: -8, backgroundImage: "url(/wimhof-bg.png)", backgroundSize: "cover", backgroundPosition: "center bottom", filter: "blur(4px) saturate(0.5)", pointerEvents: "none", zIndex: 0 }} />
         {/* Background gradient wash that shifts with phase */}
         {active && (
           <div style={{

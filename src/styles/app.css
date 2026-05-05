@@ -107,13 +107,6 @@
   /* ── COLOR TEMPERATURE ── */
   .phone { transition: filter 2s ease; }
 
-  /* ── LIVING SUNRISE ── */
-  @keyframes sunriseScroll {
-    0%   { background-position: 0% 0%; }
-    10%  { background-position: 0% 0%; }
-    100% { background-position: 0% 100%; }
-  }
-  .phone { animation: sunriseScroll 300s linear 1 forwards; }
 
   /* ── NUMBER COUNT-UP ── */
   .count-up { display: inline-block; transition: opacity 0.3s; }

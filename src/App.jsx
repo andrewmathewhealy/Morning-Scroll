@@ -468,16 +468,8 @@ function SettingsScreen() {
 }
 
 // ── BACKGROUND GRADIENT ────────────────────────────────────
-const SUNRISE_GRADIENT = `linear-gradient(in oklch 175deg,
-  #081020 0%, #0B1528 5.5%, #10203E 11%, #162D52 16.5%, #1E4580 22%,
-  #2962A8 27.5%, #3480C8 33%, #44A0DE 38.5%, #5FBBED 44%, #7FCDF0 49.5%,
-  #9DDAF0 55%, #B4E2EE 60.5%, #C8E6EA 66%, #D9EBE8 71.5%, #E6EDE6 77%,
-  #EEEEE8 82.5%, #F4F0E8 88%, #F9F2E8 94%, #FDF2E8 100%
-)`;
-
 const getBgStyle = () => ({
-  background: SUNRISE_GRADIENT,
-  backgroundSize: '100% 180%',
+  background: `linear-gradient(175deg, #A8B4D0 0%, #BFC8DE 20%, #D2D4E4 40%, #E4DDE6 60%, #F0E8E8 80%, #FDF2E8 100%)`,
 });
 
 // ── NAV TABS ──────────────────────────────────────────────
