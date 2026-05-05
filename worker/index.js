@@ -547,14 +547,16 @@ async function handleYouTubeLiveStatus(request, env, url) {
 }
 
 // ── YOUTUBE VIDEO FEED ───────────────────────────────────
-// Curated channels per category. Add more channels/categories here.
-const VIDEO_CHANNELS = {
+// Default channels — used as fallback when KV config is empty.
+// To update channels without redeploying, PUT JSON to KV key "video_channels".
+const DEFAULT_VIDEO_CHANNELS = {
   animals: [
     { channelId: "UCINb0wqPz-A0dV9nARjJlOQ", name: "The Dodo" },
     { channelId: "UCwmZiChSryoWQCZMIQezgTg", name: "BBC Earth" },
     { channelId: "UCPIvT-zcQl2H0vabdXJGcpg", name: "The Pet Collective" },
     { channelId: "UCDPk9MG2RexnOMGTD-YnSnA", name: "Nat Geo Animals" },
     { channelId: "UCkEBDbzLyH-LbB2FgMoSMaQ", name: "Animal Planet" },
+    { channelId: "UC7_VH_kj0aD9vhuHmFheUYQ", name: "GeoBeats Animals" },
   ],
   sports: [
     { channelId: "UCWJ2lWNubArHWmf3FIHbfcQ", name: "NBA" },
@@ -567,6 +569,9 @@ const VIDEO_CHANNELS = {
     { channelId: "UCoLrcjPV5PbUrUyXq5mjc_A", name: "MLB" },
     { channelId: "UChgDp_uE5PVqnpdV05xKOOA", name: "Chaz NBA" },
     { channelId: "UCWQXiB9DidR74rOPeupt8nQ", name: "Made the Cut" },
+    { channelId: "UCl9E4Zxa8CVr2LBLD0_TaNg", name: "Jomboy Media" },
+    { channelId: "UCGYYNGmyhZ_kwBF_lqqXdAQ", name: "Tifo Football" },
+    { channelId: "UCZ7wY7MRDSygp63HIEfdQZA", name: "Sky Sports Football" },
   ],
   food: [
     { channelId: "UCJFp8uSYCjXOMnkUyb3CQ3Q", name: "Tasty" },
@@ -574,6 +579,9 @@ const VIDEO_CHANNELS = {
     { channelId: "UC8Y-jrV8oR3s2Ix4viDkZtA", name: "Food Network" },
     { channelId: "UCRzPUBhXUZHclB7B5bURFXw", name: "Eater" },
     { channelId: "UCaLfMkkHhSA_LaCta0BzyhQ", name: "Munchies" },
+    { channelId: "UCJHA_jMfCvEnv-3kRjTCQXw", name: "Babish Culinary Universe" },
+    { channelId: "UCbpMy0Fg74eXXkvxJrtEn3w", name: "Bon Appétit" },
+    { channelId: "UClfLmmxQVEX8SauwFlfPpog", name: "Big Nibbles" },
   ],
   art: [
     { channelId: "UCmQThz1OLYt8mb2PU540LOA", name: "The Art Assignment" },
@@ -583,6 +591,10 @@ const VIDEO_CHANNELS = {
     { channelId: "UC0k238zFx-Z8xFH0sxCrPJg", name: "Architectural Digest" },
     { channelId: "UCDsElQQt_gCZ9LgnW-7v-cQ", name: "Kirsten Dirksen" },
     { channelId: "UCJv7eTNf6v1M0g6cGE3v8lw", name: "H88" },
+    { channelId: "UCN8V_pO0xOFKLL4XG1tshnw", name: "Perspective" },
+    { channelId: "UCyFZMEnm1il5Wv3a6tPscbA", name: "Genius" },
+    { channelId: "UC4eYXhJI4-7wSWc8UNRwD4A", name: "NPR Music" },
+    { channelId: "UCXkNod_JcH7PleOjwK_8rYQ", name: "Polyphonic" },
   ],
   nature: [
     { channelId: "UCpVm7bg6pXKo1Pr6k5kxG9A", name: "National Geographic" },
@@ -590,77 +602,213 @@ const VIDEO_CHANNELS = {
     { channelId: "UCnavGPxEijftXneFxk28srA", name: "Earth Touch" },
     { channelId: "UCwtsR2eW0MIjEnmEG2ImTzw", name: "Our Planet" },
     { channelId: "UCDDMpdWv1mGdx3ABJBgvidw", name: "Leaf of Life" },
+    { channelId: "UCbq-4OJxnziD3awH-aTezeA", name: "Real Wild" },
+    { channelId: "UCgb_TbreMgfDdLKkr4yYJHw", name: "Andrew Millison" },
   ],
 };
+
+// Load channel config from KV (if set), otherwise use hardcoded defaults.
+async function getVideoChannels(env) {
+  try {
+    const kvConfig = await env.FEED_CACHE.get("video_channels");
+    if (kvConfig) return JSON.parse(kvConfig);
+  } catch {}
+  return DEFAULT_VIDEO_CHANNELS;
+}
 
 const VIDEOS_CACHE_KEY = "videos_feed";
 const VIDEOS_CACHE_TTL = 86400; // 24 hours
 const VIDEOS_STALE_MS = 4 * 60 * 60 * 1000; // 4 hours — refresh if older
+const ETAGS_KEY = "videos_etags"; // ETag cache for 304 optimization
 
-// Fetch videos for a single channel via FREE YouTube RSS (no API key, no quota).
-async function fetchChannelVideosRSS(channelId, channelName) {
+// ── YouTube Data API v3 — Sync Engine ────────────────────
+// Uses activities.list (1 unit) instead of search.list (100 units).
+// ETag optimization: stores ETags per channel, sends If-None-Match to get
+// free 304 responses when no new content exists.
+const YT_API = "https://www.googleapis.com/youtube/v3";
+
+// Load stored ETags from KV.
+async function getETags(env) {
   try {
-    const res = await fetch(
-      `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`,
-      { headers: { "User-Agent": "MorningScroll/1.0" } }
-    );
-    if (!res.ok) { console.error(`RSS error for ${channelName}: ${res.status}`); return []; }
-    const xml = await res.text();
+    const raw = await env.FEED_CACHE.get(ETAGS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+}
 
-    const videos = [];
-    const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
-    let match;
-    while ((match = entryRegex.exec(xml)) !== null && videos.length < 8) {
-      const entry = match[1];
-      const videoId = entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/)?.[1];
-      const title = entry.match(/<title>(.*?)<\/title>/)?.[1];
-      const published = entry.match(/<published>(.*?)<\/published>/)?.[1];
-      const linkHref = entry.match(/<link[^>]+href="([^"]+)"/)?.[1] || "";
-      const isShort = linkHref.includes("/shorts/");
-      if (videoId && title && published) {
-        // Only include videos from the last 48 hours
-        const publishedTime = new Date(published).getTime();
-        const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000;
-        if (publishedTime >= fortyEightHoursAgo) {
-          videos.push({
-            video_id: videoId,
-            title: title.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#39;/g, "'").replace(/&quot;/g, '"'),
-            thumbnail: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
-            channel: channelName,
-            published_at: published,
-            embed_url: `https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0`,
-            is_short: isShort,
-          });
-        }
-      }
+// Persist ETags to KV.
+async function saveETags(env, etags) {
+  await env.FEED_CACHE.put(ETAGS_KEY, JSON.stringify(etags), { expirationTtl: VIDEOS_CACHE_TTL });
+}
+
+// Fetch recent uploads for a single channel via activities.list.
+// Cost: 1 quota unit per call, or 0 units if ETag returns 304.
+async function fetchChannelVideos(channelId, channelName, apiKey, etag) {
+  try {
+    const headers = {};
+    if (etag) headers["If-None-Match"] = etag;
+
+    const res = await fetch(
+      `${YT_API}/activities?part=snippet,contentDetails&channelId=${channelId}&maxResults=8&key=${apiKey}`,
+      { headers }
+    );
+
+    // 304 Not Modified — no new content, 0 quota cost
+    if (res.status === 304) {
+      return { videos: null, etag }; // null = use cached data
     }
-    return videos;
+
+    if (!res.ok) {
+      console.error(`API error for ${channelName}: ${res.status}`);
+      return { videos: [], etag: null };
+    }
+
+    const newEtag = res.headers.get("ETag") || null;
+    const data = await res.json();
+    if (!data.items) return { videos: [], etag: newEtag };
+
+    const now = Date.now();
+    const videos = [];
+
+    for (const item of data.items) {
+      // Only include "upload" activities
+      if (item.snippet.type !== "upload") continue;
+
+      const videoId = item.contentDetails?.upload?.videoId;
+      if (!videoId) continue;
+
+      const s = item.snippet;
+      videos.push({
+        video_id: videoId,
+        title: s.title,
+        thumbnail: s.thumbnails?.high?.url || `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+        channel: channelName,
+        published_at: s.publishedAt,
+        fetched_at: new Date(now).toISOString(),
+        embed_url: `https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0`,
+        is_short: false, // resolved below via videos.list
+      });
+    }
+
+    return { videos, etag: newEtag };
   } catch (err) {
-    console.error(`RSS fetch failed for ${channelName}:`, err.message);
-    return [];
+    console.error(`API fetch failed for ${channelName}:`, err.message);
+    return { videos: [], etag: null };
   }
 }
 
-// Fetch all curated channels via RSS. Free, no quota, no API key needed.
-async function fetchVideosFeed() {
+// Detect Shorts via videos.list (duration <= 60s).
+// Cost: 1 quota unit per call, each call handles up to 50 video IDs.
+async function markShorts(videos, apiKey) {
+  if (!videos.length) return;
+  for (let i = 0; i < videos.length; i += 50) {
+    const batch = videos.slice(i, i + 50);
+    const ids = batch.map(v => v.video_id).join(",");
+    try {
+      const res = await fetch(
+        `${YT_API}/videos?part=contentDetails&id=${ids}&key=${apiKey}`
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      const durations = {};
+      for (const item of (data.items || [])) {
+        durations[item.id] = item.contentDetails.duration;
+      }
+      for (const v of batch) {
+        const dur = durations[v.video_id];
+        if (dur) {
+          const match = dur.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+          if (match) {
+            const secs = (parseInt(match[1] || 0) * 3600) + (parseInt(match[2] || 0) * 60) + parseInt(match[3] || 0);
+            v.is_short = secs <= 60;
+          }
+        }
+      }
+    } catch {}
+  }
+}
+
+// Purge videos older than 24 hours (compliance: no archiving YouTube data).
+function purgeStaleVideos(feed) {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  for (const category of Object.keys(feed)) {
+    if (category === "cached_at") continue;
+    feed[category] = (feed[category] || []).filter(v => {
+      const fetchedAt = new Date(v.fetched_at || v.published_at).getTime();
+      return fetchedAt > cutoff;
+    });
+  }
+  return feed;
+}
+
+// Fetch all curated channels via YouTube Data API v3.
+// Quota cost per refresh:
+//   - 45 channels × 1 unit (activities.list) = 45 units max
+//   - Channels with ETag 304 = 0 units (free!)
+//   - ~1-2 units for videos.list (shorts detection)
+//   - At 6 refreshes/day ≈ 270 units/day worst case (well within 10,000)
+async function fetchVideosFeed(env) {
+  const channels = await getVideoChannels(env);
+  const apiKey = env.YOUTUBE_API_KEY;
+  if (!apiKey) throw new Error("YOUTUBE_API_KEY secret not set");
+
+  const etags = await getETags(env);
+  const newEtags = { ...etags };
+
+  // Load existing cached feed for 304 merging
+  let existingFeed = {};
+  try {
+    const cached = await env.FEED_CACHE.get(VIDEOS_CACHE_KEY);
+    if (cached) existingFeed = JSON.parse(cached);
+  } catch {}
+
   const feed = {};
 
-  for (const [category, channels] of Object.entries(VIDEO_CHANNELS)) {
+  for (const [category, chList] of Object.entries(channels)) {
     const results = await Promise.all(
-      channels.map(ch => fetchChannelVideosRSS(ch.channelId, ch.name))
+      chList.map(ch => {
+        const etagKey = ch.channelId;
+        return fetchChannelVideos(ch.channelId, ch.name, apiKey, etags[etagKey])
+          .then(r => {
+            if (r.etag) newEtags[etagKey] = r.etag;
+            return { channelId: ch.channelId, ...r };
+          });
+      })
     );
-    const categoryVideos = results.flat();
+
+    const categoryVideos = [];
+    for (const r of results) {
+      if (r.videos === null) {
+        // 304 — merge existing cached videos for this channel
+        const existing = (existingFeed[category] || []).filter(v => v.channel === r.channelId || true);
+        categoryVideos.push(...(existingFeed[category] || []).filter(v => {
+          // Match by channel name (since we don't store channelId in video objects)
+          const chEntry = chList.find(c => c.channelId === r.channelId);
+          return chEntry && v.channel === chEntry.name;
+        }));
+      } else {
+        categoryVideos.push(...r.videos);
+      }
+    }
+
+    // Detect shorts in bulk for new videos only
+    const newVideos = categoryVideos.filter(v => v.is_short === false && v.fetched_at);
+    await markShorts(newVideos, apiKey);
+
     categoryVideos.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
     feed[category] = categoryVideos;
   }
 
-  return { ...feed, cached_at: new Date().toISOString() };
+  await saveETags(env, newEtags);
+
+  const result = { ...feed, cached_at: new Date().toISOString() };
+  return purgeStaleVideos(result);
 }
 
-// Called by cron trigger (daily at 6am UTC) — the ONLY thing that writes to KV.
+// Called by cron trigger (every 4 hours) — the ONLY thing that writes to KV.
 async function refreshVideosFeed(env) {
   try {
-    const feed = await fetchVideosFeed();
+    const feed = await fetchVideosFeed(env);
     await env.FEED_CACHE.put(VIDEOS_CACHE_KEY, JSON.stringify(feed), {
       expirationTtl: VIDEOS_CACHE_TTL,
     });
@@ -670,37 +818,47 @@ async function refreshVideosFeed(env) {
   }
 }
 
+// Lock to prevent multiple simultaneous seed/refresh calls from burning quota.
+let refreshInFlight = false;
+
 // Serves /api/videos — reads from KV, self-heals if cache is stale.
 // Cron is the primary refresh mechanism; this is the fallback.
 async function handleVideosFeed(request, env, ctx) {
   try {
     const cached = await env.FEED_CACHE.get(VIDEOS_CACHE_KEY);
     if (cached) {
-      // Check if cache is stale — if so, refresh in the background
+      // Check if cache is stale — if so, refresh in the background (once)
       try {
         const parsed = JSON.parse(cached);
         const age = Date.now() - new Date(parsed.cached_at).getTime();
-        if (age > VIDEOS_STALE_MS) {
-          // Serve stale data immediately, refresh behind the scenes
-          const refresh = refreshVideosFeed(env);
+        if (age > VIDEOS_STALE_MS && !refreshInFlight) {
+          refreshInFlight = true;
+          const refresh = refreshVideosFeed(env).finally(() => { refreshInFlight = false; });
           if (ctx?.waitUntil) ctx.waitUntil(refresh);
         }
       } catch {}
       return new Response(cached, {
         status: 200,
-        headers: { ...CORS_HEADERS, "Content-Type": "application/json", "X-Cache": "HIT" },
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json", "Cache-Control": "public, max-age=14400", "X-Cache": "HIT" },
       });
     }
 
-    // KV empty (first deploy only) — seed it once, then cron takes over
-    const feed = await fetchVideosFeed();
-    const body = JSON.stringify(feed);
-    await env.FEED_CACHE.put(VIDEOS_CACHE_KEY, body, { expirationTtl: VIDEOS_CACHE_TTL });
-
-    return new Response(body, {
-      status: 200,
-      headers: { ...CORS_HEADERS, "Content-Type": "application/json", "X-Cache": "SEED" },
-    });
+    // KV empty (first deploy only) — seed it once, guard against stampede
+    if (refreshInFlight) {
+      return json({ error: "Feed is initializing, please retry in 30 seconds" }, 503);
+    }
+    refreshInFlight = true;
+    try {
+      const feed = await fetchVideosFeed(env);
+      const body = JSON.stringify(feed);
+      await env.FEED_CACHE.put(VIDEOS_CACHE_KEY, body, { expirationTtl: VIDEOS_CACHE_TTL });
+      return new Response(body, {
+        status: 200,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json", "Cache-Control": "public, max-age=14400", "X-Cache": "SEED" },
+      });
+    } finally {
+      refreshInFlight = false;
+    }
   } catch (err) {
     return json({ error: "Failed to fetch video feed", detail: err.message }, 500);
   }
