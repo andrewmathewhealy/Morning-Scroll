@@ -10,7 +10,7 @@ if (window.location.pathname === '/admin') {
         <AdminApp />
       </StrictMode>,
     );
-  });
+  }).catch(e => console.error('Admin load failed', e));
 } else {
   import('./App.jsx').then(({ default: App }) => {
     createRoot(document.getElementById('root')).render(
@@ -18,5 +18,8 @@ if (window.location.pathname === '/admin') {
         <App />
       </StrictMode>,
     );
+  }).catch(e => {
+    console.error('App load failed', e);
+    document.getElementById('root').innerHTML = '<pre style="color:white;padding:20px">' + e.message + '\n' + e.stack + '</pre>';
   });
 }

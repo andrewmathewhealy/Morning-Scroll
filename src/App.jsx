@@ -562,15 +562,17 @@ export default function MorningScrollApp() {
           </filter>
         </defs>
       </svg>
-      <div className="phone-wrapper">
-        <div className="phone" id="phone-shell" style={{ ...getBgStyle(bgTheme), '--gyro-x': gyro.x, '--gyro-y': gyro.y, filter: colorTemp }}>
-          <div className="status-bar">
-            <div className="status-time">{clockTime}</div>
-            <div style={{ width: 120, height: 30, background: "#0C1A35", borderRadius: 15, position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)" }} />
-            <div style={{ display: "flex", gap: 2 }}>
-              <span className="status-wifi" style={{ fontSize: 10 }}>●●● WiFi ▮▮▮</span>
+      <div className={`phone-wrapper${window.Capacitor ? ' is-native' : ''}`}>
+        <div className={`phone${window.Capacitor ? ' is-native' : ''}`} id="phone-shell" style={{ ...getBgStyle(bgTheme), '--gyro-x': gyro.x, '--gyro-y': gyro.y, filter: colorTemp }}>
+          {!window.Capacitor && (
+            <div className="status-bar">
+              <div className="status-time">{clockTime}</div>
+              <div className="status-notch" />
+              <div style={{ display: "flex", gap: 2 }}>
+                <span className="status-wifi" style={{ fontSize: 10 }}>●●● WiFi ▮▮▮</span>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="screen rubber-scroll" ref={screenRef}>
             {tab === "home" && <HomeScreen onOpenWordle={() => setWordleOpen(true)} radioPlayer={radioPlayer} />}

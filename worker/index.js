@@ -5,6 +5,9 @@ const ALLOWED_ORIGINS = new Set([
   "http://localhost:5174",
   "http://localhost:4173",
   "http://127.0.0.1:5173",
+  "capacitor://localhost",
+  "https://localhost",
+  "https://morningscroll.app",
 ]);
 
 function isLocalNetwork(origin) {
@@ -22,7 +25,7 @@ const CORS_HEADERS = {
 
 function isAllowedOrigin(request) {
   const origin = request.headers.get("Origin");
-  if (!origin) return false;
+  if (!origin) return true; // native apps (Capacitor) may omit Origin
   return ALLOWED_ORIGINS.has(origin) || isLocalNetwork(origin);
 }
 

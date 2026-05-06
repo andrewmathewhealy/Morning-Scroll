@@ -19,11 +19,13 @@ function useJournalPrompt() {
       if (cached?.prompt) { setState({ loading: false, prompt: cached.prompt }); return; }
     } catch {}
 
+    const timeout = (promise, ms) => Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+
     (async () => {
       try {
-        // Check Firestore for a manually-set prompt first
+        // Check Firestore for a manually-set prompt first (with timeout)
         try {
-          const manualSnap = await getDoc(doc(db, "journalPrompts", today));
+          const manualSnap = await timeout(getDoc(doc(db, "journalPrompts", today)), 3000);
           const manualData = manualSnap.data();
           if (manualData?.manual && manualData?.prompt) {
             const data = { date: today, prompt: manualData.prompt };
@@ -33,11 +35,11 @@ function useJournalPrompt() {
           }
         } catch {}
 
-        // Fetch recent prompts from Firestore to avoid repetition
+        // Fetch recent prompts from Firestore to avoid repetition (with timeout)
         let recentParam = "";
         try {
           const q = query(collection(db, "journalPrompts"), orderBy("date", "desc"), fbLimit(10));
-          const snap = await getDocs(q);
+          const snap = await timeout(getDocs(q), 3000);
           const recent = snap.docs.map(d => d.data().prompt).filter(Boolean);
           if (recent.length) recentParam = `?recent=${encodeURIComponent(recent.join("|||"))}`;
         } catch {}
@@ -46,8 +48,8 @@ function useJournalPrompt() {
         const data = await res.json();
         if (!data.prompt) throw new Error("No prompt");
 
-        // Store prompt in Firestore for future dedup
-        try { await setDoc(doc(db, "journalPrompts", today), { date: today, prompt: data.prompt }); } catch {}
+        // Store prompt in Firestore for future dedup (fire and forget)
+        try { setDoc(doc(db, "journalPrompts", today), { date: today, prompt: data.prompt }); } catch {}
 
         localStorage.setItem(cacheKey, JSON.stringify(data));
         setState({ loading: false, prompt: data.prompt });

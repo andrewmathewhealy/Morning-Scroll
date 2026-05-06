@@ -5,7 +5,8 @@
   "ios": {
     "contentInset": "always",
     "backgroundColor": "#0C1A35",
-    "preferredContentMode": "mobile"
+    "preferredContentMode": "mobile",
+    "allowsLinkPreview": false
   },
   "server": {
     "iosScheme": "https"

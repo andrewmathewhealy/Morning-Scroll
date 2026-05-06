@@ -344,52 +344,13 @@ function VideoCard({ video, isVisible, unlocked, onUnlock }) {
   const [created, setCreated] = useState(false);
   const isShort = video.is_short;
 
-  // Create player once when unlocked — never destroy it, just play/pause
+  // Mark ready once unlocked (iframe handles its own playback)
   useEffect(() => {
-    if (!unlocked || created) return;
-    let cancelled = false;
-
-    ensureYTApi().then(() => {
-      if (cancelled || !containerRef.current) return;
-      const el = document.createElement("div");
-      containerRef.current.appendChild(el);
-      playerRef.current = new window.YT.Player(el, {
-        videoId: video.video_id,
-        playerVars: {
-          autoplay: isVisible ? 1 : 0,
-          mute: 0,
-          playsinline: 1,
-          rel: 0,
-          modestbranding: 1,
-          controls: 1,
-        },
-        events: {
-          onReady: () => {
-            if (cancelled) return;
-            setReady(true);
-            if (!isVisible) {
-              try { playerRef.current.pauseVideo(); } catch {}
-            }
-          },
-        },
-      });
+    if (unlocked && !created) {
       setCreated(true);
-    });
-
-    return () => { cancelled = true; };
+      setReady(true);
+    }
   }, [unlocked]);
-
-  // Play/pause based on visibility — player stays alive
-  useEffect(() => {
-    if (!ready || !playerRef.current) return;
-    try {
-      if (isVisible) {
-        playerRef.current.playVideo();
-      } else {
-        playerRef.current.pauseVideo();
-      }
-    } catch {}
-  }, [isVisible, ready]);
 
   return (
     <div className={`vfeed-card-v ${isShort ? "vfeed-card-short" : "vfeed-card-long"}`} onClick={() => !unlocked && onUnlock()}>
@@ -400,7 +361,15 @@ function VideoCard({ video, isVisible, unlocked, onUnlock }) {
             <Icon.Play size={isShort ? 24 : 32} color="#fff" />
           </div>
         )}
-        {unlocked && <div ref={containerRef} className="vfeed-yt-container" />}
+        {unlocked && (
+          <iframe
+            className="vfeed-yt-container"
+            src={`https://www.youtube.com/embed/${video.video_id}?playsinline=1&rel=0`}
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            frameBorder="0"
+          />
+        )}
         {isShort && (
           <div className="vfeed-short-badge">SHORT</div>
         )}
