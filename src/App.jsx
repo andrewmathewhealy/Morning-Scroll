@@ -17,10 +17,9 @@ import WordleGame from "./components/Wordle/WordleGame.jsx";
 import PollCard from "./components/Poll/PollCard.jsx";
 import ArtOfTheDayCard from "./components/ArtOfTheDay/ArtOfTheDayCard.jsx";
 import OnThisDayWidget from "./components/OnThisDay/OnThisDayWidget.jsx";
-import ScoresSection from "./components/Sports/ScoresSection.jsx";
 import FeedScreen from "./components/Feed/FeedScreen.jsx";
 import { YouTubeFeedSection, YouTubeSettingsSection } from "./components/YouTube/YouTube.jsx";
-import { BrickBreaker } from "./components/MorningGame/MorningGame.jsx";
+import BrickBreaker from "./components/MorningGame/BrickBreaker.jsx";
 import MindScreen from "./components/Mind/MindScreen.jsx";
 
 // ── ERROR BOUNDARY ────────────────────────────────────────
@@ -455,21 +454,6 @@ function SettingsScreen({ bgTheme, onChangeBgTheme }) {
 
       <YouTubeSettingsSection user={ytUser} />
 
-      <span className="section-label fade-up fade-up-5">Sports Scores</span>
-      {[
-        { league: "nba", Ico: Icon.Basketball, label: "NBA", value: "Basketball" },
-        { league: "nfl", Ico: Icon.Trophy, label: "NFL", value: "Football" },
-        { league: "mlb", Ico: Icon.Trophy, label: "MLB", value: "Baseball" },
-        { league: "nhl", Ico: Icon.Trophy, label: "NHL", value: "Hockey" },
-      ].map(s => (
-        <div className="setting-row fade-up fade-up-5" key={s.league}>
-          <div className="setting-left">
-            <div className="setting-icon"><s.Ico size={18} color="#0C1A35" /></div>
-            <div><div className="setting-name">{s.label}</div><div className="setting-value">{s.value}</div></div>
-          </div>
-          <Toggle on={true} onToggle={() => {}} />
-        </div>
-      ))}
 
       <span className="section-label fade-up fade-up-5">Notifications</span>
       {[

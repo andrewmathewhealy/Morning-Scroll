@@ -2,10 +2,6 @@ import { useState, useMemo } from "react";
 import PopTheMorning from "./PopTheMorning.jsx";
 import OneLine from "./OneLine.jsx";
 import Stack from "./Stack.jsx";
-import Ripples from "./Ripples.jsx";
-import BrickBreaker from "./BrickBreaker.jsx";
-import Leaves from "./Leaves.jsx";
-import Stars from "./Stars.jsx";
 import CompletionOverlay from "./CompletionOverlay.jsx";
 import "./morningGame.css";
 
@@ -30,36 +26,6 @@ function getTodaysGame() {
   return GAMES[idx];
 }
 
-function isCompletedToday() {
-  return localStorage.getItem("mg-completed") === getToday();
-}
-
-export { default as OneLine } from "./OneLine.jsx";
-export { default as Stack } from "./Stack.jsx";
-export { default as Ripples } from "./Ripples.jsx";
-export { default as BrickBreaker } from "./BrickBreaker.jsx";
-export { default as Leaves } from "./Leaves.jsx";
-export { default as Stars } from "./Stars.jsx";
-
-// Overlay games — full-screen, no widget card, shown on app open
-// Use these separately from MorningGame (which is for card-based games)
-const OVERLAY_GAMES = { pop: PopTheMorning, ripples: Ripples, leaves: Leaves, stars: Stars };
-
-export function GameOverlay() {
-  const game = useMemo(getTodaysGame, []);
-  const [done, setDone] = useState(false); // skip completion check for testing
-
-  const GameComponent = OVERLAY_GAMES[game];
-  if (!GameComponent || done) return null;
-
-  const handleComplete = () => {
-    localStorage.setItem("mg-completed", getToday());
-    localStorage.setItem("mg-last-game", game);
-    setDone(true);
-  };
-
-  return <GameComponent onComplete={handleComplete} />;
-}
 
 // MorningGame — card widget for OneLine and Stack
 export default function MorningGame({ forceGame }) {

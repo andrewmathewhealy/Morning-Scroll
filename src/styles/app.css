@@ -1,16 +1,6 @@
 @import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Instrument+Serif&family=Lora:ital,wght@1,400&family=Barlow+Condensed:wght@600&family=DM+Sans:wght@500&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
 
-  @keyframes liveBadgePulse {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50%      { opacity: 1; transform: scale(1.05); }
-  }
-  .scores-row .game-card { margin: 0; width: 100%; box-sizing: border-box; }
-  .live-badge-dot {
-    width: 5px; height: 5px; border-radius: 50%; background: #FDF2E8;
-    animation: liveBadgePulse 3s ease-in-out infinite;
-  }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #0C1A35; margin: 0; font-family: 'Satoshi', sans-serif; }
   .phone-wrapper {
@@ -317,36 +307,6 @@
 
   /* ── SPORTS ── */
   .sports-bg { min-height: 100%; background: transparent; padding-bottom: 32px; }
-  .sports-header { padding: 16px 24px 12px; }
-  .sports-title { font-family: 'Fraunces', serif; font-size: 27.5px; font-weight: 600; color: #FDF2E8; }
-  .sports-subtitle { font-size: 13.5px; color: rgba(253,242,232,0.6); margin-top: 2px; }
-  .sports-league-section { margin-top: 16px; }
-  .sports-league-header { display: flex; align-items: center; gap: 8px; padding: 0 20px; margin-bottom: 8px; }
-  .sports-league-name { font-size: 12px; color: rgba(253,242,232,0.5); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
-  .sports-league-badge { width: 18px; height: 18px; border-radius: 4px; }
-  .game-card { margin: 0 20px 8px; background: rgba(12,26,53,0.55); backdrop-filter: blur(16px); border-radius: 18px; padding: 14px 16px; border: 1.5px solid rgba(253,242,232,0.15); }
-  .game-status-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .game-status { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; }
-  .game-status.final { color: rgba(253,242,232,0.5); background: rgba(253,242,232,0.08); }
-  .game-status.live { color: #D898AC; background: rgba(216,152,172,0.15); }
-  .game-status.scheduled { color: #F2B899; background: rgba(242,184,153,0.12); }
-  .game-time { font-size: 10px; color: rgba(253,242,232,0.4); }
-  .game-teams { display: flex; flex-direction: column; gap: 6px; }
-  .game-team-row { display: flex; align-items: center; justify-content: space-between; }
-  .game-team-left { display: flex; align-items: center; gap: 8px; }
-  .game-team-badge { width: 22px; height: 22px; border-radius: 4px; object-fit: contain; }
-  .game-team-badge-placeholder { width: 22px; height: 22px; border-radius: 4px; background: rgba(253,242,232,0.08); }
-  .game-team-name { font-size: 14px; color: #FDF2E8; font-weight: 500; }
-  .game-team-name.winner { font-weight: 700; }
-  .game-score { font-family: 'Satoshi', sans-serif; font-size: 16px; color: #FDF2E8; font-weight: 600; min-width: 24px; text-align: right; }
-  .game-score.winner { color: #F2B899; }
-  .game-score.pending { color: rgba(253,242,232,0.3); font-size: 13px; font-weight: 500; }
-  .game-venue { font-size: 10px; color: rgba(253,242,232,0.3); margin-top: 6px; }
-  .sports-skeleton { margin: 0 20px 8px; background: rgba(12,26,53,0.35); border-radius: 18px; padding: 14px 16px; border: 1.5px solid rgba(253,242,232,0.08); }
-  .sports-skeleton-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .sports-error { margin: 20px; text-align: center; padding: 40px 20px; }
-  .sports-error-msg { font-size: 13px; color: rgba(253,242,232,0.5); margin-top: 8px; }
-
   /* ── JOURNAL ── */
   .journal-card {
     background: rgba(255,255,255,0.62); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
