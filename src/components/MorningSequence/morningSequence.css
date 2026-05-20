@@ -215,6 +215,15 @@
   transition: opacity 800ms ease-out, transform 4s linear;
 }
 
+.voyage-photo.crossfade {
+  opacity: 0 !important;
+  transition: opacity 300ms ease-out !important;
+}
+
+.voyage-photo.snap-in {
+  transition: none !important;
+}
+
 .voyage-photo.blurring {
   filter: blur(15px);
   opacity: 0.2;

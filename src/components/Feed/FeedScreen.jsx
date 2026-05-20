@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { WORKER_URL } from "../../config.js";
 import { Icon } from "../../icons/Icon.jsx";
 import { formatTimeAgo } from "../../hooks/useLiveTime.js";

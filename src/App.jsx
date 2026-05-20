@@ -6,7 +6,6 @@ import "./styles/app.css";
 import "./styles/wordle.css";
 import { Icon } from "./icons/Icon.jsx";
 import { useGyroscope } from "./hooks/useGyroscope.js";
-import { useCountUp } from "./hooks/useCountUp.js";
 import { useColorTemp } from "./hooks/useColorTemp.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { useRadioPlayer } from "./hooks/useRadioPlayer.js";
@@ -49,12 +48,6 @@ class ErrorBoundary extends Component {
     }
     return this.props.children;
   }
-}
-
-// ── COUNT-UP DISPLAY ──────────────────────────────────────
-function CountUp({ value, duration = 900 }) {
-  const display = useCountUp(value, duration);
-  return <span className="count-up">{display}</span>;
 }
 
 // ── AMBIENT PARTICLES ─────────────────────────────────────
