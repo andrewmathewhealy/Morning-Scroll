@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useHaptics } from "./useHaptics.js";
+import { getSharedAudioContext } from "../../hooks/useAudioContext.js";
 
 // ── CONFIG ───────────────────────────────────────────────
 const COLS = 7;
@@ -16,7 +17,7 @@ const PADDLE_BOTTOM = 24;
 const ROW_HP = [3, 2, 1, 1];
 
 // Colors per HP level — brick fades as it gets weaker
-// Matched to brickbreaker-bg.png: peach sky, mauve mountains, lavender haze, teal water
+// Matched to brickbreaker-bg.webp: peach sky, mauve mountains, lavender haze, teal water
 const BRICK_COLORS_BY_HP = {
   3: ["#F2B899", "#F5C5A8", "#F8D2B8", "#FADFC8", "#F8D2B8", "#F5C5A8", "#F2B899"],
   2: ["#D898AC", "#E0A8BA", "#E8B8C8", "#F0C8D6", "#E8B8C8", "#E0A8BA", "#D898AC"],
@@ -60,10 +61,8 @@ function buildBricks(canvasW) {
 }
 
 // ── AUDIO ────────────────────────────────────────────────
-function getAudioCtx(ref) {
-  if (!ref.current) ref.current = new (window.AudioContext || window.webkitAudioContext)();
-  if (ref.current.state === "suspended") ref.current.resume();
-  return ref.current;
+function getAudioCtx() {
+  return getSharedAudioContext();
 }
 
 function playTick(ctx, freq = 660, dur = 0.06) {
@@ -88,7 +87,6 @@ function playWin(ctx) {
 // ── COMPONENT ────────────────────────────────────────────
 export default function BrickBreaker() {
   const canvasRef = useRef(null);
-  const audioRef = useRef(null);
   const haptics = useHaptics();
   const [phase, setPhase] = useState("idle"); // idle | playing | won | lost
   const [score, setScore] = useState(0);
@@ -172,7 +170,7 @@ export default function BrickBreaker() {
     gameRef.current = game;
     setPhase("playing");
     setScore(0);
-    getAudioCtx(audioRef); // init on gesture
+    getAudioCtx(); // init on gesture
 
     const loop = () => {
       const g = gameRef.current;
@@ -202,7 +200,7 @@ export default function BrickBreaker() {
         const hit = (ball.x - paddle.x) / PADDLE_W; // 0..1
         ball.dx = BALL_SPEED * (hit - 0.5) * 2.2;
         ball.y = paddleY - BALL_R;
-        try { playTick(getAudioCtx(audioRef), 440, 0.04); } catch {}
+        try { playTick(getAudioCtx(), 440, 0.04); } catch {}
         haptics.tap();
       }
 
@@ -242,7 +240,7 @@ export default function BrickBreaker() {
           if (minX < minY) ball.dx = -ball.dx;
           else ball.dy = -ball.dy;
 
-          try { playTick(getAudioCtx(audioRef), 600 + hitCount * 80, 0.05); } catch {}
+          try { playTick(getAudioCtx(), 600 + hitCount * 80, 0.05); } catch {}
           haptics.tap();
           break; // one collision per frame
         }
@@ -253,7 +251,7 @@ export default function BrickBreaker() {
       if (g.alive <= 0) {
         cancelAnimationFrame(rafRef.current);
         setPhase("won");
-        try { playWin(getAudioCtx(audioRef)); } catch {}
+        try { playWin(getAudioCtx()); } catch {}
         haptics.success();
         return;
       }
@@ -325,7 +323,6 @@ export default function BrickBreaker() {
   useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (audioRef.current) { try { audioRef.current.close(); } catch {} audioRef.current = null; }
     };
   }, []);
 
@@ -351,7 +348,7 @@ export default function BrickBreaker() {
         boxShadow: "0 4px 16px rgba(0,20,60,0.1), 0 1px 3px rgba(8,20,50,0.04)",
         overflow: "hidden",
         position: "relative",
-        backgroundImage: "url(/brickbreaker-bg.png)",
+        backgroundImage: "url(/brickbreaker-bg.webp)",
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}>

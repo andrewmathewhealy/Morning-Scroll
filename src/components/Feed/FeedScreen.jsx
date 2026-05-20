@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react";
+import Hls from "hls.js";
 import { WORKER_URL } from "../../config.js";
 import { Icon } from "../../icons/Icon.jsx";
 import { formatTimeAgo } from "../../hooks/useLiveTime.js";
@@ -68,14 +69,14 @@ function VideoPlayer({ video, poster, autoplay = false, fullscreen = false, star
 
     const hlsUrl = video.hlsUrl;
 
-    if (hlsUrl && window.Hls && window.Hls.isSupported()) {
+    if (hlsUrl && Hls && Hls.isSupported()) {
       // Use hls.js for DASH/HLS streams (merges video + audio streams)
-      const hls = new window.Hls({ enableWorker: false, lowLatencyMode: false });
+      const hls = new Hls({ enableWorker: false, lowLatencyMode: false });
       hlsRef.current = hls;
       hls.loadSource(hlsUrl);
       hls.attachMedia(v);
-      hls.on(window.Hls.Events.MANIFEST_PARSED, () => setHlsReady(true));
-      hls.on(window.Hls.Events.ERROR, (_, data) => {
+      hls.on(Hls.Events.MANIFEST_PARSED, () => setHlsReady(true));
+      hls.on(Hls.Events.ERROR, (_, data) => {
         if (data.fatal) {
           // HLS failed — fall back to plain MP4 (no audio but at least plays)
           hls.destroy();

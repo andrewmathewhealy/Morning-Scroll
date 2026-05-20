@@ -8,7 +8,7 @@ import "./styles/wordle.css";
 import { Icon } from "./icons/Icon.jsx";
 import { useGyroscope } from "./hooks/useGyroscope.js";
 import { useColorTemp } from "./hooks/useColorTemp.js";
-import { useAuth } from "./hooks/useAuth.js";
+import { useAuth } from "./hooks/useAuth.jsx";
 import { useRadioPlayer } from "./hooks/useRadioPlayer.js";
 
 // ── Extracted components ──

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { createPortal } from "react-dom";
 import { db } from "../../firebase.js";
 import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
-import { useAuth } from "../../hooks/useAuth.js";
+import { useAuth } from "../../hooks/useAuth.jsx";
 import { Icon } from "../../icons/Icon.jsx";
 import { WORKER_URL } from "../../config.js";
 import { useLiveTime, formatTimeAgo } from "../../hooks/useLiveTime.js";

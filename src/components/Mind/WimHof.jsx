@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { getSharedAudioContext } from "../../hooks/useAudioContext.js";
 
 const CARD = {
   background: "rgba(255,255,255,0.25)",
@@ -16,12 +17,8 @@ const INHALE_MS = 1800;
 const EXHALE_MS = 1600;
 
 // ── Audio cue helpers ──
-function getAudioCtx(ref) {
-  if (!ref.current) {
-    ref.current = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if (ref.current.state === "suspended") ref.current.resume();
-  return ref.current;
+function getAudioCtx() {
+  return getSharedAudioContext();
 }
 
 // Soft rising tone for inhale
@@ -106,7 +103,6 @@ export default function WimHof() {
   const [recoveryTime, setRecoveryTime] = useState(RECOVERY_HOLD);
   const [recoveryInhaled, setRecoveryInhaled] = useState(false);
   const timerRef = useRef(null);
-  const audioRef = useRef(null);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); clearTimeout(timerRef.current); timerRef.current = null; }
@@ -137,16 +133,16 @@ export default function WimHof() {
         count++;
         setBreathCount(count);
         setInhaling(true);
-        try { playInhaleTone(getAudioCtx(audioRef)); } catch {}
+        try { playInhaleTone(getAudioCtx()); } catch {}
         timerRef.current = setTimeout(() => {
           setInhaling(false);
           isInhale = false;
-          try { playExhaleTone(getAudioCtx(audioRef)); } catch {}
+          try { playExhaleTone(getAudioCtx()); } catch {}
           timerRef.current = setTimeout(() => {
             if (count >= TOTAL_BREATHS) {
               setPhase("retention");
               setRetentionTime(0);
-              try { playBell(getAudioCtx(audioRef), 392); } catch {}
+              try { playBell(getAudioCtx(), 392); } catch {}
               timerRef.current = setInterval(() => {
                 setRetentionTime(t => t + 1);
               }, 1000);
@@ -168,11 +164,11 @@ export default function WimHof() {
     setPhase("recovery");
     setRecoveryInhaled(false);
     setRecoveryTime(RECOVERY_HOLD);
-    try { playBell(getAudioCtx(audioRef), 523.25); } catch {}
+    try { playBell(getAudioCtx(), 523.25); } catch {}
 
     setTimeout(() => {
       setRecoveryInhaled(true);
-      try { playInhaleTone(getAudioCtx(audioRef)); } catch {}
+      try { playInhaleTone(getAudioCtx()); } catch {}
       let t = RECOVERY_HOLD;
       timerRef.current = setInterval(() => {
         t--;
@@ -180,12 +176,12 @@ export default function WimHof() {
         if (t <= 0) {
           clearInterval(timerRef.current);
           timerRef.current = null;
-          try { playBell(getAudioCtx(audioRef), 659.25); } catch {}
+          try { playBell(getAudioCtx(), 659.25); } catch {}
           setRound(r => {
             const next = r + 1;
             if (next > TOTAL_ROUNDS) {
               setPhase("done");
-              try { playComplete(getAudioCtx(audioRef)); } catch {}
+              try { playComplete(getAudioCtx()); } catch {}
             } else {
               setPhase("roundDone");
             }
@@ -204,8 +200,8 @@ export default function WimHof() {
     setPhase("countdown");
     setCountdown(3);
     // Create audio context on user gesture
-    getAudioCtx(audioRef);
-    try { playBell(getAudioCtx(audioRef)); } catch {}
+    getAudioCtx();
+    try { playBell(getAudioCtx()); } catch {}
 
     let t = 3;
     const tick = () => {
@@ -228,13 +224,12 @@ export default function WimHof() {
 
   const handleNextRound = () => {
     setRound(r => r + 1);
-    try { playBell(getAudioCtx(audioRef)); } catch {}
+    try { playBell(getAudioCtx()); } catch {}
     startBreathing();
   };
 
   useEffect(() => () => {
     clearTimer();
-    if (audioRef.current) { try { audioRef.current.close(); } catch {} audioRef.current = null; }
   }, [clearTimer]);
 
   let circleScale = 0.6;
@@ -288,7 +283,7 @@ export default function WimHof() {
 
       <div style={{ ...CARD, padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative", overflow: "hidden" }}>
         {/* Background image — heavy blur for abstract color wash */}
-        <div style={{ position: "absolute", inset: -24, backgroundImage: "url(/wimhof-bg.png)", backgroundSize: "cover", backgroundPosition: "center bottom", filter: "blur(20px) saturate(0.45) brightness(1.35)", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "absolute", inset: -24, backgroundImage: "url(/wimhof-bg.webp)", backgroundSize: "cover", backgroundPosition: "center bottom", filter: "blur(20px) saturate(0.45) brightness(1.35)", pointerEvents: "none", zIndex: 0 }} />
         {/* Light overlay to lift text */}
         <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.25)", pointerEvents: "none", zIndex: 0 }} />
         {/* Background gradient wash that shifts with phase */}

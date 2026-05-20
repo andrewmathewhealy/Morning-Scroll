@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { auth, db } from "../../firebase.js";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, getDocs, query, orderBy, limit as fbLimit } from "firebase/firestore";
-import { useAuth } from "../../hooks/useAuth.js";
+import { useAuth } from "../../hooks/useAuth.jsx";
 import { Icon } from "../../icons/Icon.jsx";
 import { WORKER_URL } from "../../config.js";
 

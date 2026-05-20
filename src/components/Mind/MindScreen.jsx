@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import Soundscapes from "./Soundscapes.jsx";
 import WimHof from "./WimHof.jsx";
+import { getSharedAudioContext } from "../../hooks/useAudioContext.js";
 
 const PRESETS = [
   { label: "Focus",   beatHz: 12,  baseHz: 200, desc: "Alpha 12 Hz", color: "#B8DDE8", gradient: "linear-gradient(135deg, #B8DDE820, #B8DDE808)" },
@@ -26,23 +27,15 @@ export default function MindScreen() {
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [timerIdx, setTimerIdx] = useState(0);
-  const ctxRef = useRef(null);
   const nodesRef = useRef(null);
   const intervalRef = useRef(null);
 
-  const getCtx = useCallback(() => {
-    if (!ctxRef.current) {
-      ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    const ctx = ctxRef.current;
-    if (ctx.state === "suspended") ctx.resume();
-    return ctx;
-  }, []);
+  const getCtx = useCallback(() => getSharedAudioContext(), []);
 
   const stopAudio = useCallback(() => {
     if (nodesRef.current) {
       const { oscL, oscR, gainL, gainR } = nodesRef.current;
-      const ctx = ctxRef.current;
+      const ctx = getSharedAudioContext();
       const now = ctx?.currentTime ?? 0;
       try {
         gainL.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
@@ -110,10 +103,6 @@ export default function MindScreen() {
 
   useEffect(() => () => {
     stopAudio();
-    if (ctxRef.current) {
-      try { ctxRef.current.close(); } catch {}
-      ctxRef.current = null;
-    }
   }, [stopAudio]);
 
   const handlePresetTap = (preset, idx) => {

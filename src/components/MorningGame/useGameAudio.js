@@ -1,4 +1,5 @@
-import { useRef, useCallback } from "react";
+import { useCallback } from "react";
+import { getSharedAudioContext } from "../../hooks/useAudioContext.js";
 
 // C Major Pentatonic — 2 octaves, 12 notes
 const MORNING_SCALE = [
@@ -15,16 +16,7 @@ const BEAT_HZ = 10;          // 10 Hz alpha wave
 const COMPLETION_BEAT_HZ = 7; // 7 Hz theta — dreamy reward feeling
 
 export function useGameAudio() {
-  const ctxRef = useRef(null);
-
-  const getCtx = useCallback(() => {
-    if (!ctxRef.current) {
-      ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    const ctx = ctxRef.current;
-    if (ctx.state === "suspended") ctx.resume();
-    return ctx;
-  }, []);
+  const getCtx = useCallback(() => getSharedAudioContext(), []);
 
   // Core binaural beat tone — plays slightly different freq in each ear
   const playBinaural = useCallback((frequency, time = 0, opts = {}) => {
