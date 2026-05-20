@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense, Component } from "react";
+import MorningSequence, { shouldShowMorningSequence } from "./components/MorningSequence/MorningSequence.jsx";
 const PulseMap = lazy(() => import("./components/PulseMap/PulseMap.jsx"));
 const SunriseGlobe = lazy(() => import("./components/PulseMap/SunriseGlobe.jsx"));
 import "./styles/app.css";
@@ -519,6 +520,7 @@ export default function MorningScrollApp() {
   const [wordleOpen, setWordleOpen] = useState(false);
   const [wordleClosing, setWordleClosing] = useState(false);
   const [bgTheme, setBgTheme] = useState(() => localStorage.getItem("ms-bg-theme") || "peach");
+  const [showSequence, setShowSequence] = useState(() => shouldShowMorningSequence());
   const screenRef = useRef(null);
   const gyro = useGyroscope();
   const colorTemp = useColorTemp();
@@ -592,6 +594,10 @@ export default function MorningScrollApp() {
               </div>
               <WordleGame />
             </div>
+          )}
+
+          {showSequence && (
+            <MorningSequence onComplete={() => setShowSequence(false)} />
           )}
 
         </div>
