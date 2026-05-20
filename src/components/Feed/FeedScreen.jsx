@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { WORKER_URL } from "../../config.js";
 import { Icon } from "../../icons/Icon.jsx";
 import { formatTimeAgo } from "../../hooks/useLiveTime.js";
@@ -337,7 +337,7 @@ function useVisibleIndex(listRef, count) {
   return visibleIndex;
 }
 
-function VideoCard({ video, isVisible, unlocked, onUnlock }) {
+const VideoCard = memo(function VideoCard({ video, isVisible, unlocked, onUnlock }) {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const [ready, setReady] = useState(false);
@@ -384,7 +384,7 @@ function VideoCard({ video, isVisible, unlocked, onUnlock }) {
       </div>
     </div>
   );
-}
+});
 
 const INITIAL_LOAD = 7;
 const LOAD_MORE = 7;

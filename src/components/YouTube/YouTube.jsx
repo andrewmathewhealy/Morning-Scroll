@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, Component } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { createPortal } from "react-dom";
 import { db } from "../../firebase.js";
 import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
@@ -6,35 +6,7 @@ import { useAuth } from "../../hooks/useAuth.js";
 import { Icon } from "../../icons/Icon.jsx";
 import { WORKER_URL } from "../../config.js";
 import { useLiveTime, formatTimeAgo } from "../../hooks/useLiveTime.js";
-
-// ── ERROR BOUNDARY (local copy for YouTube components) ────
-class ErrorBoundary extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-  static getDerivedStateFromError() { return { hasError: true }; }
-  componentDidCatch(error, info) {
-    // eslint-disable-next-line no-console
-    console.error(`[ErrorBoundary${this.props.label ? ` ${this.props.label}` : ""}]`, error, info);
-  }
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback ?? (
-        <div style={{
-          padding: 20, borderRadius: 16,
-          background: "rgba(255,255,255,0.08)",
-          border: "1px solid rgba(255,255,255,0.15)",
-          color: "rgba(253,242,232,0.55)",
-          fontSize: 12, textAlign: "center",
-        }}>
-          Something went sideways here. Try again later.
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
+import ErrorBoundary from "../ErrorBoundary.jsx";
 
 // ── YOUTUBE HOOKS & COMPONENTS ────────────────────────────
 function useYouTubeChannels(user) {
@@ -164,6 +136,8 @@ function useYouTubeVideos(channels) {
 
 function useYouTubeReadState(user) {
   const [readIds, setReadIds] = useState(new Set());
+  const readIdsRef = useRef(readIds);
+  readIdsRef.current = readIds;
 
   useEffect(() => {
     if (!user) return;
@@ -183,16 +157,15 @@ function useYouTubeReadState(user) {
     });
     if (!user) return;
     try {
-      const existing = readIds;
-      const updated = [...existing, videoId];
+      const updated = [...readIdsRef.current, videoId];
       await setDoc(doc(db, `users/${user.uid}/settings`, "youtubeRead"), { videoIds: updated.slice(-200) });
     } catch {}
-  }, [user, readIds]);
+  }, [user]);
 
   return { readIds, markRead };
 }
 
-function YouTubeCard({ channel, video, isNew, onTap }) {
+const YouTubeCard = memo(function YouTubeCard({ channel, video, isNew, onTap }) {
   useLiveTime();
   const ago = video.published
     ? formatTimeAgo(Math.floor(new Date(video.published).getTime() / 1000))
@@ -217,7 +190,7 @@ function YouTubeCard({ channel, video, isNew, onTap }) {
       </div>
     </div>
   );
-}
+});
 
 function YouTubePlayer({ video, channel, onClose }) {
   const [closing, setClosing] = useState(false);
