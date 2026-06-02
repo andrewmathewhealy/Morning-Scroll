@@ -3,12 +3,13 @@ import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import MorningSequence, { shouldShowMorningSequence } from "./components/MorningSequence/MorningSequence.jsx";
 const PulseMap = lazy(() => import("./components/PulseMap/PulseMap.jsx"));
 const SunriseGlobe = lazy(() => import("./components/PulseMap/SunriseGlobe.jsx"));
+// Dev-only admin, opened from Settings. Lazy so Firebase stays out of the main bundle.
+const AdminApp = lazy(() => import("./Admin.jsx"));
 import "./styles/app.css";
 import "./styles/wordle.css";
 import { Icon } from "./icons/Icon.jsx";
 import { useGyroscope } from "./hooks/useGyroscope.js";
 import { useColorTemp } from "./hooks/useColorTemp.js";
-import { useAuth } from "./hooks/useAuth.jsx";
 import { useRadioPlayer } from "./hooks/useRadioPlayer.js";
 
 // ── Extracted components ──
@@ -19,7 +20,6 @@ import PollCard from "./components/Poll/PollCard.jsx";
 import ArtOfTheDayCard from "./components/ArtOfTheDay/ArtOfTheDayCard.jsx";
 import OnThisDayWidget from "./components/OnThisDay/OnThisDayWidget.jsx";
 import FeedScreen from "./components/Feed/FeedScreen.jsx";
-import { YouTubeFeedSection, YouTubeSettingsSection } from "./components/YouTube/YouTube.jsx";
 import BrickBreaker from "./components/MorningGame/BrickBreaker.jsx";
 import MindScreen from "./components/Mind/MindScreen.jsx";
 
@@ -356,25 +356,13 @@ function Accordion({ title, count, total, accentColor, children, defaultOpen = f
   );
 }
 
-function SettingsScreen({ bgTheme, onChangeBgTheme }) {
-  const [toggles, setToggles] = useState({ slowScroll: false, notification: true, sleepData: false });
-  const toggle = k => setToggles(t => ({ ...t, [k]: !t[k] }));
-  const ytUser = useAuth();
+function SettingsScreen({ bgTheme, onChangeBgTheme, onOpenAdmin }) {
+  const [reminderOn, setReminderOn] = useState(true);
 
   return (
     <div className="profile-bg">
-      <div className="profile-header">
-        <div className="profile-top fade-up fade-up-1">
-          <div className="profile-avatar-large"><Icon.User size={28} /></div>
-          <div>
-            <div className="profile-name">Andrew</div>
-            <div className="profile-streak"><span>12-day</span> morning streak</div>
-          </div>
-        </div>
-      </div>
-
-      <span className="section-label fade-up fade-up-3">Background</span>
-      <div className="fade-up fade-up-3" style={{ display: "flex", gap: 12, padding: "0 20px", marginBottom: 16 }}>
+      <span className="section-label fade-up fade-up-1">Background</span>
+      <div className="fade-up fade-up-1" style={{ display: "flex", gap: 12, padding: "0 20px", marginBottom: 16 }}>
         {Object.entries(BG_THEMES).map(([key, { label, gradient }]) => (
           <button
             key={key}
@@ -394,48 +382,24 @@ function SettingsScreen({ bgTheme, onChangeBgTheme }) {
         ))}
       </div>
 
-      <span className="section-label fade-up fade-up-4">Feed Settings</span>
-      {[
-        { key: "slowScroll", Ico: Icon.Turtle, label: "Slow scroll mode", value: "15 cards per morning" },
-      ].map(s => (
-        <div className="setting-row fade-up fade-up-4" key={s.key}>
-          <div className="setting-left">
-            <div className="setting-icon"><s.Ico size={18} color="#0C1A35" /></div>
-            <div><div className="setting-name">{s.label}</div><div className="setting-value">{s.value}</div></div>
-          </div>
-          <Toggle on={toggles[s.key]} onToggle={() => toggle(s.key)} />
+      <span className="section-label fade-up fade-up-2">Notifications</span>
+      <div className="setting-row fade-up fade-up-2">
+        <div className="setting-left">
+          <div className="setting-icon"><Icon.Bell size={18} color="#0C1A35" /></div>
+          <div><div className="setting-name">Morning reminder</div><div className="setting-value">Daily at 7:00 AM</div></div>
         </div>
-      ))}
+        <Toggle on={reminderOn} onToggle={() => setReminderOn(v => !v)} />
+      </div>
 
-      <span className="section-label fade-up fade-up-4">Widgets</span>
-      {[
-        { Ico: Icon.Moon, label: "Moon Phase", value: "Visible on Home tab" },
-      ].map((s, i) => (
-        <div className="setting-row fade-up fade-up-4" key={i}>
-          <div className="setting-left">
-            <div className="setting-icon"><s.Ico size={18} color="#0C1A35" /></div>
-            <div><div className="setting-name">{s.label}</div><div className="setting-value">{s.value}</div></div>
-          </div>
-          <div className="setting-arrow">›</div>
+      {/* Dev-only entry to the admin. Remove before shipping. */}
+      <span className="section-label fade-up fade-up-3">Developer</span>
+      <div className="setting-row tappable fade-up fade-up-3" onClick={onOpenAdmin}>
+        <div className="setting-left">
+          <div className="setting-icon"><Icon.Settings size={18} color="#0C1A35" /></div>
+          <div><div className="setting-name">Admin Page</div><div className="setting-value">Manage daily content</div></div>
         </div>
-      ))}
-
-      <YouTubeSettingsSection user={ytUser} />
-
-
-      <span className="section-label fade-up fade-up-5">Notifications</span>
-      {[
-        { key: "notification", Ico: Icon.Bell, label: "Morning reminder", value: "Daily at 7:00 AM" },
-        { key: "sleepData", Ico: Icon.Moon, label: "Sleep integration", value: "Apple Health" },
-      ].map(s => (
-        <div className="setting-row fade-up fade-up-5" key={s.key}>
-          <div className="setting-left">
-            <div className="setting-icon"><s.Ico size={18} color="#0C1A35" /></div>
-            <div><div className="setting-name">{s.label}</div><div className="setting-value">{s.value}</div></div>
-          </div>
-          <Toggle on={toggles[s.key]} onToggle={() => toggle(s.key)} />
-        </div>
-      ))}
+        <div className="setting-arrow">›</div>
+      </div>
     </div>
   );
 }
@@ -488,6 +452,7 @@ export default function MorningScrollApp() {
   const [wordleClosing, setWordleClosing] = useState(false);
   const [bgTheme, setBgTheme] = useState(() => localStorage.getItem("ms-bg-theme") || "peach");
   const [showSequence, setShowSequence] = useState(() => shouldShowMorningSequence());
+  const [showAdmin, setShowAdmin] = useState(false);
   const screenRef = useRef(null);
   const gyro = useGyroscope();
   const colorTemp = useColorTemp();
@@ -531,7 +496,7 @@ export default function MorningScrollApp() {
             {tab === "home" && <HomeScreen onOpenWordle={() => setWordleOpen(true)} radioPlayer={radioPlayer} />}
             {tab === "feed" && <FeedScreen />}
             {tab === "mind" && <MindScreen />}
-            {tab === "settings" && <SettingsScreen bgTheme={bgTheme} onChangeBgTheme={changeBgTheme} />}
+            {tab === "settings" && <SettingsScreen bgTheme={bgTheme} onChangeBgTheme={changeBgTheme} onOpenAdmin={() => setShowAdmin(true)} />}
           </div>
 
           {radioPlayer.station && (
@@ -569,6 +534,26 @@ export default function MorningScrollApp() {
 
         </div>
       </div>
+
+      {/* Dev-only admin door, opened from Settings. Remove before shipping. */}
+      {showAdmin && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 100000, background: "#0a0a0f", overflow: "auto" }}>
+          <button
+            onClick={() => setShowAdmin(false)}
+            style={{
+              position: "fixed", top: 16, left: 16, zIndex: 1,
+              padding: "8px 14px", borderRadius: 10, border: "1px solid rgba(253,242,232,0.25)",
+              background: "rgba(253,242,232,0.08)", color: "#FDF2E8", fontSize: 13, fontWeight: 600,
+              fontFamily: "'Satoshi', sans-serif", cursor: "pointer",
+            }}
+          >
+            ← Back to app
+          </button>
+          <Suspense fallback={<div style={{ color: "#FDF2E8", padding: 24 }}>Loading admin…</div>}>
+            <AdminApp />
+          </Suspense>
+        </div>
+      )}
     </>
   );
 }
