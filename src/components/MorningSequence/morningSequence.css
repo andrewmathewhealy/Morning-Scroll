@@ -19,7 +19,7 @@
   to { opacity: 0; }
 }
 
-/* ── Screen 1: The Moment ───────────────────────────────── */
+/* ── Screen 1: The Moment (video + tap) ─────────────────── */
 .moment-screen {
   position: absolute;
   inset: 0;
@@ -35,12 +35,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: filter 1s ease-out, opacity 1s ease-out;
-}
-
-.moment-video.blurring {
-  filter: blur(20px);
-  opacity: 0.3;
 }
 
 /* Placeholder gradient for when no video is available */
@@ -57,12 +51,6 @@
   );
   background-size: 400% 400%;
   animation: momentShimmer 8s ease-in-out infinite;
-  transition: filter 1s ease-out, opacity 1s ease-out;
-}
-
-.moment-placeholder.blurring {
-  filter: blur(20px);
-  opacity: 0.3;
 }
 
 @keyframes momentShimmer {
@@ -81,10 +69,6 @@
   gap: 14px;
   opacity: 0;
   animation: promptFadeIn 800ms 2s ease-out forwards;
-}
-
-.moment-tap-prompt.hidden {
-  animation: promptFadeOut 400ms ease-out forwards;
 }
 
 .tap-circle {
@@ -113,139 +97,22 @@
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-@keyframes promptFadeOut {
-  to { opacity: 0; transform: translateX(-50%) translateY(-4px); }
-}
-
-/* ── Good Morning handwritten greeting ───────────────────── */
-.greeting-wrap {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-  pointer-events: none;
-  transition: opacity 800ms ease-out;
-}
-
-.greeting-wrap.fading {
-  opacity: 0;
-}
-
-.greeting-text {
-  font-family: 'Borel', cursive;
-  font-size: 52px;
-  color: white;
-  white-space: nowrap;
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
-  will-change: clip-path;
-}
-
-/* ── Screen 2: Globe Voyage ─────────────────────────────── */
-.globe-voyage {
+/* ── Screen 2: Photo Reel (tap through) ─────────────────── */
+.photo-reel {
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   background: #0a0a0f;
-  opacity: 0;
-  transition: opacity 500ms ease-out;
 }
 
-.globe-voyage.visible {
-  opacity: 1;
-}
-
-/* no fading class on container — photo lives inside it */
-
-.globe-container {
-  position: relative;
-  width: 100%;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.place-name {
-  position: absolute;
-  bottom: 22%;
-  left: 50%;
-  transform: translateX(-50%) translateY(10px);
-  font-family: 'Satoshi', sans-serif;
-  font-size: 26px;
-  font-weight: 500;
-  letter-spacing: 0.03em;
-  color: white;
-  opacity: 0;
-  transition: opacity 600ms ease-out, transform 600ms ease-out;
-  white-space: nowrap;
-}
-
-.place-name.visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.place-name.fading {
-  opacity: 0;
-  transition: opacity 600ms ease-out;
-}
-
-/* Photo overlay */
-.voyage-photo {
+.reel-photo {
   position: absolute;
   inset: 0;
   background-size: cover;
   background-position: center;
-  opacity: 0;
-  transform: scale(1.08);
-  transition: opacity 800ms ease-out, transform 3s ease-out;
+  animation: reelFadeIn 600ms ease-out;
 }
 
-.voyage-photo.visible {
-  opacity: 1;
-  transform: scale(1.0);
+@keyframes reelFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-
-.voyage-photo.ken-burns {
-  transform: scale(1.02);
-  transition: opacity 800ms ease-out, transform 4s linear;
-}
-
-.voyage-photo.crossfade {
-  opacity: 0 !important;
-  transition: opacity 300ms ease-out !important;
-}
-
-.voyage-photo.snap-in {
-  transition: none !important;
-}
-
-.voyage-photo.blurring {
-  filter: blur(15px);
-  opacity: 0.2;
-  transition: filter 800ms ease-out, opacity 800ms ease-out;
-}
-
-.photo-credit {
-  position: absolute;
-  bottom: 6%;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: 'Satoshi', sans-serif;
-  font-size: 11px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.35);
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 600ms ease-out;
-}
-
-.photo-credit.visible {
-  opacity: 1;
-}
-

@@ -1,22 +1,14 @@
 import { useState, useCallback } from "react";
 import DailyMoment from "./DailyMoment.jsx";
-import GlobeVoyage from "./GlobeVoyage.jsx";
+import PhotoReel from "./PhotoReel.jsx";
 import "./morningSequence.css";
 
 export default function MorningSequence({ onComplete }) {
   const [screen, setScreen] = useState("moment");
-  const [transitioning, setTransitioning] = useState(false);
   const [sequenceDone, setSequenceDone] = useState(false);
 
-  // Pre-mount globe hidden during Screen 1 for WebGL warmup
-  const [globePreMounted] = useState(true);
-
-  const advanceToGlobe = useCallback(() => {
-    setTransitioning(true);
-    setTimeout(() => {
-      setScreen("globe");
-      setTransitioning(false);
-    }, 1000);
+  const advanceToPhotos = useCallback(() => {
+    setScreen("photos");
   }, []);
 
   const handleSequenceComplete = useCallback(() => {
@@ -30,25 +22,8 @@ export default function MorningSequence({ onComplete }) {
 
   return (
     <div className={`morning-sequence${sequenceDone ? " fade-out" : ""}`}>
-      {screen === "moment" && (
-        <DailyMoment
-          onAdvance={advanceToGlobe}
-          isTransitioning={transitioning}
-        />
-      )}
-
-      {(screen === "globe" || globePreMounted) && (
-        <div style={{
-          position: "absolute", inset: 0,
-          visibility: screen === "globe" ? "visible" : "hidden",
-          pointerEvents: screen === "globe" ? "auto" : "none",
-        }}>
-          <GlobeVoyage
-            active={screen === "globe"}
-            onAdvance={handleSequenceComplete}
-          />
-        </div>
-      )}
+      {screen === "moment" && <DailyMoment onAdvance={advanceToPhotos} />}
+      {screen === "photos" && <PhotoReel onComplete={handleSequenceComplete} />}
     </div>
   );
 }
