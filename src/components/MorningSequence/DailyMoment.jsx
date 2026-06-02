@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 
-export default function DailyMoment({ onAdvance }) {
+export default function DailyMoment({ onAdvance, videoSrc }) {
   const videoRef = useRef(null);
   const [videoFailed, setVideoFailed] = useState(false);
 
@@ -15,7 +15,7 @@ export default function DailyMoment({ onAdvance }) {
           playsInline
           loop
           preload="auto"
-          src="/assets/test/morning-video.mp4"
+          src={videoSrc}
           onError={() => setVideoFailed(true)}
         />
       ) : (
