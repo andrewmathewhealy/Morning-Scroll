@@ -16,6 +16,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { compressImage } from "./compressImage.js";
 
 // ── STYLES ──────────────────────────────────────────────
 const STYLES = `
@@ -152,13 +153,27 @@ function LoginScreen({ onAuth }) {
 
 // ── ADMIN DASHBOARD ─────────────────────────────────────
 // ── POLL EDITOR ─────────────────────────────────────────
-function PollEditor() {
+function PollEditor({ initialDate }) {
   const today = new Date().toISOString().slice(0, 10);
-  const [date, setDate] = useState(today);
+  const [mode, setMode] = useState("single"); // "single" | "bulk"
+
+  // Single mode state
+  const [date, setDate] = useState(initialDate || today);
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", "", ""]);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState(null);
+
+  // Bulk mode state
+  const [bulkText, setBulkText] = useState("");
+  const [bulkStart, setBulkStart] = useState(today);
+  const [bulkSkipExisting, setBulkSkipExisting] = useState(true);
+  const [bulkPreview, setBulkPreview] = useState([]);
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkMsg, setBulkMsg] = useState(null);
+  const [bulkProgress, setBulkProgress] = useState(null);
+
+  // Shared queue
   const [queue, setQueue] = useState([]);
   const [queueLoading, setQueueLoading] = useState(true);
 
@@ -174,8 +189,9 @@ function PollEditor() {
 
   useEffect(() => { loadQueue(); }, [loadQueue]);
 
-  // Load existing poll when date changes
+  // Single mode: load existing poll when date changes
   useEffect(() => {
+    if (mode !== "single") return;
     const existing = queue.find((q) => q.date === date);
     if (existing) {
       setQuestion(existing.question || "");
@@ -185,7 +201,38 @@ function PollEditor() {
       setOptions(["", "", ""]);
     }
     setSaveMsg(null);
-  }, [date, queue]);
+  }, [date, queue, mode]);
+
+  // Bulk mode: parse "Question | Option A | Option B" lines and assign dates
+  useEffect(() => {
+    if (mode !== "bulk") return;
+    const lines = bulkText.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (!lines.length) { setBulkPreview([]); return; }
+    const existingDates = new Set(queue.map((q) => q.date));
+    const preview = [];
+    let dateOffset = 0;
+    for (const line of lines) {
+      const parts = line.split("|").map((p) => p.trim());
+      const question = parts[0] || "";
+      const opts = parts.slice(1).filter(Boolean);
+      const valid = Boolean(question) && opts.length >= 2;
+
+      const d = new Date(bulkStart + "T12:00:00");
+      d.setDate(d.getDate() + dateOffset);
+      let dateStr = d.toISOString().slice(0, 10);
+      if (bulkSkipExisting) {
+        while (existingDates.has(dateStr)) {
+          dateOffset++;
+          const d2 = new Date(bulkStart + "T12:00:00");
+          d2.setDate(d2.getDate() + dateOffset);
+          dateStr = d2.toISOString().slice(0, 10);
+        }
+      }
+      preview.push({ date: dateStr, question, options: opts, valid, exists: existingDates.has(dateStr) });
+      dateOffset++;
+    }
+    setBulkPreview(preview);
+  }, [bulkText, bulkStart, bulkSkipExisting, queue, mode]);
 
   const updateOption = (i, val) => {
     const next = [...options];
@@ -226,6 +273,35 @@ function PollEditor() {
     setSaving(false);
   };
 
+  const handleBulkSave = async () => {
+    const valid = bulkPreview.filter((p) => p.valid);
+    if (!valid.length) return;
+    setBulkSaving(true);
+    setBulkMsg(null);
+    setBulkProgress({ done: 0, total: valid.length });
+    try {
+      let done = 0;
+      for (const item of valid) {
+        await setDoc(doc(db, "polls", item.date), {
+          date: item.date,
+          question: item.question,
+          options: item.options,
+          createdAt: new Date().toISOString(),
+        });
+        done++;
+        setBulkProgress({ done, total: valid.length });
+      }
+      setBulkMsg(`Saved ${done} polls!`);
+      setBulkText("");
+      setBulkPreview([]);
+      loadQueue();
+    } catch (err) {
+      setBulkMsg(`Error: ${err.message}`);
+    }
+    setBulkSaving(false);
+    setBulkProgress(null);
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this poll?")) return;
     try {
@@ -234,62 +310,144 @@ function PollEditor() {
     } catch {}
   };
 
+  const validCount = bulkPreview.filter((p) => p.valid).length;
+
   return (
     <>
-      {/* Date picker */}
-      <div className="form-section">
-        <div className="form-section-title">Poll Date</div>
-        <input className="form-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-      </div>
-
-      {/* Question */}
-      <div className="form-section">
-        <div className="form-section-title">Question</div>
-        <input className="form-input" placeholder="How are you waking up?" value={question} onChange={(e) => setQuestion(e.target.value)} />
-      </div>
-
-      {/* Options */}
-      <div className="form-section">
-        <div className="form-section-title">Options</div>
-        {options.map((opt, i) => (
-          <div className="poll-option-row" key={i}>
-            <input
-              className="form-input"
-              placeholder={`Option ${i + 1}`}
-              value={opt}
-              onChange={(e) => updateOption(i, e.target.value)}
-            />
-            {options.length > 2 && (
-              <button className="poll-remove-btn" onClick={() => removeOption(i)}>×</button>
-            )}
-          </div>
-        ))}
-        {options.length < 8 && (
-          <button className="poll-add-btn" onClick={addOption}>+ Add Option</button>
-        )}
-      </div>
-
-      {/* Save */}
-      <div className="save-row">
-        <button className="save-btn" onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Poll"}</button>
-        {saveMsg && <span className="save-status">{saveMsg}</span>}
-      </div>
-
-      {/* Preview */}
-      <div className="preview-section">
-        <div className="preview-label">Live Preview</div>
-        <div className="preview-frame">
-          <div className="poll-preview-card">
-            <div className="poll-preview-title">{question || "Your question here"}</div>
-            <div className="poll-preview-sub">Tap to share anonymously</div>
-            {options.filter((o) => o.trim()).map((opt, i) => (
-              <div className="poll-preview-option" key={i}>{opt}</div>
-            ))}
-          </div>
+      {/* Mode toggle */}
+      <div className="form-section" style={{ padding: "4px" }}>
+        <div className="admin-tabs">
+          <button className={`admin-tab ${mode === "single" ? "active" : ""}`} onClick={() => setMode("single")}>Single</button>
+          <button className={`admin-tab ${mode === "bulk" ? "active" : ""}`} onClick={() => setMode("bulk")}>Bulk Import</button>
         </div>
       </div>
 
-      {/* Queue */}
+      {mode === "single" ? (
+        <>
+          {/* Date picker */}
+          <div className="form-section">
+            <div className="form-section-title">Poll Date</div>
+            <input className="form-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+
+          {/* Question */}
+          <div className="form-section">
+            <div className="form-section-title">Question</div>
+            <input className="form-input" placeholder="How are you waking up?" value={question} onChange={(e) => setQuestion(e.target.value)} />
+          </div>
+
+          {/* Options */}
+          <div className="form-section">
+            <div className="form-section-title">Options</div>
+            {options.map((opt, i) => (
+              <div className="poll-option-row" key={i}>
+                <input
+                  className="form-input"
+                  placeholder={`Option ${i + 1}`}
+                  value={opt}
+                  onChange={(e) => updateOption(i, e.target.value)}
+                />
+                {options.length > 2 && (
+                  <button className="poll-remove-btn" onClick={() => removeOption(i)}>×</button>
+                )}
+              </div>
+            ))}
+            {options.length < 8 && (
+              <button className="poll-add-btn" onClick={addOption}>+ Add Option</button>
+            )}
+          </div>
+
+          {/* Save */}
+          <div className="save-row">
+            <button className="save-btn" onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Poll"}</button>
+            {saveMsg && <span className="save-status">{saveMsg}</span>}
+          </div>
+
+          {/* Preview */}
+          <div className="preview-section">
+            <div className="preview-label">Live Preview</div>
+            <div className="preview-frame">
+              <div className="poll-preview-card">
+                <div className="poll-preview-title">{question || "Your question here"}</div>
+                <div className="poll-preview-sub">Tap to share anonymously</div>
+                {options.filter((o) => o.trim()).map((opt, i) => (
+                  <div className="poll-preview-option" key={i}>{opt}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Bulk paste */}
+          <div className="form-section">
+            <div className="form-section-title">Paste Polls (one per line: Question | Option A | Option B)</div>
+            <textarea
+              className="form-input form-textarea"
+              placeholder={"How are you waking up? | Slowly | Wired | Somewhere in between\nFirst thing you reached for? | Phone | Water | Snooze button\nToday feels like a... | Sprint | Marathon | Rest day"}
+              value={bulkText}
+              onChange={(e) => setBulkText(e.target.value)}
+              rows={10}
+              style={{ minHeight: "180px" }}
+            />
+            <div className="journal-char-count">
+              {validCount} valid poll{validCount === 1 ? "" : "s"} detected
+              {bulkPreview.length > validCount ? ` · ${bulkPreview.length - validCount} need a question + 2+ options` : ""}
+            </div>
+          </div>
+
+          {/* Start date + options */}
+          <div className="form-section">
+            <div className="form-section-title">Starting Date</div>
+            <input className="form-input" type="date" value={bulkStart} onChange={(e) => setBulkStart(e.target.value)} />
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "12px", fontSize: "13px", color: "rgba(253,242,232,0.6)", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={bulkSkipExisting}
+                onChange={(e) => setBulkSkipExisting(e.target.checked)}
+                style={{ accentColor: "#F2B899" }}
+              />
+              Skip dates that already have a poll
+            </label>
+          </div>
+
+          {/* Bulk preview */}
+          {bulkPreview.length > 0 && (
+            <div className="form-section">
+              <div className="form-section-title">Preview ({validCount} polls)</div>
+              <div style={{ maxHeight: "320px", overflowY: "auto", borderRadius: "12px" }}>
+                {bulkPreview.map((item, i) => (
+                  <div className="queue-item" key={i} style={{ opacity: item.valid ? (item.exists && !bulkSkipExisting ? 0.5 : 1) : 0.4 }}>
+                    <div className="queue-info">
+                      <div className="queue-date">
+                        {item.valid ? item.date : "skipped"}
+                        {item.valid && item.exists && !bulkSkipExisting && (
+                          <span className="journal-badge manual" style={{ marginLeft: "6px" }}>overwrite</span>
+                        )}
+                        {!item.valid && (
+                          <span className="journal-badge auto" style={{ marginLeft: "6px" }}>invalid</span>
+                        )}
+                      </div>
+                      <div className="queue-art-title">{item.question || "(no question)"}</div>
+                      <div className="queue-art-meta">{item.options.length} option{item.options.length === 1 ? "" : "s"}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Bulk save */}
+          <div className="save-row">
+            <button className="save-btn" onClick={handleBulkSave} disabled={bulkSaving || !validCount}>
+              {bulkSaving ? `Saving ${bulkProgress?.done}/${bulkProgress?.total}...` : `Save ${validCount} Polls`}
+            </button>
+            {bulkMsg && <span className="save-status">{bulkMsg}</span>}
+          </div>
+        </>
+      )}
+
+      {/* Queue — shared across both modes */}
       <div className="queue-section">
         <div className="queue-title">Poll Schedule</div>
         {queueLoading ? (
@@ -314,12 +472,12 @@ function PollEditor() {
 }
 
 // ── JOURNAL PROMPT EDITOR ────────────────────────────────
-function JournalPromptEditor() {
+function JournalPromptEditor({ initialDate }) {
   const today = new Date().toISOString().slice(0, 10);
   const [mode, setMode] = useState("single"); // "single" | "bulk"
 
   // Single mode state
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState(initialDate || today);
   const [prompt, setPrompt] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState(null);
@@ -586,10 +744,346 @@ function JournalPromptEditor() {
   );
 }
 
+// ── OVERVIEW CALENDAR ───────────────────────────────────
+// Month grid showing which daily content each day has. A=Art, P=Poll,
+// J=Journal, E=Entrance — filled marker = scheduled, hollow = missing.
+// Click any marker to jump to that editor with the date prefilled.
+function OverviewCalendar({ onJump }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [sets, setSets] = useState(null);
+  const [view, setView] = useState(() => {
+    const d = new Date();
+    return { y: d.getFullYear(), m: d.getMonth() };
+  });
+
+  useEffect(() => {
+    (async () => {
+      const cols = { art: "artOfTheDay", poll: "polls", journal: "journalPrompts", entrance: "morningSequence" };
+      const result = {};
+      for (const [key, name] of Object.entries(cols)) {
+        try {
+          const snap = await getDocs(collection(db, name));
+          result[key] = new Set(snap.docs.map((d) => d.id));
+        } catch {
+          result[key] = new Set();
+        }
+      }
+      setSets(result);
+    })();
+  }, []);
+
+  const pad = (n) => String(n).padStart(2, "0");
+  const { y, m } = view;
+  const firstDay = new Date(y, m, 1);
+  const leadBlanks = (firstDay.getDay() + 6) % 7; // Monday-first
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const monthName = firstDay.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  const prevMonth = () => setView((v) => (v.m === 0 ? { y: v.y - 1, m: 11 } : { y: v.y, m: v.m - 1 }));
+  const nextMonth = () => setView((v) => (v.m === 11 ? { y: v.y + 1, m: 0 } : { y: v.y, m: v.m + 1 }));
+
+  const TYPES = [
+    { key: "art", label: "A", tab: "art" },
+    { key: "poll", label: "P", tab: "polls" },
+    { key: "journal", label: "J", tab: "journal" },
+    { key: "entrance", label: "E", tab: "entrance" },
+  ];
+
+  const cells = [];
+  for (let i = 0; i < leadBlanks; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  const cream = "rgba(253,242,232,";
+  const markerStyle = (present) => ({
+    display: "flex", alignItems: "center", justifyContent: "center",
+    width: "100%", height: 20, borderRadius: 6, fontSize: 10, fontWeight: 700,
+    cursor: "pointer", border: present ? "none" : `1px solid ${cream}0.2)`,
+    background: present ? "#F2B899" : "transparent",
+    color: present ? "#0C1A35" : `${cream}0.35)`,
+  });
+
+  return (
+    <div className="form-section">
+      {/* Month nav */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <button className="poll-add-btn" onClick={prevMonth} style={{ width: "auto", padding: "4px 14px" }}>‹</button>
+        <div className="form-section-title" style={{ margin: 0 }}>{monthName}</div>
+        <button className="poll-add-btn" onClick={nextMonth} style={{ width: "auto", padding: "4px 14px" }}>›</button>
+      </div>
+
+      {/* Weekday header */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, marginBottom: 6 }}>
+        {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((w) => (
+          <div key={w} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: `${cream}0.4)` }}>{w}</div>
+        ))}
+      </div>
+
+      {/* Day grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
+        {cells.map((d, i) => {
+          if (!d) return <div key={`b${i}`} />;
+          const dateStr = `${y}-${pad(m + 1)}-${pad(d)}`;
+          const isToday = dateStr === today;
+          return (
+            <div key={dateStr} style={{
+              border: isToday ? "1.5px solid #F2B899" : `1px solid ${cream}0.1)`,
+              borderRadius: 10, padding: 6, minHeight: 64, background: `${cream}0.03)`,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: `${cream}0.6)`, marginBottom: 6 }}>{d}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4 }}>
+                {TYPES.map((t) => (
+                  <button
+                    key={t.key}
+                    title={`${t.key} — ${sets?.[t.key]?.has(dateStr) ? "scheduled" : "missing"} (click to edit ${dateStr})`}
+                    style={markerStyle(sets?.[t.key]?.has(dateStr))}
+                    onClick={() => onJump(t.tab, dateStr)}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div style={{ display: "flex", gap: 16, marginTop: 16, fontSize: 12, color: `${cream}0.5)`, flexWrap: "wrap" }}>
+        <span><b style={{ color: `${cream}0.75)` }}>A</b> Art</span>
+        <span><b style={{ color: `${cream}0.75)` }}>P</b> Poll</span>
+        <span><b style={{ color: `${cream}0.75)` }}>J</b> Journal</span>
+        <span><b style={{ color: `${cream}0.75)` }}>E</b> Entrance</span>
+        <span style={{ marginLeft: "auto" }}>filled = scheduled · hollow = missing</span>
+      </div>
+
+      {!sets && <div className="queue-empty">Loading…</div>}
+    </div>
+  );
+}
+
+// ── ENTRANCE EDITOR ─────────────────────────────────────
+// Daily morning-sequence content: one video + a set of photos, saved to
+// morningSequence/{date}. Photos are compressed on upload; the video is
+// uploaded as-is (source is already phone-sized 720x1280).
+function EntranceEditor({ initialDate }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [date, setDate] = useState(initialDate || today);
+  const [videoFile, setVideoFile] = useState(null);
+  const [videoName, setVideoName] = useState("");
+  const [photoFiles, setPhotoFiles] = useState([]);
+  const [photoPreviews, setPhotoPreviews] = useState([]);
+  const [existing, setExisting] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState(null);
+  const [progress, setProgress] = useState(null);
+
+  const [queue, setQueue] = useState([]);
+  const [queueLoading, setQueueLoading] = useState(true);
+
+  const loadQueue = useCallback(async () => {
+    setQueueLoading(true);
+    try {
+      const q = query(collection(db, "morningSequence"), orderBy("date", "desc"));
+      const snap = await getDocs(q);
+      setQueue(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    } catch {}
+    setQueueLoading(false);
+  }, []);
+
+  useEffect(() => { loadQueue(); }, [loadQueue]);
+
+  // Load existing content when the date changes; clear any pending selection.
+  useEffect(() => {
+    setExisting(queue.find((q) => q.date === date) || null);
+    setVideoFile(null);
+    setVideoName("");
+    setPhotoFiles([]);
+    setPhotoPreviews([]);
+    setSaveMsg(null);
+  }, [date, queue]);
+
+  const handleVideoSelect = (file) => {
+    if (!file || !file.type.startsWith("video/")) return;
+    setVideoFile(file);
+    setVideoName(file.name);
+  };
+
+  const handlePhotosSelect = (files) => {
+    const imgs = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (!imgs.length) return;
+    setPhotoFiles(imgs);
+    Promise.all(
+      imgs.map((f) => new Promise((res) => {
+        const r = new FileReader();
+        r.onload = (e) => res(e.target.result);
+        r.readAsDataURL(f);
+      }))
+    ).then(setPhotoPreviews);
+  };
+
+  const handleSave = async () => {
+    if (!date) { setSaveMsg("Date is required."); return; }
+    if (!videoFile && !photoFiles.length && !existing) {
+      setSaveMsg("Add a video or photos.");
+      return;
+    }
+    setSaving(true);
+    setSaveMsg(null);
+
+    try {
+      let videoUrl = existing?.videoUrl || null;
+      let photos = existing?.photos || [];
+
+      const total = (videoFile ? 1 : 0) + photoFiles.length;
+      let done = 0;
+      if (total) setProgress({ done, total });
+
+      if (videoFile) {
+        const r = ref(storage, `morningSequence/${date}-video-${Date.now()}.mp4`);
+        await uploadBytes(r, videoFile);
+        videoUrl = await getDownloadURL(r);
+        setProgress({ done: ++done, total });
+      }
+
+      if (photoFiles.length) {
+        const urls = [];
+        for (let i = 0; i < photoFiles.length; i++) {
+          const compressed = await compressImage(photoFiles[i]);
+          const r = ref(storage, `morningSequence/${date}-photo-${i}-${Date.now()}.jpg`);
+          await uploadBytes(r, compressed);
+          urls.push(await getDownloadURL(r));
+          setProgress({ done: ++done, total });
+        }
+        photos = urls; // a new photo selection replaces the previous set
+      }
+
+      await setDoc(doc(db, "morningSequence", date), {
+        date,
+        videoUrl,
+        photos,
+        createdAt: new Date().toISOString(),
+      });
+      setSaveMsg("Saved!");
+      loadQueue();
+    } catch (err) {
+      setSaveMsg(`Error: ${err.message}`);
+    }
+    setSaving(false);
+    setProgress(null);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this entrance?")) return;
+    try {
+      await deleteDoc(doc(db, "morningSequence", id));
+      loadQueue();
+    } catch {}
+  };
+
+  // What to show in the photo preview area: new selection, else existing.
+  const previewPhotos = photoPreviews.length ? photoPreviews : (existing?.photos || []);
+  const hasVideo = videoFile || existing?.videoUrl;
+
+  return (
+    <>
+      {/* Date picker */}
+      <div className="form-section">
+        <div className="form-section-title">Publish Date</div>
+        <input className="form-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+      </div>
+
+      {/* Video upload */}
+      <div className="form-section">
+        <div className="form-section-title">Entrance Video</div>
+        <div className="dropzone">
+          <input type="file" accept="video/*" onChange={(e) => handleVideoSelect(e.target.files[0])} />
+          {hasVideo ? (
+            <div className="dropzone-text">
+              {videoFile ? `Selected: ${videoName}` : "Current video uploaded — choose a file to replace"}
+            </div>
+          ) : (
+            <>
+              <div className="dropzone-text">Drop a video here or click to browse</div>
+              <div className="dropzone-hint">MP4 · 720×1080, uploaded as-is</div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Photos upload */}
+      <div className="form-section">
+        <div className="form-section-title">Photos</div>
+        <div className="dropzone">
+          <input type="file" accept="image/*" multiple onChange={(e) => handlePhotosSelect(e.target.files)} />
+          {previewPhotos.length ? (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+              {previewPhotos.map((src, i) => (
+                <img key={i} src={src} alt={`Photo ${i + 1}`} style={{ width: 64, height: 96, objectFit: "cover", borderRadius: 8 }} />
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="dropzone-text">Drop photos here or click to browse</div>
+              <div className="dropzone-hint">Shown in order · compressed on upload</div>
+            </>
+          )}
+        </div>
+        {photoPreviews.length > 0 && (
+          <div className="journal-char-count">{photoPreviews.length} new photo{photoPreviews.length === 1 ? "" : "s"} — replaces the current set</div>
+        )}
+      </div>
+
+      {/* Save */}
+      <div className="save-row">
+        <button className="save-btn" onClick={handleSave} disabled={saving}>
+          {saving ? (progress ? `Uploading ${progress.done}/${progress.total}...` : "Saving...") : "Save Entrance"}
+        </button>
+        {saveMsg && <span className="save-status">{saveMsg}</span>}
+      </div>
+
+      {/* Schedule */}
+      <div className="queue-section">
+        <div className="queue-title">Entrance Schedule</div>
+        {queueLoading ? (
+          <div className="queue-empty">Loading...</div>
+        ) : queue.length === 0 ? (
+          <div className="queue-empty">No entrances scheduled yet</div>
+        ) : (
+          queue.map((item) => (
+            <div className={`queue-item ${item.date === today ? "queue-today" : ""}`} key={item.id}>
+              {item.photos?.[0] ? (
+                <img src={item.photos[0]} alt="" className="queue-thumb" />
+              ) : (
+                <div className="queue-thumb" />
+              )}
+              <div className="queue-info">
+                <div className="queue-date">{item.date}{item.date === today ? " — TODAY" : ""}</div>
+                <div className="queue-art-meta">
+                  {item.videoUrl ? "Video" : "No video"} · {item.photos?.length || 0} photo{item.photos?.length === 1 ? "" : "s"}
+                </div>
+              </div>
+              <button className="queue-delete" onClick={() => handleDelete(item.id)}>Delete</button>
+            </div>
+          ))
+        )}
+      </div>
+    </>
+  );
+}
+
 // ── ART EDITOR ──────────────────────────────────────────
 function AdminDashboard() {
   const today = new Date().toISOString().slice(0, 10);
-  const [activeTab, setActiveTab] = useState("art");
+  const [activeTab, setActiveTab] = useState("overview");
+  // Date carried from the overview when you click a day, prefilled into editors.
+  const [selectedDate, setSelectedDate] = useState(today);
+
+  // Jump from the overview calendar to an editor for a specific date.
+  const goToEditor = (tab, dateStr) => {
+    setSelectedDate(dateStr);
+    if (tab === "art") setDate(dateStr); // the Art form lives in this component
+    setActiveTab(tab);
+  };
 
   // Form state
   const [date, setDate] = useState(today);
@@ -660,9 +1154,10 @@ function AdminDashboard() {
       let imageUrl = null;
 
       if (imageFile) {
+        const compressed = await compressImage(imageFile);
         const path = `art/${date}-${Date.now()}.jpg`;
         const storageRef = ref(storage, path);
-        await uploadBytes(storageRef, imageFile);
+        await uploadBytes(storageRef, compressed);
         imageUrl = await getDownloadURL(storageRef);
       }
 
@@ -729,12 +1224,14 @@ function AdminDashboard() {
       </div>
 
       <div className="admin-tabs">
+        <button className={`admin-tab ${activeTab === "overview" ? "active" : ""}`} onClick={() => setActiveTab("overview")}>Overview</button>
         <button className={`admin-tab ${activeTab === "art" ? "active" : ""}`} onClick={() => setActiveTab("art")}>Art of the Day</button>
         <button className={`admin-tab ${activeTab === "polls" ? "active" : ""}`} onClick={() => setActiveTab("polls")}>Polls</button>
         <button className={`admin-tab ${activeTab === "journal" ? "active" : ""}`} onClick={() => setActiveTab("journal")}>Journal Prompts</button>
+        <button className={`admin-tab ${activeTab === "entrance" ? "active" : ""}`} onClick={() => setActiveTab("entrance")}>Entrance</button>
       </div>
 
-      {activeTab === "journal" ? <JournalPromptEditor /> : activeTab === "polls" ? <PollEditor /> : <>
+      {activeTab === "overview" ? <OverviewCalendar onJump={goToEditor} /> : activeTab === "journal" ? <JournalPromptEditor initialDate={selectedDate} /> : activeTab === "polls" ? <PollEditor initialDate={selectedDate} /> : activeTab === "entrance" ? <EntranceEditor initialDate={selectedDate} /> : <>
 
       {/* Date picker */}
       <div className="form-section">
