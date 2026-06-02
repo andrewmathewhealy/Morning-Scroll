@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 .dev.vars
 .wrangler/
+
+# Local backup of original (pre-compression) assets — not for the repo
+.asset-originals/
