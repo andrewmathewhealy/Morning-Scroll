@@ -293,6 +293,16 @@ const FEED_TAB_COLORS = {
   art:     { normal: "#C8B8D8", bold: "#A088C0" },
 };
 
+// Soft rgba from a hex — tints each section's card shadow with its category
+// color, so the color reads as light/reflection rather than an outline.
+function hexToRgba(hex, alpha) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // Load YouTube IFrame API once globally
 let ytApiReady = false;
 let ytApiCallbacks = [];
@@ -314,31 +324,7 @@ function ensureYTApi() {
   });
 }
 
-// Tracks which video card is mostly visible in the scroll area
-function useVisibleIndex(listRef, count) {
-  const [visibleIndex, setVisibleIndex] = useState(0);
-  useEffect(() => {
-    const container = listRef.current;
-    if (!container || count === 0) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-            const idx = Number(entry.target.dataset.idx);
-            if (!isNaN(idx)) setVisibleIndex(idx);
-          }
-        }
-      },
-      { root: null, threshold: 0.5 }
-    );
-    const cards = container.querySelectorAll("[data-idx]");
-    cards.forEach(card => observer.observe(card));
-    return () => observer.disconnect();
-  }, [listRef, count]);
-  return visibleIndex;
-}
-
-const VideoCard = memo(function VideoCard({ video, isVisible, unlocked, onUnlock }) {
+const VideoCard = memo(function VideoCard({ video, unlocked, onUnlock }) {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const [ready, setReady] = useState(false);
@@ -365,7 +351,7 @@ const VideoCard = memo(function VideoCard({ video, isVisible, unlocked, onUnlock
         {unlocked && (
           <iframe
             className="vfeed-yt-container"
-            src={`https://www.youtube.com/embed/${video.video_id}?playsinline=1&rel=0`}
+            src={`https://www.youtube.com/embed/${video.video_id}?autoplay=1&playsinline=1&rel=0&controls=0`}
             allow="autoplay; encrypted-media"
             allowFullScreen
             frameBorder="0"
@@ -387,86 +373,95 @@ const VideoCard = memo(function VideoCard({ video, isVisible, unlocked, onUnlock
   );
 });
 
-const INITIAL_LOAD = 7;
-const LOAD_MORE = 7;
-
 function FeedScreen() {
   const { loading, feed, error } = useVideoFeed();
-  const [activeTab, setActiveTab] = useState("animals");
-  const [unlocked, setUnlocked] = useState(false);
-  const [showCount, setShowCount] = useState(INITIAL_LOAD);
-  const listRef = useRef(null);
-  const sentinelRef = useRef(null);
+  // Each category video unlocks (swaps thumbnail → YouTube embed) on its own
+  // tap, so we never load all five iframes at once.
+  const [unlockedIds, setUnlockedIds] = useState(() => new Set());
+  const unlock = useCallback((id) => {
+    setUnlockedIds(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
 
-  const videos = feed?.[activeTab] || [];
-  const displayedVideos = videos.slice(0, showCount);
-  const hasMore = showCount < videos.length;
-  const visibleIndex = useVisibleIndex(listRef, displayedVideos.length);
+  const dateLabel = new Date().toLocaleDateString("en-US", {
+    weekday: "long", month: "long", day: "numeric",
+  });
 
-  // Reset count when switching tabs
-  useEffect(() => { setShowCount(INITIAL_LOAD); }, [activeTab]);
-
-  // Infinite scroll — load more when sentinel enters viewport
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel || !hasMore) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setShowCount(c => c + LOAD_MORE); },
-      { rootMargin: "200px" }
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasMore, showCount]);
+  // A numbered, color-coded header per category — the "curated edition" feel.
+  const renderHead = (cat, i) => (
+    <div className="curated-section-head">
+      <span className="curated-index">{String(i + 1).padStart(2, "0")}</span>
+      <span className="curated-cat-name">{FEED_TAB_LABELS[cat]}</span>
+      <span className="curated-rule" />
+    </div>
+  );
 
   return (
     <div className="community-bg">
       <div className="community-header fade-up fade-up-1">
-        <div className="community-title">Your Feed</div>
-        <div className="community-subtitle">Curated videos from around the internet</div>
+        <div className="curated-eyebrow">{dateLabel} · Today's picks</div>
+        <div className="community-title">Your Curated Dopamine</div>
+        <div className="community-subtitle">
+          One hand-picked watch from each corner of the internet — chosen fresh every morning, nothing doomy.
+        </div>
       </div>
 
-      {/* Category tabs */}
-      <div className="vfeed-tabs">
-        {FEED_TABS.map(tab => (
-          <button
-            key={tab}
-            className={`vfeed-tab${activeTab === tab ? " active" : ""}`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {FEED_TAB_LABELS[tab]}
-          </button>
+      <div className="vfeed-list curated-list">
+        {loading && FEED_TABS.map((cat, i) => (
+          <section key={cat} className="curated-section" style={{ "--cat-color": FEED_TAB_COLORS[cat].bold }}>
+            {renderHead(cat, i)}
+            <div className="widget-shimmer curated-shimmer" />
+          </section>
         ))}
-      </div>
-
-      {/* Vertical video list */}
-      <div className="vfeed-list" ref={listRef}>
-        {loading && (
-          Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="widget-shimmer" style={{
-              height: 200, borderRadius: 16, marginBottom: 12,
-              background: "rgba(12,26,53,0.06)",
-            }} />
-          ))
-        )}
 
         {error && (
-          <div style={{ padding: "20px 0", fontSize: 13, color: "rgba(12,26,53,0.5)", textAlign: "center" }}>
-            Unable to load videos right now.
+          <div style={{ padding: "40px 0", fontSize: 13, color: "rgba(12,26,53,0.5)", textAlign: "center" }}>
+            Unable to load today's picks right now.
           </div>
         )}
 
-        {!loading && !error && videos.length === 0 && (
-          <div style={{ padding: "40px 0", fontSize: 13, color: "rgba(12,26,53,0.45)", textAlign: "center" }}>
-            No videos yet for {FEED_TAB_LABELS[activeTab]}.
+        {!loading && !error && FEED_TABS.map((cat, i) => {
+          const video = (feed?.[cat] || [])[0];
+          if (!video) return null;
+          const color = FEED_TAB_COLORS[cat].bold;
+          return (
+            <section
+              key={cat}
+              className={`curated-section fade-up fade-up-${Math.min(i + 2, 6)}`}
+              style={{ "--cat-color": color, "--cat-glow": hexToRgba(color, 0.22) }}
+            >
+              {renderHead(cat, i)}
+              <VideoCard
+                video={video}
+                unlocked={unlockedIds.has(video.video_id)}
+                onUnlock={() => unlock(video.video_id)}
+              />
+            </section>
+          );
+        })}
+
+        {/* Required disclosure: videos play in YouTube's official embedded
+            player, so use of this feed is governed by YouTube's terms. The
+            YouTube API Services Terms require us to surface these links. */}
+        {!loading && !error && (
+          <div style={{
+            padding: "20px 6px 8px", fontSize: 11, lineHeight: 1.5,
+            color: "rgba(12,26,53,0.4)", textAlign: "center",
+          }}>
+            Videos are served by YouTube. By using this feed you agree to the{" "}
+            <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer"
+              style={{ color: "rgba(12,26,53,0.55)", textDecoration: "underline" }}>
+              YouTube Terms of Service
+            </a>{" "}and the{" "}
+            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer"
+              style={{ color: "rgba(12,26,53,0.55)", textDecoration: "underline" }}>
+              Google Privacy Policy
+            </a>.
           </div>
         )}
-
-        {displayedVideos.map((v, i) => (
-          <div key={v.video_id} data-idx={i}>
-            <VideoCard video={v} isVisible={i === visibleIndex} unlocked={unlocked} onUnlock={() => setUnlocked(true)} />
-          </div>
-        ))}
-        {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
       </div>
     </div>
   );

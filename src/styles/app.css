@@ -508,35 +508,45 @@
 
 /* ── VIDEO FEED ─────────────────────────────────────────── */
 
-/* Category tabs */
-.vfeed-tabs {
-  display: flex; gap: 8px; overflow-x: auto;
-  padding: 6px 20px 14px;
-  scrollbar-width: none;
-}
-.vfeed-tabs::-webkit-scrollbar { display: none; }
-
-.vfeed-tab {
-  flex: 0 0 auto;
-  padding: 7px 16px;
-  border-radius: 20px;
-  border: 1.5px solid transparent;
-  background: rgba(253,242,232,0.5);
+/* Curated daily edition */
+.curated-eyebrow {
   font-family: 'Satoshi', sans-serif;
-  font-size: 12px; font-weight: 500;
-  color: rgba(12,26,53,0.45);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: 1.6px; text-transform: uppercase;
+  color: rgba(253,242,232,0.5);
+  margin-bottom: 7px;
 }
-.vfeed-tab.active {
-  background: #FDF2E8;
-  color: #0C1A35;
-  font-weight: 700;
-  border-color: #A0CCC8;
-  box-shadow: 0 2px 8px rgba(160,204,200,0.3);
+.curated-list { padding-top: 6px; }
+
+.curated-section { margin-bottom: 28px; }
+.curated-section:last-of-type { margin-bottom: 8px; }
+
+.curated-section-head {
+  display: flex; align-items: baseline; gap: 9px;
+  margin-bottom: 11px; padding: 0 2px;
 }
-.vfeed-tab:active { transform: scale(0.95); }
+.curated-index {
+  font-family: 'Fraunces', serif;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.5px;
+  color: var(--cat-color); opacity: 0.65;
+  font-feature-settings: "tnum";
+}
+.curated-cat-name {
+  font-family: 'Fraunces', serif;
+  font-size: 23px; font-weight: 600; line-height: 1;
+  color: var(--cat-color);
+}
+.curated-rule {
+  flex: 1; align-self: center; height: 1.5px; border-radius: 2px;
+  background: linear-gradient(to right, var(--cat-color), transparent);
+  opacity: 0.4;
+}
+/* Color from light: tint the card's shadow with the category hue */
+.curated-section .vfeed-card-v {
+  margin-bottom: 0;
+  box-shadow: 0 8px 22px var(--cat-glow, rgba(0,20,60,0.10)), 0 1px 3px rgba(8,20,50,0.05);
+}
+.curated-shimmer { aspect-ratio: 16/9; border-radius: 12px; }
 
 /* Vertical video list */
 .vfeed-list { padding: 0 20px 20px; }
