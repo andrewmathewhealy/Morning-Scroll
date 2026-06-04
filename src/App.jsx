@@ -523,10 +523,13 @@ export default function MorningScrollApp() {
           )}
 
           <div className="screen rubber-scroll" ref={screenRef}>
-            {tab === "home" && <HomeScreen onOpenGames={() => setGamesOpen(true)} radioPlayer={radioPlayer} />}
-            {tab === "feed" && <FeedScreen />}
-            {tab === "mind" && <MindScreen />}
-            {tab === "settings" && <SettingsScreen bgTheme={bgTheme} onChangeBgTheme={changeBgTheme} onOpenAdmin={() => setShowAdmin(true)} onOpenPrivacy={() => setShowPrivacy(true)} />}
+            {/* key={tab} replays the cross-fade each time the screen changes */}
+            <div key={tab} className="screen-enter">
+              {tab === "home" && <HomeScreen onOpenGames={() => setGamesOpen(true)} radioPlayer={radioPlayer} />}
+              {tab === "feed" && <FeedScreen />}
+              {tab === "mind" && <MindScreen />}
+              {tab === "settings" && <SettingsScreen bgTheme={bgTheme} onChangeBgTheme={changeBgTheme} onOpenAdmin={() => setShowAdmin(true)} onOpenPrivacy={() => setShowPrivacy(true)} />}
+            </div>
           </div>
 
           {radioPlayer.station && (
