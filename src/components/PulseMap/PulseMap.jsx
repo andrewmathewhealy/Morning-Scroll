@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import Globe from "react-globe.gl";
 import * as THREE from "three";
+import { useGlobeTouch } from "./useGlobeTouch.js";
 import { useRadioBrowser } from "./useRadioBrowser.js";
 import { useGlobeData } from "./useGlobeData.js";
 import StationPicker from "./StationPicker.jsx";
@@ -89,8 +90,15 @@ export default function PulseMap({ style, fullscreen = false, radioPlayer }) {
     setShowPicker(false);
   }, []);
 
+  const globeTouch = useGlobeTouch(globeRef, containerRef);
+
   return (
-    <div ref={containerRef} className="pulse-map-container" style={style}>
+    <div
+      ref={containerRef}
+      className="pulse-map-container"
+      style={style}
+      {...globeTouch}
+    >
       {/* CSS starfield */}
       <div className="pulse-map-stars">
         {Array.from({ length: 80 }, (_, i) => (

@@ -38,13 +38,16 @@
   .phone.is-native::after { display: none; }
   /* Fullscreen on mobile browsers */
   @media (max-width: 500px) {
+    /* Lock the shell to the visible viewport so the page itself can't be
+       dragged or rubber-banded — only .screen scrolls internally. */
+    html, body { height: var(--app-height, 100dvh); overflow: hidden; }
     body { padding: 0; }
-    .phone-wrapper { padding: 0; min-height: unset; }
+    .phone-wrapper { padding: 0; min-height: unset; height: 100%; }
     .phone {
-      width: 100vw; height: var(--app-height, 100dvh);
+      width: 100vw; height: 100%;
       border-radius: 0;
       box-shadow: none;
-      padding-top: env(safe-area-inset-top, 0px);
+      padding-top: 0; /* browser chrome already handles the top inset; native keeps its own */
     }
     .phone::after { display: none; }
     .status-bar { display: none; }

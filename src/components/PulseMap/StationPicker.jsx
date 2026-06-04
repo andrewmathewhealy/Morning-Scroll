@@ -8,15 +8,24 @@ export default function StationPicker({
   currentStation, radioStatus, onTogglePlay, onStop,
 }) {
   const [closing, setClosing] = useState(false);
+  const [armed, setArmed] = useState(false);
   const dragRef = useRef({ startY: 0, dragging: false });
   const sheetRef = useRef(null);
 
   useEffect(() => {
     document.body.classList.add("journal-open");
-    return () => document.body.classList.remove("journal-open");
+    // Ignore the trailing "ghost click" from the globe tap that opened this
+    // sheet — otherwise the overlay's onClick fires the instant it mounts and
+    // the picker closes immediately.
+    const armTimer = setTimeout(() => setArmed(true), 300);
+    return () => {
+      document.body.classList.remove("journal-open");
+      clearTimeout(armTimer);
+    };
   }, []);
 
   const dismiss = () => {
+    if (!armed) return;
     setClosing(true);
     setTimeout(onClose, 500);
   };

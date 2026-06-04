@@ -477,15 +477,21 @@ export default function MorningScrollApp() {
   useEffect(() => { if (screenRef.current) screenRef.current.scrollTop = 0; }, [tab]);
 
   // Lock the app to the *visible* viewport height. vh/dvh are unreliable in
-  // in-app browsers (Messages/Instagram) and around the iOS toolbar, so we drive
-  // height from innerHeight directly and keep it in sync on resize/rotate.
+  // in-app browsers (Messages/Instagram). visualViewport.height is the actually
+  // visible area (it excludes the browser chrome / address bar); innerHeight
+  // over-reports it there, which left the app too tall. Keep it in sync.
   useEffect(() => {
-    const setAppHeight = () =>
-      document.documentElement.style.setProperty("--app-height", `${window.innerHeight}px`);
+    const vv = window.visualViewport;
+    const setAppHeight = () => {
+      const h = vv ? vv.height : window.innerHeight;
+      document.documentElement.style.setProperty("--app-height", `${Math.round(h)}px`);
+    };
     setAppHeight();
+    vv?.addEventListener("resize", setAppHeight);
     window.addEventListener("resize", setAppHeight);
     window.addEventListener("orientationchange", setAppHeight);
     return () => {
+      vv?.removeEventListener("resize", setAppHeight);
       window.removeEventListener("resize", setAppHeight);
       window.removeEventListener("orientationchange", setAppHeight);
     };

@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import Globe from "react-globe.gl";
 import { TextureLoader, ShaderMaterial, Vector2 } from "three";
+import { useGlobeTouch } from "./useGlobeTouch.js";
 import "./pulseMap.css";
 
 // ── SUN POSITION ─────────────────────────────────────────
@@ -237,8 +238,15 @@ export default function SunriseGlobe({ style }) {
     }
   }, []);
 
+  const globeTouch = useGlobeTouch(globeRef, containerRef);
+
   return (
-    <div ref={containerRef} className="pulse-map-container" style={style}>
+    <div
+      ref={containerRef}
+      className="pulse-map-container"
+      style={style}
+      {...globeTouch}
+    >
       {/* Starfield */}
       <div className="pulse-map-stars">
         {Array.from({ length: 80 }, (_, i) => (
