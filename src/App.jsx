@@ -476,6 +476,21 @@ export default function MorningScrollApp() {
 
   useEffect(() => { if (screenRef.current) screenRef.current.scrollTop = 0; }, [tab]);
 
+  // Lock the app to the *visible* viewport height. vh/dvh are unreliable in
+  // in-app browsers (Messages/Instagram) and around the iOS toolbar, so we drive
+  // height from innerHeight directly and keep it in sync on resize/rotate.
+  useEffect(() => {
+    const setAppHeight = () =>
+      document.documentElement.style.setProperty("--app-height", `${window.innerHeight}px`);
+    setAppHeight();
+    window.addEventListener("resize", setAppHeight);
+    window.addEventListener("orientationchange", setAppHeight);
+    return () => {
+      window.removeEventListener("resize", setAppHeight);
+      window.removeEventListener("orientationchange", setAppHeight);
+    };
+  }, []);
+
   // Global tactile layer: every interactive control gives a subtle bump on tap
   // — native buttons/links automatically, plus any `.tappable` div. Add
   // data-haptic="medium|select|success|none" to vary the intensity or opt out.
