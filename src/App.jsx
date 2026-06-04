@@ -11,9 +11,11 @@ import { Icon } from "./icons/Icon.jsx";
 import { useGyroscope } from "./hooks/useGyroscope.js";
 import { useColorTemp } from "./hooks/useColorTemp.js";
 import { useRadioPlayer } from "./hooks/useRadioPlayer.js";
+import { haptic } from "./hooks/haptics.js";
 
 // ── Extracted components ──
 import { WeatherWidget, MoonWidget, useWeather } from "./components/Weather/Weather.jsx";
+import TodaysLight from "./components/TodaysLight/TodaysLight.jsx";
 import JournalWidget from "./components/Journal/JournalWidget.jsx";
 import PollCard from "./components/Poll/PollCard.jsx";
 import ArtOfTheDayCard from "./components/ArtOfTheDay/ArtOfTheDayCard.jsx";
@@ -163,7 +165,7 @@ function HomeAtmosphere() {
 // ── TOGGLE ────────────────────────────────────────────────
 function Toggle({ on, onToggle }) {
   return (
-    <div className={`toggle ${on ? "on" : "off"}`} onClick={onToggle}>
+    <div className={`toggle ${on ? "on" : "off"}`} data-haptic="medium" onClick={onToggle}>
       <div className="toggle-thumb" />
     </div>
   );
@@ -190,6 +192,7 @@ function GlobeSection({ radioPlayer }) {
         borderRadius: 20, padding: "5px 4px",
       }}>
         <span
+          data-haptic="select"
           onClick={(e) => { e.stopPropagation(); setGlobeMode("sunrise"); }}
           style={{
             padding: "3px 14px", cursor: "pointer",
@@ -202,6 +205,7 @@ function GlobeSection({ radioPlayer }) {
         </span>
         <span style={{ width: 1, height: 12, background: "rgba(253,242,232,0.2)" }} />
         <span
+          data-haptic="select"
           onClick={(e) => { e.stopPropagation(); setGlobeMode("radio"); }}
           style={{
             padding: "3px 14px", cursor: "pointer",
@@ -217,6 +221,7 @@ function GlobeSection({ radioPlayer }) {
       {/* Fullscreen close button */}
       {fullscreen && (
         <div
+          data-haptic="light"
           onClick={() => setFullscreen(false)}
           style={{
             position: "absolute", top: 14, right: 14, zIndex: 11,
@@ -232,6 +237,7 @@ function GlobeSection({ radioPlayer }) {
       {/* Expand button (non-fullscreen only) */}
       {!fullscreen && (
         <div
+          data-haptic="light"
           onClick={(e) => { e.stopPropagation(); setFullscreen(true); }}
           style={{
             position: "absolute", bottom: 10, right: 10, zIndex: 10,
@@ -293,6 +299,10 @@ function HomeScreen({ onOpenGames, radioPlayer }) {
         </div>
       </div>
 
+      <div className="section-pad spring-in spring-in-3 depth-mid">
+        <TodaysLight sunrise={weatherData?.sunrise ?? null} sunset={weatherData?.sunset ?? null} />
+      </div>
+
       <div className="section-pad spring-in spring-in-5 depth-mid">
         <ErrorBoundary label="PollCard"><PollCard /></ErrorBoundary>
       </div>
@@ -312,7 +322,7 @@ function HomeScreen({ onOpenGames, radioPlayer }) {
       </div>
 
       <div className="section-pad spring-in spring-in-3 depth-mid">
-        <div className="games-card" onClick={onOpenGames}>
+        <div className="games-card tappable" data-haptic="medium" onClick={onOpenGames}>
           <div className="gc-left">
             <div className="gc-label">Play</div>
             <div className="gc-title">Morning Games</div>
@@ -336,7 +346,7 @@ function Accordion({ title, count, total, accentColor, children, defaultOpen = f
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="accordion fade-up fade-up-2">
-      <div className="accordion-header" onClick={() => setOpen(o => !o)}>
+      <div className="accordion-header tappable" onClick={() => setOpen(o => !o)}>
         <div className="accordion-left">
           {accentColor && <div style={{ width: 10, height: 10, borderRadius: 3, background: accentColor, flexShrink: 0 }} />}
           <span className="accordion-title">{title}</span>
@@ -359,6 +369,7 @@ function SettingsScreen({ bgTheme, onChangeBgTheme, onOpenAdmin, onOpenPrivacy }
         {Object.entries(BG_THEMES).map(([key, { label, gradient }]) => (
           <button
             key={key}
+            data-haptic="select"
             onClick={() => onChangeBgTheme(key)}
             style={{
               flex: 1, height: 56, borderRadius: 14, border: bgTheme === key ? "2.5px solid #0C1A35" : "1.5px solid rgba(12,26,53,0.15)",
@@ -465,6 +476,22 @@ export default function MorningScrollApp() {
 
   useEffect(() => { if (screenRef.current) screenRef.current.scrollTop = 0; }, [tab]);
 
+  // Global tactile layer: every interactive control gives a subtle bump on tap
+  // — native buttons/links automatically, plus any `.tappable` div. Add
+  // data-haptic="medium|select|success|none" to vary the intensity or opt out.
+  // Capture phase so it fires even when a handler stops propagation.
+  useEffect(() => {
+    const onTap = (e) => {
+      const el = e.target.closest('[data-haptic], .tappable, button, [role="button"], a[href]');
+      if (!el) return;
+      const kind = el.dataset.haptic || "light";
+      if (kind === "none") return;
+      (haptic[kind] || haptic.light)();
+    };
+    document.addEventListener("click", onTap, true);
+    return () => document.removeEventListener("click", onTap, true);
+  }, []);
+
   const closeGames = () => {
     setGamesClosing(true);
     setTimeout(() => { setGamesOpen(false); setGamesClosing(false); }, 260);
@@ -512,7 +539,7 @@ export default function MorningScrollApp() {
             {TABS.map(t => {
               const active = tab === t.id;
               return (
-                <div key={t.id} className={`nav-item tappable ${active ? "active" : ""}`} onClick={() => setTab(t.id)}>
+                <div key={t.id} className={`nav-item tappable ${active ? "active" : ""}`} data-haptic="select" onClick={() => setTab(t.id)}>
                   <div className="nav-icon">{active ? <t.ActiveIcon size={22} /> : <t.InactiveIcon size={22} />}</div>
                   <div className="nav-label">{t.label}</div>
                   <div className="nav-dot" />

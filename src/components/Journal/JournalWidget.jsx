@@ -170,7 +170,7 @@ function JournalWidget() {
   return (
     <>
       {/* Inline card — collapsed view */}
-      <div className="journal-card" onClick={() => { if (user) setExpanded(true); }}>
+      <div className="journal-card tappable" onClick={() => { if (user) setExpanded(true); }}>
         <div className="journal-header">
           <Icon.Feather size={14} color="#D898AC" />
           <div className="journal-label">Morning Journal</div>

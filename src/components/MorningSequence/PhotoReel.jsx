@@ -26,7 +26,7 @@ export default function PhotoReel({ onComplete, photos }) {
   };
 
   return (
-    <div className="photo-reel" onClick={handleTap}>
+    <div className="photo-reel" data-haptic="light" onClick={handleTap}>
       {/* key={index} restarts the fade-in each time the photo changes */}
       <div
         key={index}

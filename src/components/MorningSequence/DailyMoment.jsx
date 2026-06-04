@@ -5,7 +5,7 @@ export default function DailyMoment({ onAdvance, videoSrc }) {
   const [videoFailed, setVideoFailed] = useState(false);
 
   return (
-    <div className="moment-screen" onClick={onAdvance}>
+    <div className="moment-screen" data-haptic="light" onClick={onAdvance}>
       {!videoFailed ? (
         <video
           ref={videoRef}

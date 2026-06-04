@@ -180,7 +180,7 @@ function VideoPlayer({ video, poster, autoplay = false, fullscreen = false, star
   };
 
   return (
-    <div ref={containerRef} className="video-wrap" style={{ position: "relative", background: "#000", cursor: "pointer", minHeight: fullscreen ? 520 : undefined }} onClick={handleClick}>
+    <div ref={containerRef} className="video-wrap" data-haptic="light" style={{ position: "relative", background: "#000", cursor: "pointer", minHeight: fullscreen ? 520 : undefined }} onClick={handleClick}>
       <video
         ref={videoRef}
         poster={poster ?? undefined}
@@ -340,7 +340,7 @@ const VideoCard = memo(function VideoCard({ video, unlocked, onUnlock }) {
   }, [unlocked]);
 
   return (
-    <div className={`vfeed-card-v ${isShort ? "vfeed-card-short" : "vfeed-card-long"}`} onClick={() => !unlocked && onUnlock()}>
+    <div className={`vfeed-card-v ${isShort ? "vfeed-card-short" : "vfeed-card-long"}`} data-haptic="light" onClick={() => !unlocked && onUnlock()}>
       <div className={`vfeed-thumb-wrap ${isShort ? "vfeed-thumb-short" : "vfeed-thumb-long"}`}>
         <img className="vfeed-thumb" src={video.thumbnail} alt="" />
         {!unlocked && (

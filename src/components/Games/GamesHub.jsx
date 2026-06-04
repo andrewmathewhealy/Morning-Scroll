@@ -40,7 +40,7 @@ export default function GamesHub() {
         {GAMES.map(g => (
           <button
             key={g.id}
-            className="game-tile"
+            className="game-tile tappable"
             style={{ "--game-accent": g.accent }}
             onClick={() => setActiveId(g.id)}
           >

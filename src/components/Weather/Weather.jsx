@@ -228,7 +228,7 @@ export function useWeather() {
   const [weather, setWeather] = useState({ loading: true, data: null, error: null });
 
   useEffect(() => {
-    const cacheKey = 'weather-v6';
+    const cacheKey = 'weather-v7';
     try {
       const cached = JSON.parse(localStorage.getItem(cacheKey));
       if (cached && Date.now() - cached.ts < 10 * 60 * 1000) {
@@ -272,6 +272,8 @@ export function useWeather() {
             humidity: Math.round(cur.humidity),
             windSpeed: Math.round(cur.windspeed),
             moonphase: cur.moonphase ?? null,
+            sunrise: cur.sunrise ?? json.days?.[0]?.sunrise ?? null,
+            sunset: cur.sunset ?? json.days?.[0]?.sunset ?? null,
             hours,
           };
           localStorage.setItem(cacheKey, JSON.stringify(data));
