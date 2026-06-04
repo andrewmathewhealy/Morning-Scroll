@@ -4,36 +4,6 @@ import { WORKER_URL } from "../../config.js";
 import { Icon } from "../../icons/Icon.jsx";
 import { formatTimeAgo } from "../../hooks/useLiveTime.js";
 
-// ── FEED SKELETON ─────────────────────────────────────────
-function FeedSkeleton() {
-  return (
-    <>
-      {/* Hero skeleton */}
-      <div className="skeleton-card spring-in spring-in-1">
-        <div className="skeleton skeleton-img" style={{ height: 220 }} />
-        <div className="skeleton-body">
-          <div className="skeleton skeleton-line" style={{ width: "35%", height: 10 }} />
-          <div className="skeleton skeleton-line" style={{ width: "95%", height: 16 }} />
-          <div className="skeleton skeleton-line" style={{ width: "80%", height: 16 }} />
-          <div className="skeleton skeleton-line" style={{ width: "45%", height: 10 }} />
-        </div>
-      </div>
-      {/* Small card skeletons with stagger */}
-      {[0,1,2,3,4].map(i => (
-        <div key={i} className={`feed-card-small spring-in spring-in-${Math.min(i+2,6)}`}
-          style={{ margin: "10px 20px 0", padding: "12px 14px", gap: 12, alignItems: "center" }}>
-          <div className="skeleton" style={{ width: 56, height: 56, borderRadius: 14, flexShrink: 0 }} />
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-            <div className="skeleton skeleton-line" style={{ width: "38%", height: 9 }} />
-            <div className="skeleton skeleton-line" style={{ width: "88%", height: 13 }} />
-            <div className="skeleton skeleton-line" style={{ width: "52%", height: 9 }} />
-          </div>
-        </div>
-      ))}
-    </>
-  );
-}
-
 // ── VIDEO PLAYER ──────────────────────────────────────────
 // ── GLOBAL MUTE STATE ─────────────────────────────────────
 // Shared across all VideoPlayer instances — unmuting one unmutes all
@@ -303,41 +273,8 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-// Load YouTube IFrame API once globally
-let ytApiReady = false;
-let ytApiCallbacks = [];
-function ensureYTApi() {
-  if (ytApiReady) return Promise.resolve();
-  if (window.YT && window.YT.Player) { ytApiReady = true; return Promise.resolve(); }
-  return new Promise(resolve => {
-    ytApiCallbacks.push(resolve);
-    if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-      const tag = document.createElement("script");
-      tag.src = "https://www.youtube.com/iframe_api";
-      document.head.appendChild(tag);
-      window.onYouTubeIframeAPIReady = () => {
-        ytApiReady = true;
-        ytApiCallbacks.forEach(cb => cb());
-        ytApiCallbacks = [];
-      };
-    }
-  });
-}
-
 const VideoCard = memo(function VideoCard({ video, unlocked, onUnlock }) {
-  const containerRef = useRef(null);
-  const playerRef = useRef(null);
-  const [ready, setReady] = useState(false);
-  const [created, setCreated] = useState(false);
   const isShort = video.is_short;
-
-  // Mark ready once unlocked (iframe handles its own playback)
-  useEffect(() => {
-    if (unlocked && !created) {
-      setCreated(true);
-      setReady(true);
-    }
-  }, [unlocked]);
 
   return (
     <div className={`vfeed-card-v ${isShort ? "vfeed-card-short" : "vfeed-card-long"}`} data-haptic="light" onClick={() => !unlocked && onUnlock()}>
