@@ -575,14 +575,12 @@
   font-family: 'Satoshi', sans-serif;
   font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase;
   color: #FDF2E8;
-  -webkit-text-stroke: 0.5px rgba(12,26,53,0.5); paint-order: stroke fill;
-  text-shadow: 0 1px 3px rgba(12,26,53,0.28);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.25);
 }
 .tl-time {
   font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; line-height: 1.1;
   color: #FDF2E8;
-  -webkit-text-stroke: 0.8px rgba(12,26,53,0.55); paint-order: stroke fill;
-  text-shadow: 0 1px 4px rgba(12,26,53,0.3);
+  text-shadow: 0 1px 5px rgba(0,0,0,0.28);
 }
 
 /* ── Morning Games ──────────────────────────────────────── */

@@ -45,7 +45,7 @@
   position: absolute;
   inset: 0;
   z-index: 9998;
-  background: rgba(8, 16, 32, 0.7);
+  background: rgba(12, 26, 53, 0.5);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   animation: journalFadeIn 0.35s ease;
@@ -60,13 +60,14 @@
   left: 0;
   right: 0;
   z-index: 9999;
-  background: #0C1A35;
+  background: #FDF2E8;
   border-radius: 24px 24px 0 0;
   display: flex;
   flex-direction: column;
   max-height: 60vh;
   animation: journalSlideUp 0.35s cubic-bezier(0.36, 1.3, 0.64, 1);
   transition: transform 0.5s cubic-bezier(0.6, -0.28, 0.74, 0.05), opacity 0.4s ease;
+  box-shadow: 0 -8px 32px rgba(12, 26, 53, 0.18);
 }
 .station-picker-sheet.closing {
   transform: translateY(110%);
@@ -77,7 +78,7 @@
   width: 36px;
   height: 4px;
   border-radius: 2px;
-  background: rgba(253, 242, 232, 0.2);
+  background: rgba(12, 26, 53, 0.2);
   margin: 10px auto 8px;
   flex-shrink: 0;
   cursor: grab;
@@ -92,8 +93,8 @@
 .station-picker-title {
   font-family: 'Satoshi', sans-serif;
   font-size: 15px;
-  color: #FDF2E8;
-  font-weight: 500;
+  color: #0C1A35;
+  font-weight: 600;
 }
 
 /* ── LOADING ── */
@@ -106,7 +107,7 @@
 .station-shimmer {
   height: 52px;
   border-radius: 14px;
-  background: linear-gradient(90deg, rgba(253,242,232,0.04) 25%, rgba(253,242,232,0.08) 50%, rgba(253,242,232,0.04) 75%);
+  background: linear-gradient(90deg, rgba(12,26,53,0.04) 25%, rgba(12,26,53,0.08) 50%, rgba(12,26,53,0.04) 75%);
   background-size: 200% 100%;
   animation: widgetShimmer 1.5s ease-in-out infinite;
 }
@@ -116,7 +117,7 @@
   padding: 24px 20px 32px;
   font-family: 'Satoshi', sans-serif;
   font-size: 13px;
-  color: rgba(253, 242, 232, 0.45);
+  color: rgba(12, 26, 53, 0.5);
   text-align: center;
   line-height: 1.5;
 }
@@ -137,8 +138,8 @@
   gap: 12px;
   padding: 10px 14px;
   border-radius: 14px;
-  background: rgba(253, 242, 232, 0.04);
-  border: 1.5px solid rgba(253, 242, 232, 0.06);
+  background: rgba(12, 26, 53, 0.04);
+  border: 1.5px solid rgba(12, 26, 53, 0.08);
   cursor: pointer;
   transition: all 0.18s;
   text-align: left;
@@ -147,19 +148,19 @@
   color: inherit;
 }
 .station-card:active {
-  background: rgba(253, 242, 232, 0.08);
-  border-color: rgba(242, 184, 153, 0.3);
+  background: rgba(12, 26, 53, 0.07);
+  border-color: rgba(12, 26, 53, 0.25);
 }
 .station-card.active {
-  border-color: rgba(242, 184, 153, 0.4);
-  background: rgba(242, 184, 153, 0.08);
+  border-color: rgba(12, 26, 53, 0.4);
+  background: rgba(12, 26, 53, 0.06);
 }
 
 .station-card-icon {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: rgba(253, 242, 232, 0.06);
+  background: rgba(12, 26, 53, 0.06);
   flex-shrink: 0;
   overflow: hidden;
   display: flex;
@@ -187,7 +188,7 @@
 .station-card-name {
   font-family: 'Satoshi', sans-serif;
   font-size: 13.5px;
-  color: #FDF2E8;
+  color: #0C1A35;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -195,7 +196,7 @@
 }
 .station-card-meta {
   font-size: 11px;
-  color: rgba(253, 242, 232, 0.4);
+  color: rgba(12, 26, 53, 0.5);
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -203,10 +204,10 @@
 }
 .station-card-dot {
   margin: 0 4px;
-  color: rgba(253, 242, 232, 0.25);
+  color: rgba(12, 26, 53, 0.3);
 }
 .station-card-tags {
-  color: rgba(253, 242, 232, 0.35);
+  color: rgba(12, 26, 53, 0.4);
 }
 
 .station-playing-badge {
@@ -214,13 +215,13 @@
   align-items: center;
   gap: 5px;
   font-size: 10px;
-  color: #F2B899;
-  font-weight: 500;
+  color: #0C1A35;
+  font-weight: 600;
   flex-shrink: 0;
 }
 .station-loading-badge {
   font-size: 11px;
-  color: rgba(253, 242, 232, 0.4);
+  color: rgba(12, 26, 53, 0.5);
   flex-shrink: 0;
 }
 
@@ -229,7 +230,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #F2B899;
+  background: #0C1A35;
   animation: liveBadgePulse 3s ease-in-out infinite;
   flex-shrink: 0;
 }
@@ -237,7 +238,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(253, 242, 232, 0.4);
+  background: rgba(12, 26, 53, 0.4);
   animation: liveBadgePulse 1s ease-in-out infinite;
   flex-shrink: 0;
 }
@@ -245,14 +246,14 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #D898AC;
+  background: #C06A88;
   flex-shrink: 0;
 }
 
 /* ── NOW PLAYING (full mode inside picker) ── */
 .radio-now-playing {
   padding: 14px 20px 24px;
-  border-top: 1px solid rgba(253, 242, 232, 0.08);
+  border-top: 1px solid rgba(12, 26, 53, 0.1);
   margin-top: 4px;
 }
 .radio-np-header {
@@ -263,7 +264,7 @@
 }
 .radio-np-label {
   font-size: 10px;
-  color: rgba(253, 242, 232, 0.4);
+  color: rgba(12, 26, 53, 0.5);
   font-weight: 600;
   letter-spacing: 0.8px;
   text-transform: uppercase;
@@ -271,17 +272,17 @@
 .radio-np-station {
   font-family: 'Satoshi', sans-serif;
   font-size: 15px;
-  color: #FDF2E8;
+  color: #0C1A35;
   font-weight: 500;
 }
 .radio-np-country {
   font-size: 12px;
-  color: rgba(253, 242, 232, 0.4);
+  color: rgba(12, 26, 53, 0.5);
   margin-top: 2px;
 }
 .radio-np-error {
   font-size: 12px;
-  color: #D898AC;
+  color: #C06A88;
   margin-top: 6px;
 }
 .radio-np-controls {
@@ -294,7 +295,7 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(253, 242, 232, 0.1);
+  background: rgba(12, 26, 53, 0.1);
   border: none;
   cursor: pointer;
   display: flex;
@@ -302,7 +303,7 @@
   justify-content: center;
   transition: background 0.15s;
 }
-.radio-np-btn:active { background: rgba(253, 242, 232, 0.18); }
+.radio-np-btn:active { background: rgba(12, 26, 53, 0.18); }
 .radio-np-stop {
   width: 36px;
   height: 36px;
@@ -318,10 +319,10 @@
 /* ── MINI PLAYER BAR ── */
 .radio-mini-player {
   height: 52px;
-  background: rgba(12, 26, 53, 0.95);
+  background: rgba(253, 242, 232, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(253, 242, 232, 0.08);
+  border-top: 1px solid rgba(12, 26, 53, 0.1);
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -352,7 +353,7 @@
 .radio-mini-name {
   font-family: 'Satoshi', sans-serif;
   font-size: 13px;
-  color: #FDF2E8;
+  color: #0C1A35;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -360,13 +361,13 @@
 }
 .radio-mini-country {
   font-size: 10px;
-  color: rgba(253, 242, 232, 0.4);
+  color: rgba(12, 26, 53, 0.5);
 }
 .radio-mini-btn {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(253, 242, 232, 0.08);
+  background: rgba(12, 26, 53, 0.08);
   border: none;
   cursor: pointer;
   display: flex;
@@ -375,4 +376,4 @@
   flex-shrink: 0;
   transition: background 0.15s;
 }
-.radio-mini-btn:active { background: rgba(253, 242, 232, 0.15); }
+.radio-mini-btn:active { background: rgba(12, 26, 53, 0.15); }

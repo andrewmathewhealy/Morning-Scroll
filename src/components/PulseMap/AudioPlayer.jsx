@@ -18,10 +18,10 @@ export default function AudioPlayer({ station, status, onTogglePlay, onStop, isM
           </div>
         </div>
         <button className="radio-mini-btn" onClick={onTogglePlay} aria-label={status === "playing" ? "Pause" : "Play"}>
-          {status === "playing" ? <Icon.Pause size={16} color="#FDF2E8" /> : <Icon.Play size={16} color="#FDF2E8" />}
+          {status === "playing" ? <Icon.Pause size={16} color="#0C1A35" /> : <Icon.Play size={16} color="#0C1A35" />}
         </button>
         <button className="radio-mini-btn" onClick={onStop} aria-label="Stop">
-          <Icon.X size={16} color="rgba(253,242,232,0.5)" />
+          <Icon.X size={16} color="rgba(12,26,53,0.5)" />
         </button>
       </div>
     );
@@ -42,10 +42,10 @@ export default function AudioPlayer({ station, status, onTogglePlay, onStop, isM
       )}
       <div className="radio-np-controls">
         <button className="radio-np-btn" onClick={onTogglePlay}>
-          {status === "playing" ? <Icon.Pause size={22} color="#FDF2E8" /> : <Icon.Play size={22} color="#FDF2E8" />}
+          {status === "playing" ? <Icon.Pause size={22} color="#0C1A35" /> : <Icon.Play size={22} color="#0C1A35" />}
         </button>
         <button className="radio-np-stop" onClick={onStop}>
-          <Icon.X size={18} color="rgba(253,242,232,0.5)" />
+          <Icon.X size={18} color="rgba(12,26,53,0.5)" />
         </button>
       </div>
     </div>

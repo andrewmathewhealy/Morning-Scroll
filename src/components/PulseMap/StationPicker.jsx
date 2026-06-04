@@ -60,7 +60,7 @@ export default function StationPicker({
         />
 
         <div className="station-picker-header">
-          <Icon.Radio size={16} color="#B8DDE8" />
+          <Icon.Radio size={16} color="#0C1A35" />
           <span className="station-picker-title">{country ? `Radio in ${country}` : "Nearby Stations"}</span>
         </div>
 
@@ -89,7 +89,7 @@ export default function StationPicker({
                     <img src={s.favicon} alt="" className="station-favicon" onError={e => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }} />
                   ) : null}
                   <div className="station-favicon-fallback" style={s.favicon ? { display: "none" } : undefined}>
-                    <Icon.Radio size={18} color="rgba(253,242,232,0.4)" />
+                    <Icon.Radio size={18} color="rgba(12,26,53,0.4)" />
                   </div>
                 </div>
                 <div className="station-card-info">
