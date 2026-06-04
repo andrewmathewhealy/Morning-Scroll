@@ -15,13 +15,13 @@ import { useRadioPlayer } from "./hooks/useRadioPlayer.js";
 // ── Extracted components ──
 import { WeatherWidget, MoonWidget, useWeather } from "./components/Weather/Weather.jsx";
 import JournalWidget from "./components/Journal/JournalWidget.jsx";
-import WordleGame from "./components/Wordle/WordleGame.jsx";
 import PollCard from "./components/Poll/PollCard.jsx";
 import ArtOfTheDayCard from "./components/ArtOfTheDay/ArtOfTheDayCard.jsx";
 import OnThisDayWidget from "./components/OnThisDay/OnThisDayWidget.jsx";
 import FeedScreen from "./components/Feed/FeedScreen.jsx";
-import BrickBreaker from "./components/MorningGame/BrickBreaker.jsx";
+import GamesHub from "./components/Games/GamesHub.jsx";
 import MindScreen from "./components/Mind/MindScreen.jsx";
+import PrivacyPolicy from "./components/PrivacyPolicy/PrivacyPolicy.jsx";
 
 
 // ── AMBIENT PARTICLES ─────────────────────────────────────
@@ -269,7 +269,7 @@ function GlobeSection({ radioPlayer }) {
 }
 
 // ── HOME SCREEN ───────────────────────────────────────────
-function HomeScreen({ onOpenWordle, radioPlayer }) {
+function HomeScreen({ onOpenGames, radioPlayer }) {
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }).toLowerCase();
@@ -312,25 +312,18 @@ function HomeScreen({ onOpenWordle, radioPlayer }) {
       </div>
 
       <div className="section-pad spring-in spring-in-3 depth-mid">
-        <ErrorBoundary label="BrickBreaker"><BrickBreaker /></ErrorBoundary>
-      </div>
-
-      <div className="section-pad spring-in spring-in-6 depth-mid">
-        <div className="wordle-card" onClick={onOpenWordle}>
-          <div className="wc-left">
-            <div className="wc-label">Daily · Word Game</div>
-            <div className="wc-title">WORDLE</div>
-            <div className="wc-date">{now.toLocaleDateString("en-US", { month: "long", day: "numeric" })}</div>
+        <div className="games-card" onClick={onOpenGames}>
+          <div className="gc-left">
+            <div className="gc-label">Play</div>
+            <div className="gc-title">Morning Games</div>
+            <div className="gc-sub">Wordle, Brick Breaker &amp; more</div>
           </div>
-          <div className="wc-right">
-            <div className="wc-tiles">
-              <div className="wc-tile wc-tile-green"/>
-              <div className="wc-tile wc-tile-amber"/>
-              <div className="wc-tile wc-tile-dark"/>
-              <div className="wc-tile wc-tile-dark"/>
-              <div className="wc-tile wc-tile-dark"/>
+          <div className="gc-right">
+            <div className="gc-chips">
+              <span className="gc-chip" style={{ background: "#7A9E52" }}>W</span>
+              <span className="gc-chip" style={{ background: "#F2B899", color: "#0C1A35" }}>B</span>
             </div>
-            <div className="wc-play">Play →</div>
+            <div className="gc-play">Play →</div>
           </div>
         </div>
       </div>
@@ -356,7 +349,7 @@ function Accordion({ title, count, total, accentColor, children, defaultOpen = f
   );
 }
 
-function SettingsScreen({ bgTheme, onChangeBgTheme, onOpenAdmin }) {
+function SettingsScreen({ bgTheme, onChangeBgTheme, onOpenAdmin, onOpenPrivacy }) {
   const [reminderOn, setReminderOn] = useState(true);
 
   return (
@@ -389,6 +382,15 @@ function SettingsScreen({ bgTheme, onChangeBgTheme, onOpenAdmin }) {
           <div><div className="setting-name">Morning reminder</div><div className="setting-value">Daily at 7:00 AM</div></div>
         </div>
         <Toggle on={reminderOn} onToggle={() => setReminderOn(v => !v)} />
+      </div>
+
+      <span className="section-label fade-up fade-up-3">About</span>
+      <div className="setting-row tappable fade-up fade-up-3" onClick={onOpenPrivacy}>
+        <div className="setting-left">
+          <div className="setting-icon"><Icon.BookOpen size={18} color="#0C1A35" /></div>
+          <div><div className="setting-name">Privacy Policy</div><div className="setting-value">How your data is handled</div></div>
+        </div>
+        <div className="setting-arrow">›</div>
       </div>
 
       {/* Dev-only entry to the admin. Remove before shipping. */}
@@ -448,11 +450,12 @@ function RadioMiniPlayer({ radioPlayer }) {
 
 export default function MorningScrollApp() {
   const [tab, setTab] = useState("home");
-  const [wordleOpen, setWordleOpen] = useState(false);
-  const [wordleClosing, setWordleClosing] = useState(false);
+  const [gamesOpen, setGamesOpen] = useState(false);
+  const [gamesClosing, setGamesClosing] = useState(false);
   const [bgTheme, setBgTheme] = useState(() => localStorage.getItem("ms-bg-theme") || "peach");
   const [showSequence, setShowSequence] = useState(() => shouldShowMorningSequence());
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
   const screenRef = useRef(null);
   const gyro = useGyroscope();
   const colorTemp = useColorTemp();
@@ -462,9 +465,9 @@ export default function MorningScrollApp() {
 
   useEffect(() => { if (screenRef.current) screenRef.current.scrollTop = 0; }, [tab]);
 
-  const closeWordle = () => {
-    setWordleClosing(true);
-    setTimeout(() => { setWordleOpen(false); setWordleClosing(false); }, 260);
+  const closeGames = () => {
+    setGamesClosing(true);
+    setTimeout(() => { setGamesOpen(false); setGamesClosing(false); }, 260);
   };
 
   const now = new Date();
@@ -493,10 +496,10 @@ export default function MorningScrollApp() {
           )}
 
           <div className="screen rubber-scroll" ref={screenRef}>
-            {tab === "home" && <HomeScreen onOpenWordle={() => setWordleOpen(true)} radioPlayer={radioPlayer} />}
+            {tab === "home" && <HomeScreen onOpenGames={() => setGamesOpen(true)} radioPlayer={radioPlayer} />}
             {tab === "feed" && <FeedScreen />}
             {tab === "mind" && <MindScreen />}
-            {tab === "settings" && <SettingsScreen bgTheme={bgTheme} onChangeBgTheme={changeBgTheme} onOpenAdmin={() => setShowAdmin(true)} />}
+            {tab === "settings" && <SettingsScreen bgTheme={bgTheme} onChangeBgTheme={changeBgTheme} onOpenAdmin={() => setShowAdmin(true)} onOpenPrivacy={() => setShowPrivacy(true)} />}
           </div>
 
           {radioPlayer.station && (
@@ -518,13 +521,13 @@ export default function MorningScrollApp() {
             })}
           </div>
 
-          {wordleOpen && (
-            <div className={`wordle-sheet${wordleClosing ? " closing" : ""}`}>
+          {gamesOpen && (
+            <div className={`games-sheet${gamesClosing ? " closing" : ""}`}>
               <div className="ws-handle-bar">
                 <div className="ws-handle"/>
-                <button className="ws-close" onClick={closeWordle}>Done</button>
+                <button className="ws-close" onClick={closeGames}>Done</button>
               </div>
-              <WordleGame />
+              <GamesHub />
             </div>
           )}
 
@@ -534,6 +537,8 @@ export default function MorningScrollApp() {
 
         </div>
       </div>
+
+      {showPrivacy && <PrivacyPolicy onClose={() => setShowPrivacy(false)} />}
 
       {/* Dev-only admin door, opened from Settings. Remove before shipping. */}
       {showAdmin && (
