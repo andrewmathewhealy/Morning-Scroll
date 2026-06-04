@@ -601,12 +601,18 @@ const DEFAULT_VIDEO_CHANNELS = {
   ],
   nature: [
     { channelId: "UCpVm7bg6pXKo1Pr6k5kxG9A", name: "National Geographic" },
-    { channelId: "UCbwC3_kqAafyOG69S6JmoVg", name: "Explore.org" },
+    { channelId: "UC-2KSeUU5SMCX6XLRD-AEvw", name: "Explore.org" },
     { channelId: "UCnavGPxEijftXneFxk28srA", name: "Earth Touch" },
-    { channelId: "UCwtsR2eW0MIjEnmEG2ImTzw", name: "Our Planet" },
     { channelId: "UCDDMpdWv1mGdx3ABJBgvidw", name: "Leaf of Life" },
     { channelId: "UCbq-4OJxnziD3awH-aTezeA", name: "Real Wild" },
     { channelId: "UCgb_TbreMgfDdLKkr4yYJHw", name: "Andrew Millison" },
+    { channelId: "UCU0LJ9et5Tb3m7COFzShgLg", name: "Robert E Fuller" },
+    { channelId: "UCcBp_9YPyma4c3HTadmRJ3Q", name: "Nature on PBS" },
+    { channelId: "UCRZPkuHwaoKwTP3CYPdVldg", name: "Love Nature" },
+    // Outdoors / camping — broadens "nature" beyond pure wildlife.
+    { channelId: "UCSnqXeK94-iNmwqGO__eJ5g", name: "Camping with Steve" },
+    { channelId: "UC2SMpy2oZV6BoyJEYShw9bw", name: "TA Outdoors" },
+    { channelId: "UCts-8ZqS339n-9nxy3DN8Cg", name: "Joe Robinet" },
   ],
 };
 
@@ -622,113 +628,164 @@ async function getVideoChannels(env) {
 const VIDEOS_CACHE_KEY = "videos_feed";
 const VIDEOS_CACHE_TTL = 86400; // 24 hours
 const VIDEOS_STALE_MS = 4 * 60 * 60 * 1000; // 4 hours — refresh if older
-const ETAGS_KEY = "videos_etags"; // ETag cache for 304 optimization
 
-// ── YouTube Data API v3 — Sync Engine ────────────────────
-// Uses activities.list (1 unit) instead of search.list (100 units).
-// ETag optimization: stores ETags per channel, sends If-None-Match to get
-// free 304 responses when no new content exists.
+// Yesterday's featured channel per category, so we never run the same channel
+// two days in a row within one category. Kept well beyond a day so it reliably
+// survives between refreshes.
+const LAST_CHANNEL_KEY = "videos_last_channel";
+const LAST_CHANNEL_TTL = 7 * 86400; // 7 days
+
+// A pick must be a real "watch" — never a Short, never an hour-long commitment.
+// Two tiers, both Short-free (≥2 min): we prefer the snappy 2–15 min window and
+// only widen to 2–30 min for a category that would otherwise come up empty (e.g.
+// nature, which tends to post long-form). Tried in order; first match wins.
+const SELECT_TIERS = [
+  { min: 120, max: 900 },  // primary:  2–15 min
+  { min: 120, max: 1800 }, // fallback: 2–30 min
+];
+
+// Only consider what each channel posted in the last 24h.
+const LOOKBACK_HOURS = 24;
+
+// ── YouTube Data API v3 — Daily Picker ───────────────────
+// Rather than harvest every channel's uploads, we walk a category's channels
+// one at a time and stop the moment one yields a video in the wanted length
+// window. Touching as few channels as possible keeps our footprint low, and the
+// result reads as hand-picked: one video per category per day.
 const YT_API = "https://www.googleapis.com/youtube/v3";
 
-// Load stored ETags from KV.
-async function getETags(env) {
-  try {
-    const raw = await env.FEED_CACHE.get(ETAGS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return {};
+// Parse an ISO-8601 duration (e.g. "PT4M30S") into whole seconds.
+function parseDurationSeconds(iso) {
+  const m = iso?.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return null;
+  return parseInt(m[1] || 0) * 3600 + parseInt(m[2] || 0) * 60 + parseInt(m[3] || 0);
 }
 
-// Persist ETags to KV.
-async function saveETags(env, etags) {
-  await env.FEED_CACHE.put(ETAGS_KEY, JSON.stringify(etags), { expirationTtl: VIDEOS_CACHE_TTL });
-}
-
-// Fetch recent uploads for a single channel via activities.list.
-// Cost: 1 quota unit per call, or 0 units if ETag returns 304.
-async function fetchChannelVideos(channelId, channelName, apiKey, etag) {
+// Fetch a channel's recent uploads (newest ~8) via activities.list.
+// Cost: 1 quota unit per call.
+async function fetchChannelUploads(channelId, channelName, apiKey) {
   try {
-    const headers = {};
-    if (etag) headers["If-None-Match"] = etag;
-
     const res = await fetch(
-      `${YT_API}/activities?part=snippet,contentDetails&channelId=${channelId}&maxResults=8&key=${apiKey}`,
-      { headers }
+      `${YT_API}/activities?part=snippet,contentDetails&channelId=${channelId}&maxResults=8&key=${apiKey}`
     );
-
-    // 304 Not Modified — no new content, 0 quota cost
-    if (res.status === 304) {
-      return { videos: null, etag }; // null = use cached data
-    }
-
     if (!res.ok) {
       console.error(`API error for ${channelName}: ${res.status}`);
-      return { videos: [], etag: null };
+      return [];
     }
-
-    const newEtag = res.headers.get("ETag") || null;
     const data = await res.json();
-    if (!data.items) return { videos: [], etag: newEtag };
-
-    const now = Date.now();
-    const videos = [];
-
-    for (const item of data.items) {
-      // Only include "upload" activities
-      if (item.snippet.type !== "upload") continue;
-
+    const uploads = [];
+    for (const item of (data.items || [])) {
+      if (item.snippet?.type !== "upload") continue;
       const videoId = item.contentDetails?.upload?.videoId;
       if (!videoId) continue;
-
       const s = item.snippet;
-      videos.push({
+      uploads.push({
         video_id: videoId,
         title: s.title,
         thumbnail: s.thumbnails?.high?.url || `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
         channel: channelName,
         published_at: s.publishedAt,
-        fetched_at: new Date(now).toISOString(),
         embed_url: `https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0`,
-        is_short: false, // resolved below via videos.list
       });
     }
-
-    return { videos, etag: newEtag };
+    return uploads;
   } catch (err) {
-    console.error(`API fetch failed for ${channelName}:`, err.message);
-    return { videos: [], etag: null };
+    console.error(`Upload fetch failed for ${channelName}:`, err.message);
+    return [];
   }
 }
 
-// Detect Shorts via videos.list (duration <= 60s).
-// Cost: 1 quota unit per call, each call handles up to 50 video IDs.
-async function markShorts(videos, apiKey) {
-  if (!videos.length) return;
-  for (let i = 0; i < videos.length; i += 50) {
-    const batch = videos.slice(i, i + 50);
-    const ids = batch.map(v => v.video_id).join(",");
+// Look up each video's length in seconds via videos.list.
+// Cost: 1 quota unit per call (up to 50 IDs each).
+async function fetchDurations(videoIds, apiKey) {
+  const out = new Map();
+  for (let i = 0; i < videoIds.length; i += 50) {
+    const ids = videoIds.slice(i, i + 50).join(",");
     try {
-      const res = await fetch(
-        `${YT_API}/videos?part=contentDetails&id=${ids}&key=${apiKey}`
-      );
+      const res = await fetch(`${YT_API}/videos?part=contentDetails&id=${ids}&key=${apiKey}`);
       if (!res.ok) continue;
       const data = await res.json();
-      const durations = {};
       for (const item of (data.items || [])) {
-        durations[item.id] = item.contentDetails.duration;
-      }
-      for (const v of batch) {
-        const dur = durations[v.video_id];
-        if (dur) {
-          const match = dur.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-          if (match) {
-            const secs = (parseInt(match[1] || 0) * 3600) + (parseInt(match[2] || 0) * 60) + parseInt(match[3] || 0);
-            v.is_short = secs <= 60;
-          }
-        }
+        const secs = parseDurationSeconds(item.contentDetails?.duration);
+        if (secs != null) out.set(item.id, secs);
       }
     } catch {}
   }
+  return out;
+}
+
+// Per-category record of yesterday's featured channel.
+async function getLastChannels(env) {
+  try {
+    const raw = await env.FEED_CACHE.get(LAST_CHANNEL_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+}
+
+async function saveLastChannels(env, map) {
+  await env.FEED_CACHE.put(LAST_CHANNEL_KEY, JSON.stringify(map), { expirationTtl: LAST_CHANNEL_TTL });
+}
+
+// Fisher–Yates shuffle (returns a new array).
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Pick one video for a category. For each length tier in turn, walk channels one
+// at a time and return the first whose last-24h uploads include a video in that
+// tier's window — so the snappy primary tier is exhausted across all channels
+// before the wider fallback is tried. Channel order is shuffled daily, and
+// yesterday's channel is pushed to the back so it's reused only as a last resort
+// (no same channel two days running).
+async function selectCategoryVideo(chList, apiKey, excludeChannelId) {
+  const ordered = shuffle(chList).sort((a, b) => {
+    if (a.channelId === excludeChannelId) return 1;
+    if (b.channelId === excludeChannelId) return -1;
+    return 0;
+  });
+
+  const cutoff = Date.now() - LOOKBACK_HOURS * 60 * 60 * 1000;
+
+  // Fetch each channel's uploads once and each duration once, even though the
+  // fallback tier revisits the same channels.
+  const uploadsByChannel = new Map();
+  const durations = new Map();
+
+  for (const tier of SELECT_TIERS) {
+    for (const ch of ordered) {
+      let uploads = uploadsByChannel.get(ch.channelId);
+      if (!uploads) {
+        uploads = await fetchChannelUploads(ch.channelId, ch.name, apiKey);
+        uploadsByChannel.set(ch.channelId, uploads);
+      }
+
+      // Only this channel's last-24h uploads, newest first.
+      const candidates = uploads
+        .filter(u => new Date(u.published_at).getTime() > cutoff)
+        .sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+      if (!candidates.length) continue;
+
+      const unknown = candidates.filter(u => !durations.has(u.video_id)).map(u => u.video_id);
+      if (unknown.length) {
+        const resolved = await fetchDurations(unknown, apiKey);
+        for (const [id, secs] of resolved) durations.set(id, secs);
+      }
+
+      const hit = candidates.find(u => {
+        const secs = durations.get(u.video_id);
+        return secs != null && secs >= tier.min && secs <= tier.max;
+      });
+      if (hit) return { video: hit, channelId: ch.channelId };
+    }
+  }
+
+  return null;
 }
 
 // Purge videos older than 24 hours (compliance: no archiving YouTube data).
@@ -744,67 +801,60 @@ function purgeStaleVideos(feed) {
   return feed;
 }
 
-// Fetch all curated channels via YouTube Data API v3.
-// Quota cost per refresh:
-//   - 45 channels × 1 unit (activities.list) = 45 units max
-//   - Channels with ETag 304 = 0 units (free!)
-//   - ~1-2 units for videos.list (shorts detection)
-//   - At 6 refreshes/day ≈ 270 units/day worst case (well within 10,000)
+// Build the day's edition: exactly one Short-free video per category (2–15 min,
+// widening to 2–30 min only for a category that would otherwise be empty). Quota
+// is tiny — we stop touching channels the moment a category is filled, so a
+// typical refresh costs only a handful of units.
 async function fetchVideosFeed(env) {
   const channels = await getVideoChannels(env);
   const apiKey = env.YOUTUBE_API_KEY;
   if (!apiKey) throw new Error("YOUTUBE_API_KEY secret not set");
 
-  const etags = await getETags(env);
-  const newEtags = { ...etags };
-
-  // Load existing cached feed for 304 merging
+  // Load the existing edition: used both to keep today's picks stable and as a
+  // fallback if a category yields nothing at all.
   let existingFeed = {};
   try {
     const cached = await env.FEED_CACHE.get(VIDEOS_CACHE_KEY);
     if (cached) existingFeed = JSON.parse(cached);
   } catch {}
 
+  const now = Date.now();
+  const today = new Date(now).toISOString().slice(0, 10);
+
+  // One edition per day: if today's picks are already chosen, keep them. The
+  // cron at the top of the day is what rolls us onto a fresh edition.
+  if (existingFeed.cached_at?.slice(0, 10) === today) {
+    return existingFeed;
+  }
+
+  const lastChannels = await getLastChannels(env);
+  const newLastChannels = {};
   const feed = {};
 
   for (const [category, chList] of Object.entries(channels)) {
-    const results = await Promise.all(
-      chList.map(ch => {
-        const etagKey = ch.channelId;
-        return fetchChannelVideos(ch.channelId, ch.name, apiKey, etags[etagKey])
-          .then(r => {
-            if (r.etag) newEtags[etagKey] = r.etag;
-            return { channelId: ch.channelId, ...r };
-          });
-      })
-    );
+    const pick = await selectCategoryVideo(chList, apiKey, lastChannels[category]);
 
-    const categoryVideos = [];
-    for (const r of results) {
-      if (r.videos === null) {
-        // 304 — merge existing cached videos for this channel
-        const existing = (existingFeed[category] || []).filter(v => v.channel === r.channelId || true);
-        categoryVideos.push(...(existingFeed[category] || []).filter(v => {
-          // Match by channel name (since we don't store channelId in video objects)
-          const chEntry = chList.find(c => c.channelId === r.channelId);
-          return chEntry && v.channel === chEntry.name;
-        }));
-      } else {
-        categoryVideos.push(...r.videos);
-      }
+    if (pick) {
+      newLastChannels[category] = pick.channelId;
+      feed[category] = [{
+        ...pick.video,
+        fetched_at: new Date(now).toISOString(),
+        is_short: false,
+      }];
+    } else {
+      // Nothing in the last 24h — keep yesterday's pick rather than show an
+      // empty category, restamped so the 24h purge keeps it.
+      feed[category] = (existingFeed[category] || []).map(v => ({
+        ...v,
+        fetched_at: new Date(now).toISOString(),
+      }));
+      if (lastChannels[category]) newLastChannels[category] = lastChannels[category];
     }
-
-    // Detect shorts in bulk for new videos only
-    const newVideos = categoryVideos.filter(v => v.is_short === false && v.fetched_at);
-    await markShorts(newVideos, apiKey);
-
-    categoryVideos.sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
-    feed[category] = categoryVideos;
   }
 
-  await saveETags(env, newEtags);
+  await saveLastChannels(env, newLastChannels);
 
-  const result = { ...feed, cached_at: new Date().toISOString() };
+  const result = { ...feed, cached_at: new Date(now).toISOString() };
   return purgeStaleVideos(result);
 }
 
