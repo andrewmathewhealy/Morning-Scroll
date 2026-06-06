@@ -300,7 +300,7 @@ function HomeScreen({ onOpenGames, radioPlayer, bgTheme }) {
       </div>
 
       <div className="section-pad spring-in spring-in-3 depth-mid">
-        <TodaysLight sunrise={weatherData?.sunrise ?? null} sunset={weatherData?.sunset ?? null} />
+        <TodaysLight sunrise={weatherData?.sunrise ?? null} sunset={weatherData?.sunset ?? null} bgTheme={bgTheme} />
       </div>
 
       <div className="section-pad spring-in spring-in-5 depth-mid">
