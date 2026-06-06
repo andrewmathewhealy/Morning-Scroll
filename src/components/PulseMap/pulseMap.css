@@ -364,6 +364,8 @@
   color: rgba(12, 26, 53, 0.5);
 }
 .radio-mini-btn {
+  -webkit-appearance: none;
+  appearance: none;
   width: 32px;
   height: 32px;
   border-radius: 50%;
