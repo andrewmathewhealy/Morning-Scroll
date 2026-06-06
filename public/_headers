@@ -1,0 +1,9 @@
+# Long-cache the content-hashed build assets (their names change on every build,
+# so they're safe to cache forever) ...
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# ... but never let the HTML entry point go stale, so new deploys show up on
+# the next load instead of being held back by Safari's cache.
+/*
+  Cache-Control: public, max-age=0, must-revalidate
