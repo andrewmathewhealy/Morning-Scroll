@@ -377,3 +377,5 @@
   transition: background 0.15s;
 }
 .radio-mini-btn:active { background: rgba(12, 26, 53, 0.15); }
+.radio-mini-btn-play { background: #0C1A35; }
+.radio-mini-btn-play:active { background: #1c3055; }
