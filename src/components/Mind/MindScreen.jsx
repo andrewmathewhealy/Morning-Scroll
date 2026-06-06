@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import Soundscapes from "./Soundscapes.jsx";
 import WimHof from "./WimHof.jsx";
 import { getSharedAudioContext } from "../../hooks/useAudioContext.js";
 
@@ -128,7 +127,7 @@ export default function MindScreen() {
       <div className="home-header spring-in spring-in-1 depth-top">
         <div>
           <div className="home-greeting">Mind</div>
-          <div className="home-date">Focus, breathe, and listen</div>
+          <div className="home-date">Focus and breathe</div>
         </div>
       </div>
 
@@ -293,11 +292,6 @@ export default function MindScreen() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* ── SOUNDSCAPES ── */}
-      <div className="section-pad spring-in spring-in-3" style={{ paddingTop: 18 }}>
-        <Soundscapes />
       </div>
 
       {/* ── BREATHWORK ── */}

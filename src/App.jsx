@@ -275,7 +275,7 @@ function GlobeSection({ radioPlayer }) {
 }
 
 // ── HOME SCREEN ───────────────────────────────────────────
-function HomeScreen({ onOpenGames, radioPlayer, bgTheme }) {
+function HomeScreen({ onOpenGames, onOpenMind, radioPlayer, bgTheme }) {
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }).toLowerCase();
@@ -336,6 +336,24 @@ function HomeScreen({ onOpenGames, radioPlayer, bgTheme }) {
               <span className="gc-chip" style={{ background: "#F2B899", color: "#0C1A35" }}>B</span>
             </div>
             <div className="gc-play">Play →</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="section-pad spring-in spring-in-3 depth-mid">
+        <div className="mind-card tappable" data-haptic="medium" onClick={onOpenMind}
+          style={{ background: (BG_THEMES[bgTheme] ?? BG_THEMES.peach).mindCard }}>
+          <div className="gc-left">
+            <div className="gc-label">Unwind</div>
+            <div className="gc-title">Mind</div>
+            <div className="gc-sub">Binaural beats &amp; breathing</div>
+          </div>
+          <div className="gc-right">
+            <div className="gc-chips">
+              <span className="gc-chip" style={{ background: "rgba(253,242,232,0.18)" }}><Icon.Radio size={13} color="#FDF2E8" /></span>
+              <span className="gc-chip" style={{ background: "rgba(253,242,232,0.18)" }}><Icon.Wind size={13} color="#FDF2E8" /></span>
+            </div>
+            <div className="gc-play">Open →</div>
           </div>
         </div>
       </div>
@@ -430,10 +448,10 @@ function SettingsScreen({ bgTheme, onChangeBgTheme, onOpenAdmin, onOpenPrivacy, 
 
 // ── BACKGROUND GRADIENT ────────────────────────────────────
 const BG_THEMES = {
-  peach:    { label: "Peach",    swatch: "#F2B899", card: "#C07E50", gradient: "linear-gradient(175deg, #D9A088 0%, #E4B8A0 20%, #EECEBC 40%, #F4DDD0 60%, #F8E8E0 80%, #FDF2E8 100%)" },
-  lavender: { label: "Lavender", swatch: "#A8B4D0", card: "#76849F", gradient: "linear-gradient(175deg, #A8B4D0 0%, #BFC8DE 20%, #D2D4E4 40%, #E4DDE6 60%, #F0E8E8 80%, #FDF2E8 100%)" },
-  rose:     { label: "Rose",     swatch: "#D898AC", card: "#A85F72", gradient: "linear-gradient(175deg, #C0808E 0%, #D0A0AC 20%, #DEB8C2 40%, #E8CCD4 60%, #F0DDE0 80%, #FDF2E8 100%)" },
-  mint:     { label: "Mint",     swatch: "#A0CCC8", card: "#5A8E87", gradient: "linear-gradient(175deg, #88B8B4 0%, #A0CCC8 20%, #B8DCDA 40%, #D0E8E4 60%, #E4EEEA 80%, #FDF2E8 100%)" },
+  peach:    { label: "Peach",    swatch: "#F2B899", card: "#C07E50", mindCard: "#7E5675", gradient: "linear-gradient(175deg, #D9A088 0%, #E4B8A0 20%, #EECEBC 40%, #F4DDD0 60%, #F8E8E0 80%, #FDF2E8 100%)" },
+  lavender: { label: "Lavender", swatch: "#A8B4D0", card: "#76849F", mindCard: "#534C84", gradient: "linear-gradient(175deg, #A8B4D0 0%, #BFC8DE 20%, #D2D4E4 40%, #E4DDE6 60%, #F0E8E8 80%, #FDF2E8 100%)" },
+  rose:     { label: "Rose",     swatch: "#D898AC", card: "#A85F72", mindCard: "#6F4684", gradient: "linear-gradient(175deg, #C0808E 0%, #D0A0AC 20%, #DEB8C2 40%, #E8CCD4 60%, #F0DDE0 80%, #FDF2E8 100%)" },
+  mint:     { label: "Mint",     swatch: "#A0CCC8", card: "#5A8E87", mindCard: "#4D5886", gradient: "linear-gradient(175deg, #88B8B4 0%, #A0CCC8 20%, #B8DCDA 40%, #D0E8E4 60%, #E4EEEA 80%, #FDF2E8 100%)" },
 };
 const getBgStyle = (theme) => ({ background: BG_THEMES[theme]?.gradient ?? BG_THEMES.peach.gradient });
 
@@ -441,7 +459,7 @@ const getBgStyle = (theme) => ({ background: BG_THEMES[theme]?.gradient ?? BG_TH
 const TABS = [
   { id: "home",     label: "Home",     ActiveIcon: p => <Icon.Home     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Home     {...p} color="rgba(12,26,53,0.5)" /> },
   { id: "feed",     label: "Feed",     ActiveIcon: p => <Icon.Feed     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Feed     {...p} color="rgba(12,26,53,0.5)" /> },
-  { id: "mind",     label: "Mind",     ActiveIcon: p => <Icon.Mind     {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Mind     {...p} color="rgba(12,26,53,0.5)" /> },
+  { id: "community", label: "Community", ActiveIcon: p => <Icon.User {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.User {...p} color="rgba(12,26,53,0.5)" /> },
   { id: "settings", label: "Settings", ActiveIcon: p => <Icon.Settings {...p} color="#0C1A35" />, InactiveIcon: p => <Icon.Settings {...p} color="rgba(12,26,53,0.5)" /> },
 ];
 
@@ -470,10 +488,26 @@ function RadioMiniPlayer({ radioPlayer }) {
   );
 }
 
+// ── COMMUNITY (placeholder — content coming later) ────────
+function CommunityScreen() {
+  return (
+    <div className="home-bg" style={{ paddingBottom: 40 }}>
+      <div className="home-header spring-in spring-in-1 depth-top">
+        <div>
+          <div className="home-greeting">Community</div>
+          <div className="home-date">Coming soon</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MorningScrollApp() {
   const [tab, setTab] = useState("home");
   const [gamesOpen, setGamesOpen] = useState(false);
   const [gamesClosing, setGamesClosing] = useState(false);
+  const [mindOpen, setMindOpen] = useState(false);
+  const [mindClosing, setMindClosing] = useState(false);
   const [bgTheme, setBgTheme] = useState(() => localStorage.getItem("ms-bg-theme") || "peach");
   const [showSequence, setShowSequence] = useState(() => shouldShowMorningSequence());
   const [showAdmin, setShowAdmin] = useState(false);
@@ -529,6 +563,11 @@ export default function MorningScrollApp() {
     setTimeout(() => { setGamesOpen(false); setGamesClosing(false); }, 260);
   };
 
+  const closeMind = () => {
+    setMindClosing(true);
+    setTimeout(() => { setMindOpen(false); setMindClosing(false); }, 260);
+  };
+
   const now = new Date();
   const clockTime = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 
@@ -557,9 +596,9 @@ export default function MorningScrollApp() {
           <div className="screen rubber-scroll" ref={screenRef}>
             {/* key={tab} replays the cross-fade each time the screen changes */}
             <div key={tab} className="screen-enter">
-              {tab === "home" && <HomeScreen onOpenGames={() => setGamesOpen(true)} radioPlayer={radioPlayer} bgTheme={bgTheme} />}
+              {tab === "home" && <HomeScreen onOpenGames={() => setGamesOpen(true)} onOpenMind={() => setMindOpen(true)} radioPlayer={radioPlayer} bgTheme={bgTheme} />}
               {tab === "feed" && <FeedScreen />}
-              {tab === "mind" && <MindScreen />}
+              {tab === "community" && <CommunityScreen />}
               {tab === "settings" && <SettingsScreen bgTheme={bgTheme} onChangeBgTheme={changeBgTheme} onOpenAdmin={() => setShowAdmin(true)} onOpenPrivacy={() => setShowPrivacy(true)} onReplayIntro={() => setShowSequence(true)} />}
             </div>
           </div>
@@ -590,6 +629,18 @@ export default function MorningScrollApp() {
                 <button className="ws-close" onClick={closeGames}>Done</button>
               </div>
               <GamesHub />
+            </div>
+          )}
+
+          {mindOpen && (
+            <div className={`games-sheet${mindClosing ? " closing" : ""}`} style={{ ...getBgStyle(bgTheme) }}>
+              <div className="ws-handle-bar">
+                <div className="ws-handle"/>
+                <button className="ws-close" onClick={closeMind}>Done</button>
+              </div>
+              <div className="mind-hub">
+                <MindScreen />
+              </div>
             </div>
           )}
 

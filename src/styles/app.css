@@ -604,6 +604,20 @@
   border: 1.5px solid #FDF2E8;
 }
 .games-card:active { transform: scale(0.98); }
+
+/* Mind entry card — same language as the Games card, distinct deep-indigo tone */
+.mind-card {
+  background: #534C84; border-radius: 24px; padding: 18px 20px;
+  cursor: pointer; transition: transform 0.15s ease, background 0.3s ease;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 8px 28px rgba(8,20,50,0.22), 0 1px 3px rgba(8,20,50,0.06);
+  border: 1.5px solid #FDF2E8;
+}
+.mind-card:active { transform: scale(0.98); }
+/* Scroll container for the Mind sheet contents */
+.mind-hub { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.mind-hub::-webkit-scrollbar { display: none; }
+
 .gc-left { display: flex; flex-direction: column; gap: 3px; }
 .gc-label { font-size: 10px; color: rgba(253,242,232,0.7); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
 .gc-title { font-family: 'Fraunces', serif; font-size: 22px; color: #FDF2E8; font-weight: 600; }
