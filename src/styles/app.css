@@ -566,8 +566,26 @@
   border: 1.5px solid #FDF2E8;
   display: flex; align-items: flex-start; justify-content: space-between;
   padding: 16px 20px;
+  isolation: isolate; /* contain the blend layers to this card */
 }
-.tl-item { display: flex; flex-direction: column; gap: 2px; }
+/* Layer 1 — a muted copy of the sky, masked OUT over the sun so the centre
+   stays vivid. Everything outside the sun reads softer/desaturated. */
+.todays-light::before {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background-image: url(/todays-light.jpg);
+  background-size: cover; background-position: center 45%;
+  filter: saturate(0.32) brightness(1.05) contrast(1.02);
+  -webkit-mask-image: radial-gradient(150px 132px at 49% 43%, transparent 0%, transparent 42%, #000 82%);
+          mask-image: radial-gradient(150px 132px at 49% 43%, transparent 0%, transparent 42%, #000 82%);
+}
+/* Layer 2 — warm bloom over the sun so it glows and becomes the hero. */
+.todays-light::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(124px 112px at 49% 43%,
+    rgba(255,196,122,0.55) 0%, rgba(255,152,112,0.30) 38%, transparent 66%);
+  mix-blend-mode: screen;
+}
+.tl-item { display: flex; flex-direction: column; gap: 2px; position: relative; z-index: 2; }
 .tl-item-right { align-items: flex-end; }
 /* Cream text with a thin navy outline — paint-order keeps the cream fill full,
    so the navy just rims it and makes it pop against the pastel sky. */
