@@ -2,7 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Instrument+Serif&family=Lora:ital,wght@1,400&family=Barlow+Condensed:wght@600&family=DM+Sans:wght@500&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
+  html, body, #root { height: 100%; }
   body { background: #0C1A35; margin: 0; font-family: 'Satoshi', sans-serif; overscroll-behavior: none; }
   .phone-wrapper {
     display: flex; justify-content: center; align-items: center;
@@ -40,7 +40,7 @@
   @media (max-width: 500px) {
     /* Lock the shell to the visible viewport so the page itself can't be
        dragged or rubber-banded — only .screen scrolls internally. */
-    html, body { height: var(--app-height, 100dvh); overflow: hidden; }
+    html, body, #root { height: var(--app-height, 100dvh); overflow: hidden; }
     body { padding: 0; }
     .phone-wrapper { padding: 0; min-height: unset; height: 100%; }
     .phone {
