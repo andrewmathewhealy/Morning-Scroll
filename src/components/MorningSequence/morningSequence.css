@@ -35,6 +35,23 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  animation: momentPour 1150ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* "Pour down" entrance — the video unfurls from top to bottom behind a soft,
+   irregular jagged edge (whimsical, like a gentle ridgeline descending). */
+@keyframes momentPour {
+  from {
+    opacity: 0.6;
+    clip-path: polygon(0% 0%, 100% 0%, 100% -6%, 90% -16%, 80% -10%, 70% -18%,
+      60% -12%, 50% -20%, 40% -11%, 30% -17%, 20% -13%, 10% -19%, 0% -6%);
+  }
+  60% { opacity: 1; }
+  to {
+    opacity: 1;
+    clip-path: polygon(0% 0%, 100% 0%, 100% 118%, 90% 108%, 80% 114%, 70% 106%,
+      60% 112%, 50% 104%, 40% 113%, 30% 107%, 20% 111%, 10% 105%, 0% 118%);
+  }
 }
 
 /* Placeholder gradient for when no video is available */
@@ -50,7 +67,14 @@
     #0a0a1a 100%
   );
   background-size: 400% 400%;
-  animation: momentShimmer 8s ease-in-out infinite;
+  animation: momentPour 1150ms cubic-bezier(0.22, 1, 0.36, 1) both,
+             momentShimmer 8s ease-in-out infinite;
+}
+
+/* Respect users who prefer less motion — show the video immediately. */
+@media (prefers-reduced-motion: reduce) {
+  .moment-video { animation: none; }
+  .moment-placeholder { animation: momentShimmer 8s ease-in-out infinite; }
 }
 
 @keyframes momentShimmer {
