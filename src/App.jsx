@@ -361,7 +361,7 @@ function Accordion({ title, count, total, accentColor, children, defaultOpen = f
   );
 }
 
-function SettingsScreen({ bgTheme, onChangeBgTheme, onOpenAdmin, onOpenPrivacy }) {
+function SettingsScreen({ bgTheme, onChangeBgTheme, onOpenAdmin, onOpenPrivacy, onReplayIntro }) {
   const [reminderOn, setReminderOn] = useState(true);
 
   return (
@@ -395,6 +395,15 @@ function SettingsScreen({ bgTheme, onChangeBgTheme, onOpenAdmin, onOpenPrivacy }
           <div><div className="setting-name">Morning reminder</div><div className="setting-value">Daily at 7:00 AM</div></div>
         </div>
         <Toggle on={reminderOn} onToggle={() => setReminderOn(v => !v)} />
+      </div>
+
+      <span className="section-label fade-up fade-up-3">Entrance</span>
+      <div className="setting-row tappable fade-up fade-up-3" onClick={onReplayIntro}>
+        <div className="setting-left">
+          <div className="setting-icon"><Icon.Sunrise size={18} color="#0C1A35" /></div>
+          <div><div className="setting-name">Replay intro</div><div className="setting-value">Watch the entrance (video &amp; photos) again</div></div>
+        </div>
+        <div className="setting-arrow">›</div>
       </div>
 
       <span className="section-label fade-up fade-up-3">About</span>
@@ -551,7 +560,7 @@ export default function MorningScrollApp() {
               {tab === "home" && <HomeScreen onOpenGames={() => setGamesOpen(true)} radioPlayer={radioPlayer} bgTheme={bgTheme} />}
               {tab === "feed" && <FeedScreen />}
               {tab === "mind" && <MindScreen />}
-              {tab === "settings" && <SettingsScreen bgTheme={bgTheme} onChangeBgTheme={changeBgTheme} onOpenAdmin={() => setShowAdmin(true)} onOpenPrivacy={() => setShowPrivacy(true)} />}
+              {tab === "settings" && <SettingsScreen bgTheme={bgTheme} onChangeBgTheme={changeBgTheme} onOpenAdmin={() => setShowAdmin(true)} onOpenPrivacy={() => setShowPrivacy(true)} onReplayIntro={() => setShowSequence(true)} />}
             </div>
           </div>
 
