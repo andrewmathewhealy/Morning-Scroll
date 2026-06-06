@@ -83,8 +83,7 @@ export default function MorningSequence({ onComplete }) {
 }
 
 // Session gate: check if the sequence should show today
-// TODO: remove override before shipping
-const ALWAYS_SHOW = true;
+const ALWAYS_SHOW = false;
 export function shouldShowMorningSequence() {
   if (ALWAYS_SHOW) return true;
   const today = new Date().toISOString().split("T")[0];
