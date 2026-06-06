@@ -451,8 +451,8 @@ function RadioMiniPlayer({ radioPlayer }) {
         <div className="radio-mini-name">{station.name}</div>
         <div className="radio-mini-country">{status === "error" ? "Stream unavailable" : station.country}</div>
       </div>
-      <button className="radio-mini-btn radio-mini-btn-play" onClick={togglePlay} aria-label={status === "playing" ? "Pause" : "Play"}>
-        {status === "playing" ? <Icon.Pause size={15} color="#FDF2E8" /> : <Icon.Play size={15} color="#FDF2E8" />}
+      <button className="radio-mini-btn" onClick={togglePlay} aria-label={status === "playing" ? "Pause" : "Play"}>
+        {status === "playing" ? <Icon.Pause size={16} color="#0C1A35" /> : <Icon.Play size={16} color="#0C1A35" />}
       </button>
       <button className="radio-mini-btn" onClick={stop} aria-label="Stop">
         <Icon.X size={16} color="#0C1A35" />

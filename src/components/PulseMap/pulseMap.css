@@ -319,9 +319,7 @@
 /* ── MINI PLAYER BAR ── */
 .radio-mini-player {
   height: 52px;
-  background: rgba(253, 242, 232, 0.95);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: #FDF2E8;
   border-top: 1px solid rgba(12, 26, 53, 0.1);
   display: flex;
   align-items: center;
@@ -369,7 +367,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(12, 26, 53, 0.08);
+  background: rgba(12, 26, 53, 0.10);
   border: none;
   cursor: pointer;
   display: flex;
@@ -378,6 +376,4 @@
   flex-shrink: 0;
   transition: background 0.15s;
 }
-.radio-mini-btn:active { background: rgba(12, 26, 53, 0.15); }
-.radio-mini-btn-play { background: #0C1A35; }
-.radio-mini-btn-play:active { background: #1c3055; }
+.radio-mini-btn:active { background: rgba(12, 26, 53, 0.18); }
