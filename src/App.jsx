@@ -275,7 +275,7 @@ function GlobeSection({ radioPlayer }) {
 }
 
 // ── HOME SCREEN ───────────────────────────────────────────
-function HomeScreen({ onOpenGames, radioPlayer }) {
+function HomeScreen({ onOpenGames, radioPlayer, bgTheme }) {
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }).toLowerCase();
@@ -322,7 +322,9 @@ function HomeScreen({ onOpenGames, radioPlayer }) {
       </div>
 
       <div className="section-pad spring-in spring-in-3 depth-mid">
-        <div className="games-card tappable" data-haptic="medium" onClick={onOpenGames}>
+        <div className="games-card tappable" data-haptic="medium" onClick={onOpenGames}
+          style={{ background: (BG_THEMES[bgTheme] ?? BG_THEMES.peach).card }}>
+
           <div className="gc-left">
             <div className="gc-label">Play</div>
             <div className="gc-title">Morning Games</div>
@@ -419,10 +421,10 @@ function SettingsScreen({ bgTheme, onChangeBgTheme, onOpenAdmin, onOpenPrivacy }
 
 // ── BACKGROUND GRADIENT ────────────────────────────────────
 const BG_THEMES = {
-  peach:    { label: "Peach",    swatch: "#F2B899", gradient: "linear-gradient(175deg, #D9A088 0%, #E4B8A0 20%, #EECEBC 40%, #F4DDD0 60%, #F8E8E0 80%, #FDF2E8 100%)" },
-  lavender: { label: "Lavender", swatch: "#A8B4D0", gradient: "linear-gradient(175deg, #A8B4D0 0%, #BFC8DE 20%, #D2D4E4 40%, #E4DDE6 60%, #F0E8E8 80%, #FDF2E8 100%)" },
-  rose:     { label: "Rose",     swatch: "#D898AC", gradient: "linear-gradient(175deg, #C0808E 0%, #D0A0AC 20%, #DEB8C2 40%, #E8CCD4 60%, #F0DDE0 80%, #FDF2E8 100%)" },
-  mint:     { label: "Mint",     swatch: "#A0CCC8", gradient: "linear-gradient(175deg, #88B8B4 0%, #A0CCC8 20%, #B8DCDA 40%, #D0E8E4 60%, #E4EEEA 80%, #FDF2E8 100%)" },
+  peach:    { label: "Peach",    swatch: "#F2B899", card: "#C07E50", gradient: "linear-gradient(175deg, #D9A088 0%, #E4B8A0 20%, #EECEBC 40%, #F4DDD0 60%, #F8E8E0 80%, #FDF2E8 100%)" },
+  lavender: { label: "Lavender", swatch: "#A8B4D0", card: "#76849F", gradient: "linear-gradient(175deg, #A8B4D0 0%, #BFC8DE 20%, #D2D4E4 40%, #E4DDE6 60%, #F0E8E8 80%, #FDF2E8 100%)" },
+  rose:     { label: "Rose",     swatch: "#D898AC", card: "#A85F72", gradient: "linear-gradient(175deg, #C0808E 0%, #D0A0AC 20%, #DEB8C2 40%, #E8CCD4 60%, #F0DDE0 80%, #FDF2E8 100%)" },
+  mint:     { label: "Mint",     swatch: "#A0CCC8", card: "#5A8E87", gradient: "linear-gradient(175deg, #88B8B4 0%, #A0CCC8 20%, #B8DCDA 40%, #D0E8E4 60%, #E4EEEA 80%, #FDF2E8 100%)" },
 };
 const getBgStyle = (theme) => ({ background: BG_THEMES[theme]?.gradient ?? BG_THEMES.peach.gradient });
 
@@ -546,7 +548,7 @@ export default function MorningScrollApp() {
           <div className="screen rubber-scroll" ref={screenRef}>
             {/* key={tab} replays the cross-fade each time the screen changes */}
             <div key={tab} className="screen-enter">
-              {tab === "home" && <HomeScreen onOpenGames={() => setGamesOpen(true)} radioPlayer={radioPlayer} />}
+              {tab === "home" && <HomeScreen onOpenGames={() => setGamesOpen(true)} radioPlayer={radioPlayer} bgTheme={bgTheme} />}
               {tab === "feed" && <FeedScreen />}
               {tab === "mind" && <MindScreen />}
               {tab === "settings" && <SettingsScreen bgTheme={bgTheme} onChangeBgTheme={changeBgTheme} onOpenAdmin={() => setShowAdmin(true)} onOpenPrivacy={() => setShowPrivacy(true)} />}
