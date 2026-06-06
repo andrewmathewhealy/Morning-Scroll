@@ -8,6 +8,7 @@ const ALLOWED_ORIGINS = new Set([
   "capacitor://localhost",
   "https://localhost",
   "https://morningscroll.app",
+  "https://morning-scroll.pages.dev",
 ]);
 
 function isLocalNetwork(origin) {
@@ -23,10 +24,16 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+// Cloudflare Pages production + per-deploy preview URLs, e.g.
+// https://morning-scroll.pages.dev and https://abc123.morning-scroll.pages.dev
+function isPagesPreview(origin) {
+  return /^https:\/\/([a-z0-9-]+\.)?morning-scroll\.pages\.dev$/.test(origin || "");
+}
+
 function isAllowedOrigin(request) {
   const origin = request.headers.get("Origin");
   if (!origin) return true; // native apps (Capacitor) may omit Origin
-  return ALLOWED_ORIGINS.has(origin) || isLocalNetwork(origin);
+  return ALLOWED_ORIGINS.has(origin) || isLocalNetwork(origin) || isPagesPreview(origin);
 }
 
 const JOURNAL_PROMPT_INSTRUCTIONS = `Generate one morning journal prompt. One sentence, no explanation.
