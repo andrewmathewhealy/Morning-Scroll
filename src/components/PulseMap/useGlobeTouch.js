@@ -53,9 +53,8 @@ export function useGlobeTouch(globeRef, containerRef) {
           startY: e.clientY,
           startTop: scroller.scrollTop,
           scroller,
-          lastY: e.clientY,
-          lastT: e.timeStamp || performance.now(),
-          velocity: 0, // scrollTop px per ms
+          // Ring buffer of recent {y, t} samples for accurate flick velocity.
+          samples: [{ y: e.clientY, t: e.timeStamp || performance.now() }],
         };
         el.setPointerCapture?.(e.pointerId);
       }
@@ -67,16 +66,10 @@ export function useGlobeTouch(globeRef, containerRef) {
     if (!d || e.pointerId !== d.id) return;
     d.scroller.scrollTop = d.startTop - (e.clientY - d.startY);
 
-    // Track velocity (scrollTop grows as the finger moves up). Exponential
-    // smoothing keeps one noisy sample from dominating the fling.
     const now = e.timeStamp || performance.now();
-    const dt = now - d.lastT;
-    if (dt > 0) {
-      const v = -(e.clientY - d.lastY) / dt;
-      d.velocity = d.velocity * 0.6 + v * 0.4;
-      d.lastY = e.clientY;
-      d.lastT = now;
-    }
+    d.samples.push({ y: e.clientY, t: now });
+    // Keep only the last ~120ms of motion — that's the flick that matters.
+    while (d.samples.length > 2 && now - d.samples[0].t > 120) d.samples.shift();
   }, []);
 
   const endDrag = useCallback((e) => {
@@ -88,21 +81,31 @@ export function useGlobeTouch(globeRef, containerRef) {
     containerRef.current?.releasePointerCapture?.(d.id);
     scrollDrag.current = null;
 
-    // Only fling on an actual flick — if the finger paused before lifting,
-    // honour that and stop (matches native behaviour).
+    // Velocity from the oldest sample in the recent window to the newest, so a
+    // genuine flick is measured accurately (no over-smoothing damping it).
     const now = (e && e.timeStamp) || performance.now();
-    const fresh = now - d.lastT < 60;
-    let perFrame = (fresh ? d.velocity : 0) * 16; // ≈ px per 16ms frame
-    if (Math.abs(perFrame) < 0.8) return;
+    const last = d.samples[d.samples.length - 1];
+    const first = d.samples[0];
+    const span = last.t - first.t;
+    // Only fling if the gesture was still moving when it lifted.
+    const stale = now - last.t > 70;
+    let perFrame = 0;
+    if (!stale && span > 0) {
+      const vel = -(last.y - first.y) / span; // scrollTop px per ms
+      perFrame = vel * 16;                     // px per ~16ms frame
+    }
+    if (Math.abs(perFrame) < 0.6) return;
+    // Cap absurd velocities but allow a strong, long fling.
+    perFrame = Math.max(-90, Math.min(90, perFrame));
 
     const scroller = d.scroller;
-    const friction = 0.95;
+    const friction = 0.975; // higher = longer glide (≈40× the per-frame step)
     const step = () => {
       scroller.scrollTop += perFrame;
       perFrame *= friction;
       const top = scroller.scrollTop;
       const maxTop = scroller.scrollHeight - scroller.clientHeight;
-      if (Math.abs(perFrame) > 0.4 && top > 0 && top < maxTop) {
+      if (Math.abs(perFrame) > 0.3 && top > 0 && top < maxTop) {
         inertiaRaf.current = requestAnimationFrame(step);
       } else {
         inertiaRaf.current = 0;
