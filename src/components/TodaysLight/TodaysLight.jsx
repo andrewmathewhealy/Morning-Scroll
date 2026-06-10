@@ -11,10 +11,9 @@ function formatClock(t) {
   return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
 }
 
-export default function TodaysLight({ sunrise, sunset, bgTheme = "peach" }) {
-  const theme = ["peach", "lavender", "rose", "mint"].includes(bgTheme) ? bgTheme : "peach";
+export default function TodaysLight({ sunrise, sunset }) {
   return (
-    <div className="todays-light" style={{ backgroundImage: `url(/todays-light-${theme}.jpg)` }}>
+    <div className="todays-light">
       <div className="tl-item">
         <span className="tl-label">Sunrise:</span>
         <span className="tl-time">{formatClock(sunrise)}</span>
